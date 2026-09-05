@@ -52,6 +52,9 @@ htmlcov/
 logs/
 *.log
 
+# RPA/解析运行时产物
+outputs/
+
 # Env
 .env
 .env.local
