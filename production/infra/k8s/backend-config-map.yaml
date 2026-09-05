@@ -1,0 +1,67 @@
+# 文件名：backend-config-map.yaml 职责：生产环境后端 ConfigMap,作为 Deployment envFrom 来源注入应用/数据库/Redis 配置
+# kubectl apply -f backend-config-map.yaml -n fintrust
+#
+# 此 ConfigMap 是 backend Deployment 的 envFrom 来源 (见 backend.yaml L24-26).
+# 敏感信息 (DB password / DeepSeek API Key / JWT Secret) 走 db-secrets Secret,
+# 不在此处明文配置.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: fintrust
+  labels:
+    app: backend
+    component: config-center
+data:
+  # === 应用 ===
+  APP_NAME: "FinTrust Hub Backend"
+  APP_VERSION: "3.1.0"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_HOST: "0.0.0.0"
+  APP_PORT: "8000"
+
+  # === 数据库 (敏感值走 Secret) ===
+  DATABASE_POOL_SIZE: "20"
+  DATABASE_MAX_OVERFLOW: "40"
+  DATABASE_ECHO: "false"
+
+  # === Redis ===
+  REDIS_URL: "redis://redis-svc:6379/0"
+
+  # === ClickHouse (P1 异常处理对应配置) ===
+  # 设计依据: docs/chaos-engineering-deepseek.md S6 + llm_service.py _record_metric
+  # 异常处理: 连接失败/查询超时/客户端关闭 → 走 logger.debug 降级, 不阻断业务
+  CLICKHOUSE_HOST: "clickhouse-svc"
+  CLICKHOUSE_PORT: "8123"
+  CLICKHOUSE_USER: "default"
+  CLICKHOUSE_DATABASE: "fintrust_metrics"
+  CLICKHOUSE_CONNECT_TIMEOUT: "5"      # 连接超时 5s, 超时降级到 debug 日志
+  CLICKHOUSE_QUERY_TIMEOUT: "10"       # 查询超时 10s, 超时降级到 debug 日志
+
+  # === LLM 指标落库开关 (P1 _record_metric 失败时打 debug 日志) ===
+  # 设为 false 时, _record_metric 直接 return, 不再尝试 ClickHouse 写入
+  LLM_METRICS_ENABLED: "true"
+  # 指标落库失败时, 是否同步打 debug 日志 (默认 true 便于排查)
+  LLM_METRICS_LOG_ON_FAILURE: "true"
+
+  # === DeepSeek / LLM ===
+  # API Key 走 Secret (db-secrets), 此处仅配置非敏感项
+  DEEPSEEK_BASE_URL: "https://api.deepseek.com/v1"
+  DEEPSEEK_MODEL: "deepseek-chat"
+  DEEPSEEK_REASONER_MODEL: "deepseek-reasoner"
+  DEEPSEEK_TIMEOUT_CHAT: "30.0"
+  DEEPSEEK_TIMEOUT_REASONER: "60.0"
+  DEEPSEEK_MAX_TOKENS_PER_CALL: "2048"
+  DEEPSEEK_CACHE_TTL_DEFAULT: "3600"
+
+  # === JWT ===
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_MINUTES: "1440"
+
+  # === 日志采集 (与 infra/observability/loki-promtail 联动) ===
+  LOG_LEVEL: "INFO"
+  LOG_JSON_SERIALIZE: "true"      # loguru serialize=True, 输出 JSON 行供 Promtail 解析
+  LOG_FILE_PATH: "logs/fintrust-{time:YYYY-MM-DD}.log"
+  LOG_RETENTION_DAYS: "30"

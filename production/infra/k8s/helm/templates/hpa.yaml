@@ -1,0 +1,50 @@
+{{/* 文件名：hpa.yaml 职责：后端 HorizontalPodAutoscaler Helm 模板,CPU>70% 自动伸缩 3-10 副本
+*/}}
+{{- if .Values.backend.hpa.enabled -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-backend-hpa
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "backend-hpa") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "fintrust-hub.fullname" . }}-backend
+  minReplicas: {{ .Values.backend.hpa.minReplicas | default 3 }}
+  maxReplicas: {{ .Values.backend.hpa.maxReplicas | default 10 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.backend.hpa.targetCPUUtilizationPercentage | default 70 }}
+    # Memory 也加入参考, 防止 OOM 单纯按 CPU 伸缩不到
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    # 伸缩策略: 防止抖动 (stabilizationWindow 60s)
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max
+{{- end }}

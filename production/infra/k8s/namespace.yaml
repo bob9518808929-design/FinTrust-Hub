@@ -1,0 +1,8 @@
+# 文件名：namespace.yaml 职责：FinTrust Hub K8s 命名空间定义,带版本标签供所有组件归属
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fintrust
+  labels:
+    app.kubernetes.io/name: fintrust-hub
+    app.kubernetes.io/version: "3.1.0"

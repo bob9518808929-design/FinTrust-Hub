@@ -1,0 +1,110 @@
+// ====================================================================
+// FinTrust Hub · Deepspace AI 深空科技主题变量 (project_memory: 深色科技风默认)
+//
+// 设计语言:
+//   背景: 030712 纯深空 → 0f172a slate-900 渐变 + 双霓虹光晕 (青 #22d3ee / 紫 #a855f7)
+//   主色: 青蓝 #38bdf8 (Neural Cyan) → 紫粉 #c084fc (AI Orchid) 渐变
+//   玻璃拟态: Element Plus 卡片/对话框/表格都用 8% 黑玻璃 + 1px 半透明霓虹边
+//   对比度: 正文 #e2e8f0 / 辅助 #94a3b8 (WCAG AA+, 防止 Experience 350996 "一片漆黑")
+//   特效: 按钮发光 / 卡片悬浮 glow / 选中框外发光 / 滚动条霓虹蓝紫
+//
+// SCSS 变量只在全局样式和 reset 工具类里引用. 组件内如果需要直接写颜色,
+// 必须通过下面的 CSS 变量 (var(--xxx)) 引用, 以支持后续一键换肤.
+// ====================================================================
+
+// === 1. 品牌 & 语义色 (AI 双色霓虹: 青蓝 + 紫粉) ===
+$color-primary:        #38bdf8;  // 主 Cyan-400: 按钮/链接/选中 (科技蓝)
+$color-primary-2:      #c084fc;  // 辅 Orchid-300: 渐变终点/AI 徽章/雷达
+$color-success:        #10b981;  // 成功 Emerald-500
+$color-warning:        #fbbf24;  // 警告 Amber-400
+$color-danger:         #f87171;  // 危险 Red-400
+$color-info:           #818cf8;  // 信息 Indigo-400
+
+// === 2. 文本 (对比度 >= 4.5:1, 防一片漆黑) ===
+$text-primary:         #e2e8f0;  // 标题/正文 Slate-200
+$text-regular:         #cbd5e1;  // 一般文字 Slate-300
+$text-secondary:       #94a3b8;  // 辅助说明 Slate-400
+$text-placeholder:     #64748b;  // placeholder Slate-500
+$text-muted:           #475569;  // 弱化/禁用 Slate-600
+
+// === 3. 背景 (分层: 基础 / 页面 / 卡片 / 三级 / 悬浮) ===
+$bg-base:              #030712;  // 基础: 深空 Gray-950 (最底层, 防止黑屏用稍偏蓝)
+$bg-page:              #050b1c;  // 页面: 比 base 浅一点, 做径向渐变底
+$bg-card:              rgba(15, 23, 42, 0.55);   // 卡片: Glass Slate-900 55%
+$bg-card-opaque:       #0f172a;                   // 卡片不透明版 (弹窗外层/表格底色)
+$bg-tertiary:          rgba(30, 41, 59, 0.65);   // 输入框/Tab: Slate-800 65%
+$bg-hover:             rgba(56, 189, 248, 0.14); // hover 底 (Cyan-400 tint)
+$bg-active:            $color-primary;
+
+// === 4. 边框 (半透明霓虹边, 玻璃拟态灵魂) ===
+$border-color:         rgba(56, 189, 248, 0.22); // 常态: 1px 半透 Cyan
+$border-light:         rgba(192, 132, 252, 0.28); // 悬浮/聚焦: 紫边
+$border-lighter:       rgba(148, 163, 184, 0.35); // 弱分隔
+
+// === 5. 圆角 (更圆 = 更现代 AI 感) ===
+$radius-sm:   6px;
+$radius-base:  10px;
+$radius-lg:    14px;
+$radius-xl:    20px;
+
+// === 6. 间距 (和原主题保持一致, 不破坏布局) ===
+$spacing-xs:   4px;
+$spacing-sm:   8px;
+$spacing-base: 12px;
+$spacing-lg:   16px;
+$spacing-xl:   24px;
+$spacing-xxl:  32px;
+
+// === 7. 字号 ===
+$font-size-xs:   12px;
+$font-size-sm:   13px;
+$font-size-base: 14px;
+$font-size-lg:   16px;
+$font-size-xl:   18px;
+$font-size-xxl:  22px;
+$font-size-xxxl: 28px;
+
+// === 8. 阴影 + 发光 (科技感核心: glow 代替深投影) ===
+$shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.55);
+$shadow-base:
+  0 2px 10px rgba(0, 0, 0, 0.55),
+  0 0 0 1px rgba(56, 189, 248, 0.10);
+$shadow-lg:
+  0 10px 30px rgba(0, 0, 0, 0.60),
+  0 0 0 1px rgba(192, 132, 252, 0.18),
+  0 0 24px rgba(56, 189, 248, 0.14);
+$shadow-glow-cyan:
+  0 0 0 1px rgba(56, 189, 248, 0.40),
+  0 0 14px rgba(56, 189, 248, 0.35);
+$shadow-glow-orchid:
+  0 0 0 1px rgba(192, 132, 252, 0.42),
+  0 0 16px rgba(192, 132, 252, 0.35);
+
+// === 9. 过渡 ===
+$transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.5s  cubic-bezier(0.22, 1, 0.36, 1);
+
+// === 10. z-index (project_memory 硬约束不动: 模态 10000 / toast 9500) ===
+$z-sidebar:   1000;
+$z-header:    1100;
+$z-dropdown:  2000;
+$z-modal:    10000;
+$z-toast:     9500;
+$z-tooltip:   9900;
+
+// === 11. 布局 ===
+$sidebar-width:            220px;
+$sidebar-collapsed-width:   64px;
+$header-height:             56px;
+$breadcrumb-height:         40px;
+$footer-height:             32px;
+
+// === 12. AI 科技专属 (用于 CSS 渐变背景/按钮) ===
+$ai-gradient:      linear-gradient(135deg, #22d3ee 0%, #38bdf8 32%, #818cf8 64%, #c084fc 100%);
+$ai-gradient-soft: linear-gradient(135deg, rgba(34,211,238,0.14) 0%, rgba(192,132,252,0.18) 100%);
+$ai-glow-bg:
+  radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.16), transparent 60%),
+  radial-gradient(1000px 520px at 110% 10%, rgba(192, 132, 252, 0.18), transparent 55%),
+  radial-gradient(800px  400px at 50% 110%, rgba(129, 140, 248, 0.10), transparent 55%),
+  linear-gradient(180deg, #030712 0%, #050b1c 100%);

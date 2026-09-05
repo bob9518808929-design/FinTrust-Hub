@@ -1,0 +1,240 @@
+# 修复建议规则库（v1.0 种子规则，仅规则匹配，LLM 兜底推迟 v1.1）
+# 置信度 confidence < 0.7 时只展示 reference，不展示 command
+# Agent 禁止自动执行（agent_auto_execute: false）
+
+# 全局约束
+global:
+  # 修复命令属于"不可逆操作"（可能改环境状态），需阻塞模态窗二次确认
+  # 修复建议本身属于"决策建议"，可非阻塞 toast 展示
+  display_policy: "non_blocking_toast"
+  execution_policy: "blocking_modal_with_confirmation"
+  agent_behavior: "propose_only_no_auto_execute"
+
+rules:
+  # ===== 连接类（高可修复性）=====
+  - id: CONN-REDIS-001
+    category: connection
+    severity: blocker
+    pattern_type: regex
+    pattern: '.*ConnectionRefused.*6379.*|.*Redis.*ECONNREFUSED.*|.*redis.*ConnectionError.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: command
+      command: 'docker compose up -d redis'
+      explanation: 'Redis 服务未启动或端口被占用，启动本地 Redis 容器'
+      confidence: 0.95
+      requires_human: false
+    source: spec
+    spec_section: "MOD-01"
+
+  - id: CONN-POSTGRES-001
+    category: connection
+    severity: blocker
+    pattern_type: regex
+    pattern: '.*connection.*5432.*refused.*|.*psycopg.*OperationalError.*|.*could not connect to server.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: command
+      command: 'docker compose up -d postgres'
+      explanation: 'PostgreSQL 未启动，启动本地 Postgres 容器'
+      confidence: 0.95
+      requires_human: false
+    source: spec
+    spec_section: "MOD-01"
+
+  - id: CONN-CLICKHOUSE-001
+    category: connection
+    severity: warning
+    pattern_type: regex
+    pattern: '.*ClickHouse.*8123.*|.*clickhouse.*ConnectionError.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: command
+      command: 'docker compose up -d clickhouse'
+      explanation: 'ClickHouse 未启动，IoT 时序数据写入会降级'
+      confidence: 0.9
+      requires_human: false
+    source: spec
+    spec_section: "MOD-01"
+
+  - id: CONN-NEO4J-001
+    category: connection
+    severity: warning
+    pattern_type: regex
+    pattern: '.*Neo4j.*7687.*|.*neo4j.*ServiceUnavailable.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: command
+      command: 'docker compose up -d neo4j'
+      explanation: 'Neo4j 未启动，关系图谱查询会降级'
+      confidence: 0.9
+      requires_human: false
+    source: spec
+    spec_section: "MOD-01"
+
+  # ===== 依赖类（高可修复性）=====
+  - id: DEP-IMPORT-001
+    category: dependency
+    severity: blocker
+    pattern_type: regex
+    pattern: 'ModuleNotFoundError:\s*(\w+)'
+    extract:
+      module: '$1'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 1
+    remediation:
+      action: command
+      command_template: 'pip install {module}'
+      explanation: 'Python 依赖包 {module} 未安装'
+      confidence: 0.9
+      requires_human: false
+    source: spec
+    spec_section: "MOD-00"
+
+  - id: DEP-IMPORT-002
+    category: dependency
+    severity: blocker
+    pattern_type: regex
+    pattern: 'ImportError:\s*(.*)'
+    extract:
+      detail: '$1'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 1
+    remediation:
+      action: reference
+      reference: '检查 {detail} 是否在 .venv 中；可能版本不兼容，建议 pip install --upgrade'
+      confidence: 0.6  # 低于阈值，仅展示 reference
+      requires_human: true
+    source: spec
+    spec_section: "MOD-00"
+
+  # ===== 契约类（中可修复性）=====
+  - id: CONTRACT-ORPHAN-001
+    category: contract
+    severity: warning
+    pattern_type: structural  # 结构性检测（孤儿契约边，由 contract_edge_analyzer 标记）
+    remediation:
+      action: guide
+      guide: '前端调用了后端未注册的端点 {endpoint}，检查路由文件或前端调用是否过期'
+      confidence: 0.8
+      requires_human: true
+    source: runtime
+    spec_section: "MOD-01"
+
+  - id: CONTRACT-404-001
+    category: contract
+    severity: warning
+    pattern_type: regex
+    pattern: '404.*POST\s+(\S+)|404.*GET\s+(\S+)'
+    extract:
+      endpoint: '$1'
+    triggers:
+      log_level: WARNING
+      time_window_minutes: 5
+    remediation:
+      action: guide
+      guide: '端点 {endpoint} 返回 404，可能路由未注册或方法不匹配'
+      confidence: 0.75
+      requires_human: true
+    source: runtime
+
+  # ===== 业务类（低可修复性，仅给排查指引）=====
+  - id: BIZ-KEYERROR-001
+    category: business
+    severity: warning
+    pattern_type: regex
+    pattern: 'KeyError:\s*[\'"](\w+)[\'"]'
+    extract:
+      key: '$1'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: reference
+      reference: '检查数据源是否包含字段 {key}；查看堆栈定位调用方'
+      confidence: 0.5  # 低于阈值，仅展示 reference
+      requires_human: true
+    source: manual
+
+  - id: BIZ-VALUEERROR-001
+    category: business
+    severity: warning
+    pattern_type: regex
+    pattern: 'ValueError:\s*(.*)'
+    extract:
+      detail: '$1'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: reference
+      reference: '业务数据校验失败：{detail}；检查入参合法性'
+      confidence: 0.4
+      requires_human: true
+    source: manual
+
+  - id: BIZ-TIMEOUT-001
+    category: business
+    severity: warning
+    pattern_type: regex
+    pattern: '.*TimeoutError.*|.*timeout.*exceeded.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 5
+    remediation:
+      action: reference
+      reference: '请求超时，检查下游服务响应时间或调高超时阈值'
+      confidence: 0.6
+      requires_human: true
+    source: runtime
+
+  # ===== 配置类（中可修复性）=====
+  - id: CONFIG-ENV-001
+    category: config
+    severity: blocker
+    pattern_type: regex
+    pattern: '.*SettingsError.*|.*ValidationError.*settings.*|.*environment.*not.*set.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 1
+    remediation:
+      action: guide
+      guide: '环境变量配置缺失或非法，检查 .env 文件（参考 backend/app/config.py 的 Settings 类）'
+      confidence: 0.85
+      requires_human: false
+    source: spec
+    spec_section: "MOD-00"
+
+  - id: CONFIG-JWT-001
+    category: config
+    severity: blocker
+    pattern_type: regex
+    pattern: '.*JWT_SECRET.*not.*set.*|.*SECRET_KEY.*missing.*'
+    triggers:
+      log_level: ERROR
+      time_window_minutes: 1
+    remediation:
+      action: guide
+      guide: 'JWT 密钥未配置，无法签发 token；设置 .env 的 JWT_SECRET_KEY'
+      confidence: 0.9
+      requires_human: false
+    source: spec
+    spec_section: "MOD-01"
+
+# ===== 统计 =====
+# 规则总数：14
+# 连接类：4（高置信度，可自动建议执行命令）
+# 依赖类：2
+# 契约类：2
+# 业务类：3（低置信度，仅给排查指引）
+# 配置类：2

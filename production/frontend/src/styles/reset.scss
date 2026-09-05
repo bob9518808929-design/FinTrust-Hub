@@ -1,0 +1,171 @@
+// 全局重置 + Deepspace AI 深空科技基础层
+// 参考 Experience 350996: 必须成组定义语义变量 + 正文对比度 WCAG AA+, 并避免
+//                       背景特效 z-index > 正文导致"一片漆黑".
+@use './variables.scss' as *;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// === 根级语义化 CSS 变量 (一键换肤入口 + Element Plus 自定义主题) ===
+:root,
+html[data-theme='deepspace-ai'] {
+  // 给 App.vue 用 var(--app-bg), 保证与 Element Plus 暗色主题一致
+  --app-bg: #{$bg-page};
+  --app-bg-glow: #{ $ai-glow-bg };
+
+  // ===== Element Plus 官方 dark 变量覆盖 (关键: 所有组件读这些值) =====
+  // 颜色体系
+  --el-color-primary:          #{$color-primary};
+  --el-color-primary-light-3:  #7dd3fc;   // sky-300 (hover)
+  --el-color-primary-light-5:  #bae6fd;   // sky-200 (pressed)
+  --el-color-primary-light-7:  #e0f2fe;   // sky-100 (bg tint)
+  --el-color-primary-light-8:  #f0f9ff;
+  --el-color-primary-light-9:  #f8fafc;
+  --el-color-primary-dark-2:   #0ea5e9;   // sky-500
+
+  --el-color-success:   #{$color-success};
+  --el-color-warning:   #{$color-warning};
+  --el-color-danger:    #{$color-danger};
+  --el-color-info:      #{$color-info};
+
+  // 文本
+  --el-text-color-primary:    #{$text-primary};
+  --el-text-color-regular:    #{$text-regular};
+  --el-text-color-secondary:  #{$text-secondary};
+  --el-text-color-placeholder:#{$text-placeholder};
+  --el-disabled-text-color:   #{$text-muted};
+
+  // 背景/表面
+  --el-bg-color:             #{$bg-card-opaque};
+  --el-bg-color-page:        #{$bg-page};
+  --el-bg-color-overlay:     rgba(15, 23, 42, 0.92); // 下拉/弹层玻璃
+  --el-fill-color:           #{$bg-tertiary};
+  --el-fill-color-light:     rgba(30, 41, 59, 0.55);
+  --el-fill-color-lighter:   rgba(30, 41, 59, 0.35);
+  --el-fill-color-blank:     rgba(15, 23, 42, 0.65);
+  // --el-fill-color-{dark,darker}: 给 Bank/Reform/列表中"深色小块背景"用的深灰层级, 避免 Experience 366208 中
+  //   Element Plus 默认未声明时回退到 light slate-100 (#f1f5f9) 造成"大量浅色斑块"
+  --el-fill-color-dark:      rgba(30, 41, 59, 0.55);
+  --el-fill-color-darker:    rgba(15, 23, 42, 0.72);
+  --el-mask-color:           rgba(3, 7, 18, 0.72);
+  --el-mask-color-extra-light: rgba(3, 7, 18, 0.45);
+
+  // 边框
+  --el-border-color:         #{$border-color};
+  --el-border-color-light:   #{$border-light};
+  --el-border-color-lighter: #{$border-lighter};
+  --el-border-color-extra-light: rgba(148, 163, 184, 0.18);
+  --el-border-width:         1px;
+  --el-border-style:         solid;
+
+  // 圆角 (更圆 = 更现代 AI)
+  --el-border-radius-small:  #{$radius-sm};
+  --el-border-radius-base:   #{$radius-base};
+  --el-border-radius-large:  #{$radius-lg};
+  --el-border-radius-round:  9999px;
+
+  // 字体
+  --el-font-size-extra-small: #{$font-size-xs};
+  --el-font-size-small:       #{$font-size-sm};
+  --el-font-size-base:        #{$font-size-base};
+  --el-font-size-medium:      #{$font-size-lg};
+  --el-font-size-large:       #{$font-size-xl};
+
+  // 交互
+  --el-transition-duration:  #{$transition-fast};
+
+  // ===== 自定义 FinTrust AI 扩展变量 (业务组件 / 渐变 / 光晕) =====
+  --ft-primary-2:    #{$color-primary-2};
+  --ft-ai-gradient:  #{ $ai-gradient };
+  --ft-ai-gradient-soft: #{ $ai-gradient-soft };
+  --ft-shadow-glow-cyan:   #{ $shadow-glow-cyan };
+  --ft-shadow-glow-orchid: #{ $shadow-glow-orchid };
+  --ft-shadow-lg: #{ $shadow-lg };
+  --ft-shadow-base: #{ $shadow-base };
+}
+
+html, body, #app {
+  width: 100%;
+  min-height: 100%;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', system-ui, Arial, sans-serif;
+  font-size: $font-size-base;
+  color: $text-primary;
+  background: $bg-base;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// 全屏"深空 + 霓虹光晕"背景 (固定不随滚动跳)
+// z-index = -1 → 放在 #app 内容层之下, 绝对不压正文 (防 Experience 350996 全黑)
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: $ai-glow-bg;
+  background-attachment: fixed;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast, text-shadow $transition-fast;
+
+  &:hover {
+    color: $color-primary-2;
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.45);
+  }
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+// === 深色滚动条 (AI 霓虹蓝紫) ===
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+
+  &-track {
+    background: transparent;
+  }
+
+  &-thumb {
+    background: linear-gradient(180deg, rgba(56,189,248,0.45), rgba(192,132,252,0.5));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+
+    &:hover {
+      background: linear-gradient(180deg, rgba(56,189,248,0.70), rgba(192,132,252,0.8));
+      background-clip: content-box;
+      border: 2px solid transparent;
+    }
+  }
+}
+html {
+  scrollbar-color: rgba(192,132,252,0.6) transparent;
+  scrollbar-width: thin;
+}
+
+// === 文本选择: 霓虹渐变选中 ===
+::selection {
+  background: linear-gradient(135deg, rgba(34,211,238,0.35), rgba(192,132,252,0.40));
+  color: $text-primary;
+}
+::-moz-selection {
+  background: linear-gradient(135deg, rgba(34,211,238,0.35), rgba(192,132,252,0.40));
+  color: $text-primary;
+}

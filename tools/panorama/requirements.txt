@@ -1,0 +1,20 @@
+# 全景导航工具依赖（v1.0）
+# 注意：仅本地开发环境使用，生产环境不安装
+
+# 进程/系统探测
+psutil>=5.9.0
+
+# Git Python 接口（可选，缺失则降级为 subprocess）
+gitpython>=3.1.0
+
+# YAML 配置
+PyYAML>=6.0
+
+# 文件哈希
+hashlib  # 标准库，无需安装
+
+# Python AST（标准库）
+# ast  # 无需安装
+
+# TS/Vue 解析（可选，缺失则降级为正则）
+# 不强制安装；正则模式足以覆盖 axios 调用与 @router 装饰器捕获

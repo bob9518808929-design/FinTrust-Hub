@@ -1,0 +1,87 @@
+# 文件名：external_api_config.yaml 职责：8 个外部数据源(发票查验/企信/司法/票据/银企直连资金监管/第三方风控/保司报价/核心企业ERP)真实 API 配置,定义网关地址与凭证环境变量名
+#
+# 8 个外部数据源 API 配置. 所有凭证从环境变量读取, 不在此硬编码.
+# 当某数据源的环境变量未配置 (api_key/app_id 为空) 时, 对应适配器会自动
+# 降级到内存 Mock 数据, 保持服务可用.
+#
+# 数据源:
+#   invoice_verifier : 国家税务总局发票查验 API
+#   gsxt             : 国家企业信用信息公示系统 API
+#   judiciary        : 中国裁判文书网 / 执行信息公开网 API
+#   ecds             : 上海票据交易所 ECDS API
+#   bank_fund        : 银企直连资金监管 API (监管账户余额/划拨/流水)
+#   risk_data        : 第三方风控数据源 API (天眼查/企查查/百融类)
+#   insurer_quote    : 保司报价 API (人保/平安/太保类应收账款保险)
+#   erp_data         : 核心企业 ERP 数据接口 (SC1 画像 / SC8 撮合数据源)
+
+data_sources:
+  - source_type: INVOICE_VERIFIER
+    name: 国家税务总局发票查验
+    base_url: https://inv-veri.chinatax.gov.cn/api
+    sandbox_url: https://sandbox.inv-veri.chinatax.gov.cn/api
+    app_id_env: TAX_APP_ID
+    api_key_env: TAX_API_KEY
+    timeout_seconds: 8
+
+  - source_type: GSXT
+    name: 国家企业信用信息公示系统
+    base_url: https://api.gsxt.gov.cn/api
+    sandbox_url: https://sandbox.api.gsxt.gov.cn/api
+    app_id_env: GSXT_APP_ID
+    api_key_env: GSXT_API_KEY
+    timeout_seconds: 8
+
+  - source_type: JUDICIARY
+    name: 中国裁判文书网
+    base_url: https://wenshu.court.gov.cn/api
+    sandbox_url: https://sandbox.wenshu.court.gov.cn/api
+    app_id_env: COURT_APP_ID
+    api_key_env: COURT_API_KEY
+    timeout_seconds: 10
+
+  - source_type: ECDS
+    name: 上海票据交易所 ECDS
+    base_url: https://api.shcpe.com.cn/api
+    sandbox_url: https://sandbox.api.shcpe.com.cn/api
+    app_id_env: ECDS_APP_ID
+    api_key_env: ECDS_API_KEY
+    timeout_seconds: 10
+
+  - source_type: BANK_FUND
+    name: 银企直连资金监管
+    base_url: https://bank-direct.example-bank.com.cn/api
+    sandbox_url: https://sandbox.bank-direct.example-bank.com.cn/api
+    app_id_env: FUND_SUPERVISION_ORG_CODE
+    api_key_env: FUND_SUPERVISION_API_KEY
+    endpoint_env: FUND_SUPERVISION_API_URL
+    timeout_seconds: 10
+
+  - source_type: RISK_DATA
+    name: 第三方风控数据源
+    base_url: https://api.risk-provider.com/api
+    sandbox_url: https://sandbox.api.risk-provider.com/api
+    app_id_env: RISK_DATA_APP_ID
+    api_key_env: RISK_DATA_API_KEY
+    endpoint_env: RISK_DATA_API_URL
+    timeout_seconds: 8
+
+  - source_type: INSURER_QUOTE
+    name: 保司应收账款保险报价
+    base_url: https://api.insurer-portal.com/api
+    sandbox_url: https://sandbox.api.insurer-portal.com/api
+    app_id_env: INSURER_APP_ID
+    api_key_env: INSURER_API_KEY
+    endpoint_env: INSURER_API_URL
+    timeout_seconds: 8
+
+  - source_type: ERP_DATA
+    name: 核心企业 ERP 数据接口
+    base_url: https://erp.core-enterprise.com/api
+    sandbox_url: https://sandbox.erp.core-enterprise.com/api
+    app_id_env: ERP_DATA_APP_ID
+    api_key_env: ERP_DATA_API_KEY
+    endpoint_env: ERP_DATA_API_URL
+    timeout_seconds: 10
+
+# 是否优先使用沙箱地址 (调试用, 生产置 false)
+use_sandbox: false

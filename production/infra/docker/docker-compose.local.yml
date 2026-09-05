@@ -1,0 +1,71 @@
+# 文件名：docker-compose.local.yml 职责：本地基础设施编排,启动 Redis 与 ClickHouse 容器并配置数据卷
+# 用法:
+#   cd production/infra/docker
+#   docker compose -f docker-compose.local.yml up -d
+#   docker compose -f docker-compose.local.yml ps
+#   docker compose -f docker-compose.local.yml logs -f redis clickhouse
+#   docker compose -f docker-compose.local.yml down   # 停止 (保留数据卷)
+#   docker compose -f docker-compose.local.yml down -v  # 停止并清空数据
+#
+# 设计依据: spec.md L3503 PostgreSQL + Redis + ClickHouse + Neo4j
+# 降级原则 (project_memory): 后端通过 redis_client.py / clickhouse_client.py 懒加载,
+#   本服务未启动时仅 warning 不阻断应用启动.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: fintrust-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    # 本地开发默认无密码; 生产请在 .env 设置 REDIS_PASSWORD
+    # command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-}"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fintrust-local
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8-alpine
+    container_name: fintrust-clickhouse
+    restart: unless-stopped
+    ports:
+      - "8123:8123"   # HTTP 接口 (clickhouse_connect 使用)
+      - "9000:9000"   # 原生 TCP 接口
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fintrust-local
+
+volumes:
+  redis-data:
+    name: fintrust-redis-data
+  clickhouse-data:
+    name: fintrust-clickhouse-data
+  clickhouse-logs:
+    name: fintrust-clickhouse-logs
+
+networks:
+  fintrust-local:
+    name: fintrust-local
+    driver: bridge

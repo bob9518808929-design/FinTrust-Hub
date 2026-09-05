@@ -1,0 +1,62 @@
+{{/* 文件名：pvc.yaml 职责：PostgreSQL 与 Redis 持久化卷声明 Helm 模板,分别申请 50Gi/10Gi 存储
+*/}}
+{{- if .Values.postgresql.enabled -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-postgres-data
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "postgres-pvc") | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce  # 单节点读写 (PG 主备场景需要 RWO)
+  {{- with .Values.postgresql.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.persistence.size | default "50Gi" | quote }}
+{{- end }}
+
+{{- if .Values.redis.enabled -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-redis-data
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "redis-pvc") | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.redis.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size | default "10Gi" | quote }}
+{{- end }}
+
+{{/* AI 模型权重缓存卷 (R4.2, 避免每次启动重新下载 Qwen-7B ~15GB) */}}
+{{- if .Values.aiEngine.enabled -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-ai-model
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "ai-model-pvc") | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany  # 多 Pod 共享模型缓存 (GPU 节点可能多副本)
+  {{- with .Values.global.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: "50Gi"
+{{- end }}

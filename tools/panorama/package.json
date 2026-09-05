@@ -1,0 +1,22 @@
+{
+  "name": "finttrust-panorama",
+  "version": "1.0.0",
+  "description": "FinTrust Hub 全景导航工具 - 双产出（HTML + AGENT_CONTEXT.md）",
+  "private": true,
+  "scripts": {
+    "panorama:quick": "python collect.py --quick",
+    "panorama:incremental": "python collect.py --incremental",
+    "panorama:full": "python collect.py --full",
+    "panorama:text": "python collect.py --text",
+    "panorama:watch": "node scripts/watch.js"
+  },
+  "engines": {
+    "python": ">=3.10"
+  },
+  "panoramaConfig": {
+    "autoRefreshOnDev": true,
+    "integrateWithCursorRules": true,
+    "dashboardOutput": "panorama_dashboard.html",
+    "agentContextOutput": "data/AGENT_CONTEXT.md"
+  }
+}

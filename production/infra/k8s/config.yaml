@@ -1,0 +1,32 @@
+# ConfigMap + Secrets 模板
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: fintrust
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_HOST: "0.0.0.0"
+  APP_PORT: "8000"
+  DATABASE_URL: postgresql+asyncpg://fintrust:$(POSTGRES_PASSWORD)@postgres:5432/fintrust_hub
+  REDIS_URL: redis://redis:6379/0
+  CLICKHOUSE_HOST: clickhouse
+  CLICKHOUSE_DATABASE: fintrust_metrics
+  NEO4J_URI: bolt://neo4j:7687
+  CORS_ORIGINS: https://fintrust.example.com
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secrets
+  namespace: fintrust
+type: Opaque
+stringData:
+  postgres-user: fintrust
+  postgres-password: CHANGE_ME_IN_PRODUCTION
+  redis-password: ""
+  clickhouse-password: fintrust
+  neo4j-password: fintrust
+  jwt-secret: CHANGE_ME_IN_PRODUCTION
+  deepseek-api-key: ""

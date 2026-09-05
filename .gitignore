@@ -1,0 +1,25 @@
+# ===== FinTrust Hub 根 .gitignore =====
+# 子目录另有细化: production/backend/.gitignore (.env/.venv/缓存/ECO-01 密封存储)
+#                 production/frontend/.gitignore (node_modules/dist/env)
+#                 tools/panorama/.gitignore (采集缓存与生成数据, dashboard 自包含不入库)
+
+# OS 杂物
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 密钥兜底 (双保险, 已确认仓库内无此类文件)
+*.pem
+*.key
+*.p12
+
+# Python 根级缓存 (backend 由子 .gitignore 覆盖)
+__pycache__/
+*.pyc
+
+# 日志
+*.log
+
+# Git 冲突残留
+*.orig
+*.rej

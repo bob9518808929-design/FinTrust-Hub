@@ -1,0 +1,98 @@
+# 文件名：mqtt_config.yaml 职责：EMQX MQTT 5.0 配置,定义监听端口、用户认证、ACL 权限与遗嘱消息
+#
+# 标准覆盖范围:
+#   - 认证 (内置用户名/密码, 真实环境可对接 OAuth2 / LDAP)
+#   - ACL (按 topic 限定 publish / subscribe 权限)
+#   - Topic 命名规范 (设备分级, 遗嘱消息 LWT)
+#   - MQTT 5.0 特性 (Session, QoS, Retain, Will Message)
+
+# === MQTT 监听 ===
+listeners:
+  tcp:
+    external:
+      bind: "0.0.0.0:1883"
+      max_connections: 100000
+  ssl:
+    external:
+      bind: "0.0.0.0:8883"
+      ssl_options:
+        keyfile: "/opt/emqx/etc/certs/server.key"
+        certfile: "/opt/emqx/etc/certs/server.crt"
+        cacertfile: "/opt/emqx/etc/certs/ca.crt"
+  ws:
+    external:
+      bind: "0.0.0.0:8083"
+  wss:
+    external:
+      bind: "0.0.0.0:8084"
+
+# === 认证 (用户名/密码 内置, 真实环境接 JWT/OAuth2) ===
+authentication:
+  - mechanism: password_based
+    backend: built_in_database
+    user_id_type: username
+    password_hash_algorithm:
+      name: sha256
+      salt_position: suffix
+    # 种子用户 (docker 启动后可通过 Dashboard / API 添加更多)
+    # 注意: 真实部署不要在配置文件硬编码密码, 仅作示例
+    bootstrap_file: "/opt/emqx/etc/users.conf"
+
+# === 授权 (ACL) ===
+authorization:
+  no_match: deny  # 默认拒绝, 仅放行显式 ACL
+  sources:
+    - type: file
+      path: "/opt/emqx/etc/acl.conf"
+    - type: built_in_database
+
+# === Topic 命名规范 ===
+# 设备分级 (FinTrust IoT 命名空间):
+#   fintrust/<enterprise_id>/<device_id>/telemetry      上行遥测
+#   fintrust/<enterprise_id>/<device_id>/command         下行命令
+#   fintrust/<enterprise_id>/<device_id>/event           上行事件/告警
+#   fintrust/<enterprise_id>/<device_id>/status         上下线状态
+#   fintrust/<enterprise_id>/broadcast                  企业级广播
+#
+# 通配符: fintrust/+/+/telemetry  订阅所有遥测
+topic_matching: wildcard
+
+# === 遗嘱消息 (LWT) ===
+# 设备异常断开时, broker 自动发布 LWT 通知
+will_message:
+  enabled: true
+  topic: "fintrust/{enterprise_id}/{device_id}/status"
+  qos: 1
+  retain: true
+  payload: '{"status":"offline","reason":"will_message","timestamp":null}'
+
+# === MQTT 5.0 会话特性 ===
+session:
+  max_expiry_seconds: 86400  # 24h
+  message_retry_interval: 20s
+
+# === QoS 与 Retain ===
+mqtt:
+  max_packet_size: 1MB
+  max_qos: 2
+  max_topic_levels: 10
+  max_clientid_len: 64
+  retain_available: true
+  wildcard_subscription: true
+  shared_subscription: true
+
+# === 限流 ===
+flapping_detect:
+  threshold: 30
+  window_time: 5s
+  banned_duration: 300s
+
+# === 资源限制 ===
+zone:
+  external:
+    mqtt:
+      max_packet_size: 1MB
+      max_qos: 2
+      max_topic_alias: 10
+    force_shutdown:
+      max_heap_size: "256MB"

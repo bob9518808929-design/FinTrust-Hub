@@ -1,0 +1,96 @@
+# 文件名：promtail-config.yml 职责：Promtail 采集规则,监听 backend loguru JSON 日志并解析推送至 Loki
+#
+# loguru serialize=True 输出格式 (单行 JSON):
+#   {"text":"...","record":{"time":{"repr":"...","elapsed":...},
+#     "level":{"name":"INFO","..."}, "name":"app.services.llm_service",
+#     "line":161, "message":"LLM 限流触发 (req=..., ent=...)"...}}
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # === 1. Docker Compose 部署: 采集 backend 容器 stdout ===
+  - job_name: fintrust-backend-docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: ["fintrust-backend"]
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        target_label: container
+      - target_label: service
+        replacement: backend
+      - target_label: env
+        replacement: production
+    pipeline_stages:
+      # loguru serialize=True 行是 JSON, 解析 record 子对象
+      - json:
+          expressions:
+            level: record.level.name
+            logger: record.name
+            line: record.line
+            message: record.message
+            ts: record.time.repr
+      - labels:
+          level:
+          logger:
+          line:
+      - timestamp:
+          source: ts
+          format: RFC3339Nano
+
+  # === 2. K8s 部署: 采集 backend Pod stdout (推荐用 Helm loki-stack) ===
+  - job_name: fintrust-backend-k8s
+    kubernetes_sd_configs:
+      - role: pod
+        selectors:
+          - role: pod
+            label: app=backend
+            namespace: fintrust
+    relabel_configs:
+      - source_labels: ['__meta_kubernetes_pod_name']
+        target_label: pod
+      - source_labels: ['__meta_kubernetes_namespace']
+        target_label: namespace
+      - target_label: service
+        replacement: backend
+    pipeline_stages:
+      - json:
+          expressions:
+            level: record.level.name
+            logger: record.name
+            line: record.line
+            message: record.message
+      - labels:
+          level:
+          logger:
+          line:
+
+  # === 3. 物理文件采集 (本地开发 / 非 Docker 部署) ===
+  - job_name: fintrust-backend-file
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: fintrust-backend
+          host: localhost
+          __path__: /var/log/fintrust/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: record.level.name
+            logger: record.name
+            line: record.line
+            message: record.message
+      - labels:
+          level:
+          logger:
+          line:

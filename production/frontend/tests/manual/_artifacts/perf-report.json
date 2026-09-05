@@ -1,0 +1,4407 @@
+[
+  {
+    "page": "PC-home",
+    "totalLoad": 1783,
+    "requests": [
+      {
+        "url": "/",
+        "method": "GET",
+        "type": "document",
+        "status": 200,
+        "timeMs": 329
+      },
+      {
+        "url": "/@vite/client",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 24
+      },
+      {
+        "url": "/src/main.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_locale_lang_zh-cn.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/dist/index.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/@element-plus_icons-vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 82
+      },
+      {
+        "url": "/@vite-plugin-pwa/virtual:pwa-register",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/src/App.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/router/index.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/src/styles/main.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/stores/alertStore.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 48
+      },
+      {
+        "url": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ZC4IWGWV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 55
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KE5LXLFG.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-YFT6OQ5R.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-5YY4JTYS.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 184
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KJAL47MX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 65
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-AUS75BQE.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 73
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-2ZEMH6L7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 110
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 58
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_base_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 60
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_config-provider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 59
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-router.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 66
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 75
+      },
+      {
+        "url": "/src/layouts/MobileLayout.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 77
+      },
+      {
+        "url": "/src/stores/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 78
+      },
+      {
+        "url": "/src/stores/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 79
+      },
+      {
+        "url": "/src/composables/useCoachMark.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 84
+      },
+      {
+        "url": "/src/App.vue?vue&type=style&index=0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 83
+      },
+      {
+        "url": "/@id/__x00__plugin-vue:export-helper",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 85
+      },
+      {
+        "url": "/src/router/mobile.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 85
+      },
+      {
+        "url": "/src/composables/useDevice.ts?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 87
+      },
+      {
+        "url": "/src/composables/useWorkerAuth.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 88
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-33MNMCMW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-config-provider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_sub-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_icon_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?vue&type=style&index=0&scoped=0355add9&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_avatar_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tooltip_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_badge_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_select_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_option_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue?vue&type=style&index=0&scoped=a04def32&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue?vue&type=style&index=0&scoped=be4426bb&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 53
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue?vue&type=style&index=0&scoped=772024c0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tag_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue?vue&type=style&index=0&scoped=44ba2600&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/src/api/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/src/api/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/.vite/deps/@vueuse_core.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 53
+      },
+      {
+        "url": "/src/api/client.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 47
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/base.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-B2IDKKNV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 48
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-DY3WZHNJ.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-sub-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 50
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3G4IJ6Z4.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 48
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-VJNN2YAF.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 48
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3IRQ3CWX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 50
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 46
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-avatar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 50
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-badge.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 46
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3NTXP6HY.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ACGPJJ3P.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-select.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/node_modules/.vite/deps/axios.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tooltip.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-popper.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-scrollbar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tag.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "http://localhost:8000/api/v1/enterprises",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 323
+      },
+      {
+        "url": "/src/views/HomeView.vue?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_table_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_table-column_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_empty_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_progress_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_divider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_row_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_col_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_card_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/src/views/HomeView.vue?vue&type=style&index=0&scoped=b4e148ca&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-L3ILB55Q.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-table.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-table-column.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-empty.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-NBXA62NW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 4
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-divider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 4
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-row.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 2
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-col.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-card.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-checkbox.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-progress.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 2
+      },
+      {
+        "url": "http://localhost:8000/api/v1/reform/E001/state",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 8
+      }
+    ]
+  },
+  {
+    "page": "PC-bank",
+    "totalLoad": 1844,
+    "requests": [
+      {
+        "url": "/bank",
+        "method": "GET",
+        "type": "document",
+        "status": 200,
+        "timeMs": 319
+      },
+      {
+        "url": "/@vite/client",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/src/main.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_locale_lang_zh-cn.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/dist/index.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/@element-plus_icons-vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 73
+      },
+      {
+        "url": "/@vite-plugin-pwa/virtual:pwa-register",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/src/App.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/src/router/index.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/src/styles/main.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/stores/alertStore.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ZC4IWGWV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 55
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KE5LXLFG.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-YFT6OQ5R.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-5YY4JTYS.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 166
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KJAL47MX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 65
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-AUS75BQE.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 71
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-2ZEMH6L7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 124
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_base_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_config-provider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-router.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 59
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 58
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 60
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 66
+      },
+      {
+        "url": "/src/layouts/MobileLayout.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 65
+      },
+      {
+        "url": "/src/stores/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 66
+      },
+      {
+        "url": "/src/stores/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 69
+      },
+      {
+        "url": "/src/composables/useCoachMark.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 72
+      },
+      {
+        "url": "/src/App.vue?vue&type=style&index=0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/@id/__x00__plugin-vue:export-helper",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 71
+      },
+      {
+        "url": "/src/router/mobile.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 73
+      },
+      {
+        "url": "/src/composables/useDevice.ts?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/src/composables/useWorkerAuth.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 75
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-33MNMCMW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-config-provider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_sub-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_icon_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?vue&type=style&index=0&scoped=0355add9&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_avatar_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tooltip_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_badge_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_select_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_option_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 42
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue?vue&type=style&index=0&scoped=a04def32&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue?vue&type=style&index=0&scoped=be4426bb&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 45
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue?vue&type=style&index=0&scoped=772024c0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 46
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tag_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue?vue&type=style&index=0&scoped=44ba2600&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/api/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/src/api/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/.vite/deps/@vueuse_core.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/src/api/client.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/base.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-B2IDKKNV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-DY3WZHNJ.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-sub-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3G4IJ6Z4.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-VJNN2YAF.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3IRQ3CWX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-avatar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 38
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-badge.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3NTXP6HY.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ACGPJJ3P.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-select.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/node_modules/.vite/deps/axios.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tooltip.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-popper.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-scrollbar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 4
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tag.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "http://localhost:8000/api/v1/enterprises",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 329
+      },
+      {
+        "url": "/src/views/bank/BankWorkbenchView.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_descriptions_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_descriptions-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_input-number_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_alert_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dialog_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_form_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_radio-group_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_radio-button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_form-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_switch_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_slider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_row_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_col_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_empty_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_input_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_card_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_progress_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/src/stores/bank.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/src/views/bank/BankWorkbenchView.vue?vue&type=style&index=0&scoped=f7dd772f&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-CIDCB3H7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-descriptions.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-K7VNTWFL.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-BRRZCCMX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-alert.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-form.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-radio.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-radio-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-HNUV6DMC.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dialog.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-switch.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-radio-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-col.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-empty.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-row.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-slider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-NBXA62NW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-card.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-descriptions-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-input-number.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-form-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-input.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/src/api/bank.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-overlay.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-progress.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": "PENDING"
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 148
+      },
+      {
+        "url": "http://localhost:8000/api/v1/reform/E001/state",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank/BANK-SDB/trust-profile",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank/BANK-SDB/risk-letters",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 62
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank/BANK-SDB/decisions",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 113
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank/BANK-SDB/statistics",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 112
+      },
+      {
+        "url": "http://localhost:8000/api/v1/bank/BANK-SDB/supervision-accounts",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 112
+      }
+    ]
+  },
+  {
+    "page": "PC-approval",
+    "totalLoad": 1768,
+    "requests": [
+      {
+        "url": "/approval",
+        "method": "GET",
+        "type": "document",
+        "status": 200,
+        "timeMs": 321
+      },
+      {
+        "url": "/@vite/client",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/src/main.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 19
+      },
+      {
+        "url": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_locale_lang_zh-cn.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "/node_modules/element-plus/dist/index.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/@element-plus_icons-vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 95
+      },
+      {
+        "url": "/@vite-plugin-pwa/virtual:pwa-register",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/App.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/src/router/index.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/src/styles/main.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 48
+      },
+      {
+        "url": "/src/stores/alertStore.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 45
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ZC4IWGWV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 51
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KE5LXLFG.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-YFT6OQ5R.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 42
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-5YY4JTYS.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 161
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KJAL47MX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 60
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-AUS75BQE.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-2ZEMH6L7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 113
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 58
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_base_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 58
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_config-provider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 59
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-router.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 68
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 79
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 81
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 82
+      },
+      {
+        "url": "/src/layouts/MobileLayout.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 82
+      },
+      {
+        "url": "/src/stores/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 83
+      },
+      {
+        "url": "/src/stores/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 84
+      },
+      {
+        "url": "/src/composables/useCoachMark.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 87
+      },
+      {
+        "url": "/src/App.vue?vue&type=style&index=0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 86
+      },
+      {
+        "url": "/@id/__x00__plugin-vue:export-helper",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 88
+      },
+      {
+        "url": "/src/router/mobile.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 91
+      },
+      {
+        "url": "/src/composables/useDevice.ts?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 91
+      },
+      {
+        "url": "/src/composables/useWorkerAuth.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 91
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-33MNMCMW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-config-provider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_sub-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_icon_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?vue&type=style&index=0&scoped=0355add9&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_avatar_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tooltip_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_badge_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_select_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_option_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue?vue&type=style&index=0&scoped=a04def32&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue?vue&type=style&index=0&scoped=be4426bb&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue?vue&type=style&index=0&scoped=772024c0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tag_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue?vue&type=style&index=0&scoped=44ba2600&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/src/api/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/api/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/@vueuse_core.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 42
+      },
+      {
+        "url": "/src/api/client.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/base.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-B2IDKKNV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-DY3WZHNJ.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-sub-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3G4IJ6Z4.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-VJNN2YAF.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3IRQ3CWX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-avatar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-badge.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3NTXP6HY.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ACGPJJ3P.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-select.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/axios.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tooltip.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 20
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-popper.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 20
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-scrollbar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tag.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "http://localhost:8000/api/v1/enterprises",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 324
+      },
+      {
+        "url": "/src/views/approval/ApprovalWorkbenchView.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dialog_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_table_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_table-column_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_card_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_collapse_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_collapse-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_descriptions_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_descriptions-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_empty_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_alert_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/src/views/approval/ApprovalWorkbenchView.vue?vue&type=style&index=0&scoped=39a978b8&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-HNUV6DMC.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dialog.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-L3ILB55Q.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 3
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-table-column.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-card.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-collapse.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-collapse-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-CIDCB3H7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-descriptions.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-table.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-alert.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-empty.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-overlay.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-checkbox.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-descriptions-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": "PENDING"
+      },
+      {
+        "url": "http://localhost:8000/api/v1/approvals",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 270
+      },
+      {
+        "url": "http://localhost:8000/api/v1/reform/E001/state",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 36
+      }
+    ]
+  },
+  {
+    "page": "M-login",
+    "totalLoad": 1730,
+    "requests": [
+      {
+        "url": "/m/login",
+        "method": "GET",
+        "type": "document",
+        "status": 200,
+        "timeMs": 322
+      },
+      {
+        "url": "/@vite/client",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/src/main.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_locale_lang_zh-cn.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/node_modules/element-plus/dist/index.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/.vite/deps/@element-plus_icons-vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 88
+      },
+      {
+        "url": "/@vite-plugin-pwa/virtual:pwa-register",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/src/App.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/src/router/index.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/src/styles/main.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/src/stores/alertStore.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ZC4IWGWV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 54
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 42
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KE5LXLFG.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-YFT6OQ5R.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-5YY4JTYS.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 167
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KJAL47MX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 68
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-AUS75BQE.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 81
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-2ZEMH6L7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 129
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 65
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_base_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 63
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_config-provider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-router.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 72
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 72
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 78
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 78
+      },
+      {
+        "url": "/src/layouts/MobileLayout.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 78
+      },
+      {
+        "url": "/src/stores/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 79
+      },
+      {
+        "url": "/src/stores/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 80
+      },
+      {
+        "url": "/src/composables/useCoachMark.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 91
+      },
+      {
+        "url": "/src/App.vue?vue&type=style&index=0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 88
+      },
+      {
+        "url": "/@id/__x00__plugin-vue:export-helper",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 88
+      },
+      {
+        "url": "/src/router/mobile.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 84
+      },
+      {
+        "url": "/src/composables/useDevice.ts?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 87
+      },
+      {
+        "url": "/src/composables/useWorkerAuth.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 87
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-33MNMCMW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-config-provider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 21
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_sub-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_icon_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?vue&type=style&index=0&scoped=0355add9&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_avatar_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tooltip_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_badge_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_select_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_option_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue?vue&type=style&index=0&scoped=a04def32&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue?vue&type=style&index=0&scoped=be4426bb&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue?vue&type=style&index=0&scoped=772024c0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 34
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tag_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue?vue&type=style&index=0&scoped=44ba2600&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/api/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/src/api/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/.vite/deps/@vueuse_core.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/src/api/client.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/base.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-B2IDKKNV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-DY3WZHNJ.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-sub-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3G4IJ6Z4.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-VJNN2YAF.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3IRQ3CWX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-avatar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-badge.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3NTXP6HY.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ACGPJJ3P.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-select.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/axios.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 25
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tooltip.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-popper.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 20
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 17
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-scrollbar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tag.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "http://localhost:8000/api/v1/enterprises",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 333
+      },
+      {
+        "url": "/src/views/mobile/LoginView.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_input_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/src/components/common/ScanInput.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "/src/composables/useSpeech.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/src/views/mobile/LoginView.vue?vue&type=style&index=0&scoped=ad8e8bce&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-BRRZCCMX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 1
+      },
+      {
+        "url": "/src/components/common/ScanInput.vue?vue&type=style&index=0&scoped=2b394479&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 1
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-input.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 1
+      },
+      {
+        "url": "http://localhost:8000/api/v1/reform/E001/state",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 12
+      }
+    ]
+  },
+  {
+    "page": "M-scan",
+    "totalLoad": 1697,
+    "requests": [
+      {
+        "url": "/m/scan",
+        "method": "GET",
+        "type": "document",
+        "status": 200,
+        "timeMs": 310
+      },
+      {
+        "url": "/@vite/client",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/src/main.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 12
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 4
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 4
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 8
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_locale_lang_zh-cn.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/node_modules/element-plus/dist/index.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/.vite/deps/@element-plus_icons-vue.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 13
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 14
+      },
+      {
+        "url": "/node_modules/.vite/deps/echarts.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/@vite-plugin-pwa/virtual:pwa-register",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/src/App.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/src/router/index.ts?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/src/styles/main.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 45
+      },
+      {
+        "url": "/src/stores/alertStore.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/vite/dist/client/env.mjs",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ZC4IWGWV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 56
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 46
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KE5LXLFG.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 43
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-YFT6OQ5R.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 44
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-5YY4JTYS.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 158
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-KJAL47MX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 66
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-AUS75BQE.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 73
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-2ZEMH6L7.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 120
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_base_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_config-provider_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 52
+      },
+      {
+        "url": "/node_modules/.vite/deps/vue-router.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 63
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?t=1787725966597",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 60
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 60
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 63
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 64
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 67
+      },
+      {
+        "url": "/src/layouts/MobileLayout.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 68
+      },
+      {
+        "url": "/src/stores/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 69
+      },
+      {
+        "url": "/src/stores/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 70
+      },
+      {
+        "url": "/src/composables/useCoachMark.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 75
+      },
+      {
+        "url": "/src/App.vue?vue&type=style&index=0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/@id/__x00__plugin-vue:export-helper",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 74
+      },
+      {
+        "url": "/src/router/mobile.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 75
+      },
+      {
+        "url": "/src/composables/useDevice.ts?t=1787709122133",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 76
+      },
+      {
+        "url": "/src/composables/useWorkerAuth.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 77
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-33MNMCMW.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-config-provider.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 22
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_sub-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 23
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_menu-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_icon_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/src/components/layout/AppSidebar.vue?vue&type=style&index=0&scoped=0355add9&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-menu_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_dropdown-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_avatar_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tooltip_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_button_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_badge_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_select_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_option_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 40
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_breadcrumb-item_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/src/components/layout/AppHeader.vue?vue&type=style&index=0&scoped=a04def32&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/src/components/layout/AppBreadcrumb.vue?vue&type=style&index=0&scoped=be4426bb&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 41
+      },
+      {
+        "url": "/src/components/layout/AppFooter.vue?vue&type=style&index=0&scoped=772024c0&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 39
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_tag_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/src/components/common/CoachMark.vue?vue&type=style&index=0&scoped=44ba2600&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/src/api/enterprise.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/src/api/reform.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 37
+      },
+      {
+        "url": "/node_modules/.vite/deps/@vueuse_core.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 49
+      },
+      {
+        "url": "/src/api/client.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/base.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-B2IDKKNV.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-DY3WZHNJ.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-sub-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 31
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-menu-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3G4IJ6Z4.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 29
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-VJNN2YAF.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3IRQ3CWX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 30
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 35
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-menu.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 36
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-dropdown-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 33
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-avatar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 32
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-badge.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-3NTXP6HY.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-ACGPJJ3P.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 26
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-select.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 28
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-breadcrumb-item.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 27
+      },
+      {
+        "url": "/node_modules/.vite/deps/axios.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 24
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tooltip.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 18
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-popper.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 19
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button-group.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-scrollbar.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 15
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-button.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 16
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-option.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-tag.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 7
+      },
+      {
+        "url": "http://localhost:8000/api/v1/enterprises",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 320
+      },
+      {
+        "url": "/src/views/mobile/ScanConfirmView.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/src/components/common/ScanInput.vue",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 5
+      },
+      {
+        "url": "/src/composables/useSpeech.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/src/composables/usePendingSync.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 9
+      },
+      {
+        "url": "/src/utils/imageCompress.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/src/utils/indexedDbQueue.ts",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/src/views/mobile/ScanConfirmView.vue?vue&type=style&index=0&lang.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 10
+      },
+      {
+        "url": "/src/views/mobile/ScanConfirmView.vue?vue&type=style&index=1&scoped=b0bac60b&lang.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 11
+      },
+      {
+        "url": "/node_modules/.vite/deps/element-plus_es_components_input_style_css.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/src/components/common/ScanInput.vue?vue&type=style&index=0&scoped=2b394479&lang.scss",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 6
+      },
+      {
+        "url": "/node_modules/.vite/deps/chunk-BRRZCCMX.js?v=44421048",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 1
+      },
+      {
+        "url": "/node_modules/element-plus/theme-chalk/el-input.css",
+        "method": "GET",
+        "type": "script",
+        "status": 200,
+        "timeMs": 1
+      },
+      {
+        "url": "http://localhost:8000/api/v1/reform/E001/state",
+        "method": "GET",
+        "type": "xhr",
+        "status": 200,
+        "timeMs": 6
+      }
+    ]
+  }
+]

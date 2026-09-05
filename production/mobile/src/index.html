@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>FinTrust Hub 移动端</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #0f172a; }
+    #app { min-height: 100vh; }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #9ca3af;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading">FinTrust Hub 移动端加载中...</div>
+  </div>
+  <script src="<%= htmlWebpackPlugin.options.script %>"></script>
+</body>
+</html>

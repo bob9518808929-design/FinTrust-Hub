@@ -1,0 +1,172 @@
+/* src/pages/scan/index.scss — 移动端扫码页样式 */
+
+.scan-page {
+  min-height: 100vh;
+  background: $bg-page;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.section-label {
+  display: block;
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: $spacing-base;
+}
+
+/* === 业务类型 pill === */
+.biz-section {
+  background: $bg-card;
+  padding: $spacing-lg;
+  border-radius: $radius-xl;
+}
+
+.biz-pills {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.biz-pill {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-base;
+  background: $bg-tertiary;
+  border-radius: $radius-lg;
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+
+  .pill-icon {
+    font-size: $font-size-lg;
+  }
+  .pill-text {
+    font-size: $font-size-base;
+    color: $text-regular;
+  }
+
+  &.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: $color-primary;
+    .pill-text {
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+}
+
+/* === 大号扫码按钮 === */
+.scan-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-xl $spacing-lg;
+  background: $color-primary;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-base;
+
+  .scan-icon {
+    font-size: 80rpx;
+  }
+  .scan-text {
+    font-size: $font-size-lg;
+    color: white;
+    font-weight: 600;
+  }
+
+  &.is-loading {
+    opacity: 0.7;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* === 输入区 === */
+.input-section {
+  background: $bg-card;
+  padding: $spacing-lg;
+  border-radius: $radius-xl;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $bg-tertiary;
+  border-radius: $radius-lg;
+  padding: $spacing-base;
+
+  .scan-input {
+    flex: 1;
+    color: $text-primary;
+    font-size: $font-size-base;
+  }
+
+  .clear-btn {
+    color: $text-secondary;
+    font-size: $font-size-xl;
+    padding: $spacing-xs $spacing-sm;
+  }
+}
+
+/* === 提交按钮 === */
+.submit-button {
+  background: $color-success;
+  padding: $spacing-base $spacing-lg;
+  border-radius: $radius-lg;
+  text-align: center;
+  Text {
+    color: white;
+    font-size: $font-size-lg;
+    font-weight: 600;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* === 历史区 === */
+.history-section {
+  background: $bg-card;
+  padding: $spacing-lg;
+  border-radius: $radius-xl;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.history-item {
+  padding: $spacing-base;
+  background: $bg-tertiary;
+  border-radius: $radius-base;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  .history-text {
+    color: $text-primary;
+    font-size: $font-size-base;
+    word-break: break-all;
+  }
+
+  .history-meta {
+    color: $text-secondary;
+    font-size: $font-size-xs;
+  }
+}

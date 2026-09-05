@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="deepspace-ai" style="color-scheme: dark;">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="FinTrust Hub v3.1 · Deepspace AI 深空科技枢纽 — 企业改造与融资撮合信任中心" />
+    <meta name="theme-color" content="#050b1c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#050b1c" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark only" />
+    <link rel="manifest" href="/manifest.json?v=23" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FinTrust AI" />
+    <meta property="og:title" content="FinTrust Hub v3.1 — Deepspace AI" />
+    <meta property="og:description" content="企业改造与融资撮合信任枢纽 · 深空科技风" />
+    <meta property="og:type" content="website" />
+
+    <!-- 首屏 FOUC 防白屏: 在 Vite 加载 main.scss 前先把背景染成深空 -->
+    <style>
+      html, body {
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.16), transparent 60%),
+          radial-gradient(1000px 520px at 110% 10%, rgba(192, 132, 252, 0.18), transparent 55%),
+          linear-gradient(180deg, #030712 0%, #050b1c 100%);
+        background-attachment: fixed;
+        color: #e2e8f0;
+      }
+    </style>
+
+    <!-- 字体策略: 移除 Google Fonts CDN (国内访问 3.3s 阻塞首屏), 降级到 reset.scss 的系统字体栈 -->
+    <!-- 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, Arial, sans-serif -->
+    <!-- 如需 Inter 字体, 可后续下载到 public/fonts/inter.woff2 用 @font-face 本地加载 -->
+
+    <title>FinTrust Hub v3.1 · Deepspace AI 深空科技枢纽</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

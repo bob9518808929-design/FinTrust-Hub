@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinTrust Hub 交互式模拟系统 v6.0 企业改造+融资匹配+供应链金融平台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <link rel="stylesheet" href="css/style.css?v=44">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+  <!-- 顶部导航栏 -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <span class="logo">FinTrust Hub</span>
+      <span class="subtitle">v6.0 企业改造 + 融资匹配 + 供应链金融一体化平台</span>
+    </div>
+    <div class="top-bar-center">
+      <div class="enterprise-selector">
+        <label>企业:</label>
+        <select id="enterprise-select" title="切换当前操作企业 → 全局状态更新(信用/融资/责任链/政策)"></select>
+      </div>
+      <div id="scene-selector-container"></div>
+      <div class="date-control">
+        <label>时间:</label>
+        <span id="system-date" title="当前系统日期"></span>
+        <button id="date-forward" class="mini-btn" title="时间+1天 → 推进业务日期 → 季节性窗口可能切换(季末/年末/日常)">+1天</button>
+        <button id="date-autoplay" class="mini-btn" title="自动推进时间(每2秒+1天) → 模拟时间流逝 → 观察季节性政策变化">▶自动</button>
+      </div>
+      <div class="seasonal-badge" id="seasonal-badge" title="当前季节性窗口: 影响银行利率调整和审批速度"></div>
+      <div class="policy-control">
+        <label>政策:</label>
+        <select id="policy-select" class="mini-select" title="切换行业政策: 鼓励类(利率-0.5%/额度+10%) / 限制类(利率+1%/额度-20%) / 中性"></select>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <button id="btn-fund-flight" class="alert-btn" title="模拟企业资金被抽逃→触发水位红牌预警→银行端收到告警→AI驾驶舱记录">模拟资金抽逃</button>
+      <button id="btn-iot-disconnect" class="alert-btn" style="background:#ff9800" title="模拟IoT设备断线→五流降级四流→确权等级上限从A降为B">模拟IoT断线</button>
+    </div>
+  </header>
+
+  <!-- Tab 导航 (v5.0 新增 Tab0 企业改造工作台 为默认首页; 原 Tab1-10 顺延为 Tab1-10, 原 Tab8 fallback 为 Tab9) -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="reform" title="Tab0: 企业改造工作台 · 8维画像 → R2差距诊断 → R3三路径方案 → R4 DAG调度 → R5一键执行 → R9银行匹配 (v5.0 新增, 首页)">🚀 Tab0 企业改造工作台</button>
+    <button class="tab-btn" data-tab="enterprise" title="Tab1: 配置企业数据流/模块/自主度/责任链 → 查看信用完整度和融资能力">🏭 Tab1 企业端工作台</button>
+    <button class="tab-btn" data-tab="flow" title="Tab2: 发起融资 → AI逐步执行(风险分析→路由→六流验证→银行竞标) → L1-L4自主度路由">🏦 Tab2 融资流程模拟器</button>
+    <button class="tab-btn" data-tab="approval" title="Tab3: L3/L4人工审批工作台 → 查看AI建议和置信度 → 同意/否决决策">✅ Tab3 人工审批台</button>
+    <button class="tab-btn" data-tab="bank" title="Tab4: 银行端信用画像 → 贷后监管(水位/回款) → 预警列表 → 数据脱敏对比 → 责任合规报告">🏛 Tab4 银行端工作台</button>
+    <button class="tab-btn" data-tab="institution" title="Tab5: 担保申请/保前审查/反担保 + 投保/核保/保单/理赔 → 利率优惠联动">🛡 Tab5 担保与保险协作台</button>
+    <button class="tab-btn" data-tab="advisor" title="Tab6: 全局仪表盘 → 撮合工作台 → 客户管理 → 佣金结算">👔 Tab6 财务顾问运营台</button>
+    <button class="tab-btn" data-tab="cockpit" title="Tab7: AI操作全景 → L1-L4分布 → 决策链路回溯(含置信度) → 假设分析 → 异常告警">🎛 Tab7 AI驾驶舱</button>
+    <button class="tab-btn" data-tab="fallback" title="Tab8: 独立兜底引擎控制台 → 15 外部 API + B1-B12 自研矩阵 + C1-C7 兜底 + 兜底降级链 + 独立运行模式 + 三档投入仪表盘">🔧 Tab8 独立兜底引擎控制台</button>
+    <button class="tab-btn" data-tab="regulatory" title="Tab9: 监管沙盒 → 脱敏式穿透报告 → 全链路审计追踪(含区块链存证) → 合规检查">⚖ Tab9 监管沙盒</button>
+    <button class="tab-btn" data-tab="partner" title="Tab10: 关联机构门户 → 物流(运单确认) / 评估 / 律所 / 会计 → AI委派任务 → 报告回传">🤝 Tab10 关联机构门户</button>
+    <button class="tab-btn" data-tab="scf" title="Tab11: 供应链金融工作台 · SC1-SC10 引擎族 · 13维画像 · 关系图谱 · 黑白名单 · 5类SCF产品 · 独立业务闭环 (v6.0 新增)">🚛 Tab11 供应链金融工作台</button>
+    <button class="tab-guide-btn" id="tab-guide-btn" title="展开/收起当前页操作指引 (用途·上游·操作流程·触发条件·下游影响)">📖 操作指引</button>
+  </nav>
+
+  <!-- 全局告警横幅 (边缘案例/资金冻结/IoT断线/独立运行模式等异常,所有Tab顶部可见) -->
+  <div id="global-alert-banner" class="global-alert-banner"></div>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <div id="view-reform" class="view-container active"></div>
+    <div id="view-enterprise" class="view-container"></div>
+    <div id="view-flow" class="view-container"></div>
+    <div id="view-approval" class="view-container"></div>
+    <div id="view-bank" class="view-container"></div>
+    <div id="view-institution" class="view-container"></div>
+    <div id="view-advisor" class="view-container"></div>
+    <div id="view-cockpit" class="view-container"></div>
+    <div id="view-fallback" class="view-container"></div>
+    <div id="view-regulatory" class="view-container"></div>
+    <div id="view-partner" class="view-container"></div>
+    <div id="view-scf" class="view-container"></div>
+  </main>
+
+  <!-- 联动日志面板 -->
+  <footer class="log-panel" id="log-panel">
+    <div id="log-panel-header"></div>
+    <div id="log-panel-body" class="log-panel-body"></div>
+  </footer>
+
+  <!-- 浮动操作指引 -->
+  <button class="guide-fab" id="guide-fab-btn" title="点击查看当前页操作指引">❓</button>
+  <div class="guide-panel hidden" id="guide-panel-box">
+    <div class="guide-header">
+      <span class="guide-header-icon">📋</span>
+      <span class="guide-header-title" id="guide-title">操作指引</span>
+      <button class="guide-header-btn" id="guide-minimize-btn" title="最小化">—</button>
+      <button class="guide-header-btn" id="guide-close-btn" title="关闭">✕</button>
+    </div>
+    <div class="guide-body" id="guide-body"></div>
+  </div>
+
+  <!-- 脚本加载 (v=42 防缓存, v5.0 新增 reform-engine.js + view-reform.js) -->
+  <script src="js/mock-data.js?v=44"></script>
+  <script src="js/state.js?v=44"></script>
+  <script src="js/reform-engine.js?v=44"></script>
+  <script src="js/scene-loader.js?v=44"></script>
+  <script src="js/log.js?v=44"></script>
+  <script src="js/view-modal.js?v=44"></script>
+  <script src="js/view-reform.js?v=44"></script>
+  <script src="js/view-enterprise.js?v=44"></script>
+  <script src="js/view-flow.js?v=44"></script>
+  <script src="js/view-approval.js?v=44"></script>
+  <script src="js/view-bank.js?v=44"></script>
+  <script src="js/view-institution.js?v=44"></script>
+  <script src="js/view-advisor.js?v=44"></script>
+  <script src="js/view-cockpit.js?v=44"></script>
+  <script src="js/fallback-engine.js?v=44"></script>
+  <script src="js/view-fallback.js?v=44"></script>
+  <script src="js/view-regulatory.js?v=44"></script>
+  <script src="js/view-partner.js?v=44"></script>
+  <!-- v6.0 新增: 供应链金融子系统 (SC1-SC10 引擎族) -->
+  <script src="js/scf-data.js?v=44"></script>
+  <script src="js/scf-engine.js?v=44"></script>
+  <script src="js/scf-graph.js?v=44"></script>
+  <script src="js/view-scf.js?v=44"></script>
+  <script src="js/app.js?v=44"></script>
+</body>
+</html>

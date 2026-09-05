@@ -1,0 +1,277 @@
+{
+  "version": "2026.08",
+  "description": "FinTrust Hub DATA-04 IoT EMQX 告警规则 - 离线设备/异常数据/阈值告警",
+  "rules": [
+    {
+      "rule_id": "alert-device-offline",
+      "name": "设备离线告警",
+      "description": "设备连续 5 分钟未上报遥测/心跳 → 判定离线, 触发告警",
+      "trigger": {
+        "type": "device_offline",
+        "heartbeat_topic": "fintrust/+/+/status",
+        "telemetry_topic": "fintrust/+/+/telemetry",
+        "offline_after_seconds": 300,
+        "check_interval_seconds": 60
+      },
+      "actions": [
+        {
+          "type": "webhook",
+          "url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Source": "emqx-alert"
+          },
+          "payload_template": {
+            "alert_type": "device_offline",
+            "device_id": "${device_id}",
+            "enterprise_id": "${enterprise_id}",
+            "last_seen_iso": "${last_seen_iso}",
+            "offline_seconds": "${offline_seconds}",
+            "severity": "warning",
+            "message": "设备 ${device_id} 离线 ${offline_seconds} 秒"
+          }
+        },
+        {
+          "type": "mqtt_publish",
+          "topic": "fintrust/${enterprise_id}/broadcast",
+          "qos": 1,
+          "retain": false,
+          "payload_template": {
+            "alert_type": "device_offline",
+            "device_id": "${device_id}",
+            "severity": "warning"
+          }
+        }
+      ],
+      "enabled": true,
+      "cooldown_seconds": 600
+    },
+    {
+      "rule_id": "alert-data-anomaly",
+      "name": "异常数据告警",
+      "description": "设备上报数据异常 (温度超 80°C / 振动 > 5.0 / 电量 < 10% 等) → 触发告警",
+      "trigger": {
+        "type": "telemetry_threshold",
+        "telemetry_topic": "fintrust/+/+/telemetry",
+        "conditions": [
+          {
+            "metric_name": "temperature",
+            "operator": ">",
+            "threshold": 80,
+            "unit": "C",
+            "severity": "critical"
+          },
+          {
+            "metric_name": "temperature",
+            "operator": ">",
+            "threshold": 60,
+            "unit": "C",
+            "severity": "warning"
+          },
+          {
+            "metric_name": "vibration",
+            "operator": ">",
+            "threshold": 5.0,
+            "unit": "g",
+            "severity": "critical"
+          },
+          {
+            "metric_name": "battery_pct",
+            "operator": "<",
+            "threshold": 10,
+            "unit": "%",
+            "severity": "warning"
+          },
+          {
+            "metric_name": "signal_dbm",
+            "operator": "<",
+            "threshold": -90,
+            "unit": "dBm",
+            "severity": "info"
+          },
+          {
+            "metric_name": "alarm",
+            "operator": "==",
+            "threshold": "overheat",
+            "unit": "string",
+            "severity": "critical"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "webhook",
+          "url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Source": "emqx-alert"
+          },
+          "payload_template": {
+            "alert_type": "data_anomaly",
+            "device_id": "${device_id}",
+            "enterprise_id": "${enterprise_id}",
+            "metric_name": "${metric_name}",
+            "metric_value": "${metric_value}",
+            "threshold": "${threshold}",
+            "severity": "${severity}",
+            "message": "设备 ${device_id} ${metric_name}=${metric_value} 触发阈值 ${threshold}"
+          }
+        }
+      ],
+      "enabled": true,
+      "cooldown_seconds": 60
+    },
+    {
+      "rule_id": "alert-message-rate-threshold",
+      "name": "消息频率阈值告警",
+      "description": "设备单位时间内上报消息超阈值 (设备故障或被劫持) → 触发告警",
+      "trigger": {
+        "type": "message_rate",
+        "topic_pattern": "fintrust/+/+/telemetry",
+        "window_seconds": 60,
+        "max_messages_per_window": 600,
+        "min_messages_per_window": 0
+      },
+      "actions": [
+        {
+          "type": "webhook",
+          "url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Source": "emqx-alert"
+          },
+          "payload_template": {
+            "alert_type": "message_rate_anomaly",
+            "device_id": "${device_id}",
+            "enterprise_id": "${enterprise_id}",
+            "messages_count": "${messages_count}",
+            "window_seconds": "${window_seconds}",
+            "severity": "warning",
+            "message": "设备 ${device_id} 60 秒内上报 ${messages_count} 条消息, 超过阈值 600"
+          }
+        }
+      ],
+      "enabled": true,
+      "cooldown_seconds": 300
+    },
+    {
+      "rule_id": "alert-connect-failure",
+      "name": "连接失败告警",
+      "description": "设备认证失败 (密码错误 / 证书无效) → 触发告警 (可能入侵)",
+      "trigger": {
+        "type": "auth_failure",
+        "failure_topic": "$SYS/brokers/+/clients/+/disconnect",
+        "max_failures_per_ip_per_minute": 10
+      },
+      "actions": [
+        {
+          "type": "webhook",
+          "url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Source": "emqx-alert"
+          },
+          "payload_template": {
+            "alert_type": "auth_failure",
+            "client_id": "${client_id}",
+            "ip_address": "${ip_address}",
+            "failures_count": "${failures_count}",
+            "severity": "critical",
+            "message": "设备 ${client_id} 认证失败 ${failures_count} 次 (IP: ${ip_address})"
+          }
+        }
+      ],
+      "enabled": true,
+      "cooldown_seconds": 60
+    },
+    {
+      "rule_id": "alert-broker-resource",
+      "name": "Broker 资源告警",
+      "description": "EMQX broker 自身资源 (CPU/内存/连接数) 阈值告警",
+      "trigger": {
+        "type": "broker_resource",
+        "metrics": [
+          {
+            "name": "connections_count",
+            "operator": ">",
+            "threshold": 80000,
+            "severity": "warning"
+          },
+          {
+            "name": "connections_count",
+            "operator": ">",
+            "threshold": 95000,
+            "severity": "critical"
+          },
+          {
+            "name": "memory_usage_pct",
+            "operator": ">",
+            "threshold": 80,
+            "severity": "warning"
+          },
+          {
+            "name": "memory_usage_pct",
+            "operator": ">",
+            "threshold": 90,
+            "severity": "critical"
+          },
+          {
+            "name": "cpu_usage_pct",
+            "operator": ">",
+            "threshold": 80,
+            "severity": "warning"
+          },
+          {
+            "name": "message_queue_length",
+            "operator": ">",
+            "threshold": 10000,
+            "severity": "warning"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "webhook",
+          "url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Source": "emqx-alert"
+          },
+          "payload_template": {
+            "alert_type": "broker_resource",
+            "metric_name": "${metric_name}",
+            "metric_value": "${metric_value}",
+            "threshold": "${threshold}",
+            "severity": "${severity}",
+            "message": "EMQX broker ${metric_name}=${metric_value} 超过阈值 ${threshold}"
+          }
+        }
+      ],
+      "enabled": true,
+      "cooldown_seconds": 120
+    }
+  ],
+  "destinations": {
+    "webhook": {
+      "default_url": "http://host.docker.internal:8000/api/v1/modules/iot/alert",
+      "timeout_seconds": 5,
+      "retry_times": 3,
+      "retry_interval_seconds": 5
+    },
+    "mqtt_publish": {
+      "default_topic_prefix": "fintrust/alerts",
+      "default_qos": 1,
+      "default_retain": false
+    }
+  },
+  "suppression": {
+    "global_cooldown_seconds": 60,
+    "max_alerts_per_minute": 100,
+    "max_alerts_per_hour": 1000
+  }
+}

@@ -1,0 +1,24 @@
+{{/* 文件名：configmap.yaml 职责：后端 ConfigMap Helm 模板,注入非敏感环境变量与 Service 发现地址
+*/}}
+{{- if .Values.configMap.enabled | default true -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-config
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "config") | nindent 4 }}
+data:
+  {{- range $k, $v := .Values.configMap.data }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}
+  # 注入 Service 发现地址 (Pod 内可通过环境变量直接拼接 DSN)
+  BACKEND_URL: {{ printf "http://%s-backend:%v" (include "fintrust-hub.fullname" $) ($.Values.backend.service.port | default 8000) | quote }}
+  FRONTEND_URL: {{ printf "http://%s-frontend:%v" (include "fintrust-hub.fullname" $) ($.Values.frontend.service.port | default 80) | quote }}
+  AI_ENGINE_URL: {{ printf "http://%s-ai-engine:%v" (include "fintrust-hub.fullname" $) ($.Values.aiEngine.service.port | default 8000) | quote }}
+  POSTGRES_HOST: {{ printf "%s-postgres" (include "fintrust-hub.fullname" $) | quote }}
+  POSTGRES_PORT: {{ $.Values.postgresql.port | default 5432 | toString | quote }}
+  POSTGRES_DB: {{ $.Values.postgresql.database | default "fintrust" | quote }}
+  REDIS_HOST: {{ printf "%s-redis" (include "fintrust-hub.fullname" $) | quote }}
+  REDIS_PORT: {{ $.Values.redis.port | default 6379 | toString | quote }}
+{{- end }}

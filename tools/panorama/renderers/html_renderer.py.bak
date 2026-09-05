@@ -1,0 +1,1100 @@
+# 文件名：html_renderer.py
+# 职责：生成 panorama_dashboard.html（v-tree 静态树 + 4 大指标区块）
+# 设计哲学：v1.0 先用 v-tree 不用 D3，等数据稳定后升级
+
+"""panorama_dashboard.html 渲染器
+
+页面结构：
+  - 顶部：4 大指标区块（完成度/最近变更/Git 分支/风险）
+  - 左侧：v-tree 静态目录树（可折叠）
+  - 右侧：模块详情卡片（点击左侧节点加载）
+  - 底部：数据更新时间
+
+设计哲学：
+  - 静态懒加载：HTML 不含数据，JS 请求 ./data/summary.json
+  - 无 WebSocket：网页展示"数据更新于"时间，一眼可知是否过期
+  - 傻瓜式操作：无需配置，双击 HTML 即可打开
+"""
+
+from __future__ import annotations
+
+import html
+import json
+from pathlib import Path
+
+
+def render_dashboard_html(snapshot, config: dict) -> str:
+    """渲染 panorama_dashboard.html
+
+    Args:
+        snapshot: PanoramaSnapshot 实例
+        config: 配置 dict
+
+    Returns:
+        HTML 字符串
+    """
+    # 把数据嵌入（兜底，如果 JS fetch 失败也能显示）
+    orphan_edges = [e for e in snapshot.contract_edges if e.get("is_orphan")]
+    summary_json = json.dumps({
+        "generated_at": snapshot.generated_at,
+        "mode": snapshot.mode,
+        "total_files": snapshot.total_files,
+        "total_modules": snapshot.total_modules,
+        "total_lines": snapshot.total_lines,
+        "completion_rate": snapshot.completion_rate,
+        "completed_modules": snapshot.completed_modules,
+        "git_summary": snapshot.git_summary,
+        "risks": snapshot.risks,
+        "missing_annotations": snapshot.missing_annotations,
+        "contract_edges_count": len(snapshot.contract_edges),
+        "orphan_count": len(orphan_edges),
+        "contract_edges": snapshot.contract_edges,
+        "dependency_edges_count": len(snapshot.dependency_edges),
+        "completion_breakdown": snapshot.completion_breakdown,
+        "doc_health": snapshot.doc_health,
+    }, ensure_ascii=False, indent=2)
+
+    # 文件树数据（含影响面/符号, 供三视角+搜索+高风险标红）
+    tree_data = _build_tree_data(snapshot.files)
+
+    # 在 <script> 中嵌入 JSON：不能使用 html.escape（&quot; 在 JS 中非法）
+    # 只需防止 </script> 注入：把 </ 替换为 <\/
+    summary_safe = summary_json.replace("</", "<\\/")
+    tree_safe = json.dumps(tree_data, ensure_ascii=False).replace("</", "<\\/")
+
+    return _HTML_TEMPLATE.format(
+        summary_json=summary_safe,
+        tree_data=tree_safe,
+        generated_at=snapshot.generated_at,
+        mode=snapshot.mode,
+    )
+
+
+def _build_tree_data(files) -> dict:
+    """构建文件树数据结构"""
+    root = {"name": "production", "children": {}}
+    for fi in files:
+        parts = fi.path.replace("\\", "/").split("/")
+        node = root
+        for i, part in enumerate(parts):
+            if part not in node["children"]:
+                node["children"][part] = {
+                    "name": part,
+                    "children": {},
+                    "is_file": (i == len(parts) - 1),
+                    "path": "/".join(parts[:i+1]),
+                }
+            node = node["children"][part]
+            if i == len(parts) - 1:
+                node["name_cn"] = fi.name_cn or "📝 待补充"
+                node["responsibility_cn"] = fi.responsibility_cn
+                node["language"] = fi.language
+                node["line_count"] = fi.line_count
+                node["status"] = fi.status
+                node["impl_status"] = fi.impl_status
+                node["impl_markers"] = fi.impl_markers
+                # 影响面（被多少文件引用 = 改动风险）+ 符号（类名/函数名搜索）
+                node["ibc"] = len(fi.imported_by)   # imported-by count
+                node["ib"] = fi.imported_by[:15]     # 引用方（封顶 15 防膨胀）
+                node["ic"] = len(fi.imports)         # imports count
+                node["sym"] = fi.symbols[:30]
+
+    # 转为数组结构
+    def to_array(node):
+        children = node.get("children", {})
+        if not children:
+            node.pop("children", None)
+            return node
+        node["children"] = [to_array(c) for c in children.values()]
+        return node
+    return to_array(root)
+
+
+# ============================================================================
+# HTML 模板（嵌入式，无外部依赖）
+# ============================================================================
+
+_HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinTrust Hub 全景导航 - 数据更新于 {generated_at}</title>
+<style>
+* {{ margin: 0; padding: 0; box-sizing: border-box; }}
+body {{
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+               'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: #f5f7fa;
+  color: #2c3e50;
+  font-size: 14px;
+}}
+.header {{
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 24px;
+}}
+.header h1 {{ font-size: 20px; margin-bottom: 4px; }}
+.header .meta {{ font-size: 12px; opacity: 0.9; }}
+.metrics-grid {{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}}
+.metric-card {{
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-left: 4px solid #409eff;
+}}
+.metric-card.completion {{ border-left-color: #67c23a; }}
+.metric-card.recent {{ border-left-color: #409eff; }}
+.metric-card.branch {{ border-left-color: #e6a23c; }}
+.metric-card.risk {{ border-left-color: #f56c6c; }}
+.metric-card h3 {{ font-size: 13px; color: #909399; margin-bottom: 8px; }}
+.metric-card pre {{
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}}
+.main-content {{
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  padding: 0 16px 16px;
+}}
+.sidebar {{
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}}
+.sidebar h2 {{ font-size: 14px; margin-bottom: 8px; padding-bottom: 8px;
+              border-bottom: 1px solid #ebeef5; }}
+.tree-node {{ margin-left: 16px; }}
+.tree-toggle {{
+  cursor: pointer;
+  user-select: none;
+  padding: 3px 6px;
+  border-radius: 4px;
+}}
+.tree-toggle:hover {{ background: #f5f7fa; }}
+.tree-toggle::before {{
+  content: '▶';
+  display: inline-block;
+  width: 12px;
+  font-size: 10px;
+  transition: transform 0.2s;
+}}
+.tree-toggle.expanded::before {{ transform: rotate(90deg); }}
+.tree-children {{ display: none; }}
+.tree-children.expanded {{ display: block; }}
+.tree-file {{ padding: 3px 6px; cursor: pointer; border-radius: 4px; }}
+.tree-file:hover {{ background: #f5f7fa; }}
+.tree-file.active {{ background: #ecf5ff; color: #409eff; }}
+.detail-panel {{
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}}
+.detail-panel h2 {{ font-size: 16px; margin-bottom: 12px; }}
+.badge {{
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 8px;
+}}
+.badge.healthy {{ background: #f0f9eb; color: #67c23a; }}
+.badge.degraded {{ background: #fdf6ec; color: #e6a23c; }}
+.badge.fault {{ background: #fef0f0; color: #f56c6c; }}
+.badge.no_state {{ background: #f4f4f5; color: #909399; }}
+.status-dot {{ display: inline-block; width: 8px; height: 8px;
+              border-radius: 50%; margin-right: 6px; }}
+.impl-badge {{
+  display: inline-block; padding: 0 4px; margin-left: 6px;
+  border-radius: 3px; font-size: 10px; cursor: help;
+}}
+.impl-partial {{ background: #fdf6ec; color: #e6a23c; }}
+.impl-skeleton {{ background: #ecf5ff; color: #409eff; }}
+.impl-placeholder {{ background: #f4f4f5; color: #909399; }}
+.search-box {{
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}}
+.empty {{ color: #909399; text-align: center; padding: 32px; }}
+
+/* 系统总结说明区块 */
+.system-overview {{
+  margin: 0 16px 16px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}}
+.system-overview h2 {{
+  font-size: 16px; margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid #667eea; color: #2c3e50;
+}}
+.system-overview h3 {{
+  font-size: 14px; color: #606266; margin: 14px 0 8px;
+  padding-left: 10px; border-left: 3px solid #667eea;
+}}
+.system-overview p {{ font-size: 13px; color: #606266; line-height: 1.8; margin-bottom: 6px; }}
+.system-overview ul {{ margin: 4px 0 8px 20px; }}
+.system-overview li {{ font-size: 13px; color: #606266; line-height: 1.8; }}
+.system-overview .tag {{
+  display: inline-block; padding: 1px 8px; border-radius: 3px;
+  font-size: 11px; margin: 2px; background: #f0f2f5; color: #606266;
+}}
+.system-overview .tag.core {{ background: #ecf5ff; color: #409eff; }}
+.system-overview .tag.crit {{ background: #fef0f0; color: #f56c6c; }}
+
+.diagnostics-section {{
+  margin: 0 16px 16px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}}
+.diagnostics-section h2 {{
+  font-size: 15px; margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+}}
+.diag-tabs {{
+  display: flex; gap: 8px; margin-bottom: 12px;
+}}
+.diag-tab {{
+  padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  font-size: 13px; background: #f5f7fa; color: #606266;
+  border: 1px solid #e4e7ed;
+}}
+.diag-tab.active {{ background: #409eff; color: white; border-color: #409eff; }}
+.diag-table {{
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}}
+.diag-table th {{
+  text-align: left; padding: 8px; background: #f5f7fa;
+  color: #909399; font-weight: 500; border-bottom: 1px solid #ebeef5;
+}}
+.diag-table td {{
+  padding: 8px; border-bottom: 1px solid #ebeef5; color: #606266;
+  word-break: break-all;
+}}
+.diag-table tr.orphan {{ background: #fef0f0; }}
+.diag-table tr.matched {{ background: #f0f9eb; }}
+.badge-orphan {{
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 11px; background: #fef0f0; color: #f56c6c;
+}}
+.badge-matched {{
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 11px; background: #f0f9eb; color: #67c23a;
+}}
+.diag-panel {{ display: none; }}
+.diag-panel.active {{ display: block; }}
+.missing-list {{
+  max-height: 300px; overflow-y: auto; font-size: 12px;
+  color: #606266;
+}}
+.missing-list li {{ padding: 4px 0; border-bottom: 1px solid #f5f7fa; }}
+
+/* === 三视角切换 === */
+.perspective-bar {{
+  display: flex; gap: 6px; margin-bottom: 8px;
+}}
+.persp-btn {{
+  flex: 1; padding: 5px 4px; border-radius: 4px; cursor: pointer;
+  font-size: 12px; background: #f5f7fa; color: #606266;
+  border: 1px solid #e4e7ed; text-align: center; user-select: none;
+}}
+.persp-btn:hover {{ background: #ecf5ff; }}
+.persp-btn.active {{
+  background: #409eff; color: white; border-color: #409eff; font-weight: 600;
+}}
+.persp-hint {{ font-size: 11px; color: #909399; margin-bottom: 8px; line-height: 1.5; }}
+
+/* === 文件影响面角标 === */
+.impact-badge {{
+  display: inline-block; padding: 0 6px; margin-left: 4px;
+  border-radius: 8px; font-size: 10px; font-weight: 600;
+  background: #f0f2f5; color: #909399; cursor: help;
+}}
+.impact-badge.mid {{ background: #fdf6ec; color: #e6a23c; }}
+.impact-badge.high {{ background: #fef0f0; color: #f56c6c; }}
+.tree-file.high-risk {{ background: #fef6f6; }}
+.tree-file.high-risk:hover {{ background: #fde2e2; }}
+.tree-file.high-risk .fname {{ color: #f56c6c; font-weight: 600; }}
+
+/* 影响面详情面板 */
+.impact-panel {{
+  margin: 10px 0; padding: 10px 12px; border-radius: 6px;
+  font-size: 13px; line-height: 1.7;
+}}
+.impact-panel.high {{ background: #fef0f0; border-left: 4px solid #f56c6c; }}
+.impact-panel.mid {{ background: #fdf6ec; border-left: 4px solid #e6a23c; }}
+.impact-panel.low {{ background: #f0f9eb; border-left: 4px solid #67c23a; }}
+.impact-panel ul {{ margin: 6px 0 0 18px; font-size: 12px; color: #606266; }}
+.impact-panel code {{ font-size: 11px; }}
+
+/* === 诊断区折叠 === */
+details.diag-details {{
+  margin: 0 16px 16px; background: white; border-radius: 8px;
+  padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}}
+details.diag-details > summary {{
+  cursor: pointer; font-size: 15px; font-weight: 600; color: #303133;
+  list-style: none; user-select: none; padding: 4px 0;
+}}
+details.diag-details > summary::-webkit-details-marker {{ display: none; }}
+details.diag-details > summary::before {{
+  content: '▶'; display: inline-block; margin-right: 8px;
+  font-size: 11px; color: #909399; transition: transform 0.2s;
+}}
+details.diag-details[open] > summary::before {{ transform: rotate(90deg); }}
+.diag-summary-line {{
+  display: inline-block; font-size: 12px; font-weight: 400;
+  color: #606266; margin-left: 8px;
+}}
+.diag-summary-line .pill {{
+  display: inline-block; padding: 1px 8px; border-radius: 10px;
+  background: #f0f2f5; color: #606266; margin-left: 6px; font-size: 11px;
+}}
+.diag-summary-line .pill.warn {{ background: #fdf6ec; color: #e6a23c; }}
+.diag-summary-line .pill.danger {{ background: #fef0f0; color: #f56c6c; }}
+.diag-summary-line .pill.ok {{ background: #f0f9eb; color: #67c23a; }}
+.diag-body {{ margin-top: 12px; }}
+
+/* === 文档健康板块 === */
+.doc-health-grid {{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; margin: 10px 0;
+}}
+.dh-card {{
+  background: #f8fafc; border-radius: 6px; padding: 10px 12px;
+  border-top: 3px solid #409eff;
+}}
+.dh-card.ok {{ border-top-color: #67c23a; }}
+.dh-card.warn {{ border-top-color: #e6a23c; }}
+.dh-card.danger {{ border-top-color: #f56c6c; }}
+.dh-card .num {{ font-size: 22px; font-weight: 700; color: #303133; }}
+.dh-card .lbl {{ font-size: 12px; color: #909399; margin-top: 2px; }}
+.dh-realtime {{
+  font-size: 12px; color: #606266; background: #f4f8ff;
+  border-radius: 4px; padding: 6px 10px; margin: 8px 0;
+}}
+.dh-realtime .dot-live {{
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #67c23a; margin-right: 6px;
+  animation: dh-pulse 1.6s infinite;
+}}
+@keyframes dh-pulse {{
+  0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.3; }}
+}}
+.dh-list {{ margin: 6px 0 6px 18px; font-size: 12px; color: #606266; }}
+.dh-list li {{ margin-bottom: 4px; line-height: 1.6; }}
+.dh-list code {{ font-size: 11px; }}
+.dh-nextsteps {{
+  background: #f0f9eb; border-radius: 6px; padding: 10px 14px;
+  margin-top: 10px; font-size: 12px; color: #5b8c3e; line-height: 1.8;
+}}
+.dh-toggle {{
+  cursor: pointer; color: #409eff; font-size: 12px; user-select: none;
+}}
+.dh-toggle:hover {{ text-decoration: underline; }}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>FinTrust Hub 全景导航</h1>
+  <div class="meta">模式：{mode} | 数据更新于：{generated_at} |
+    <span id="data-status">✅ 静态嵌入</span></div>
+</div>
+
+<div class="system-overview" id="system-overview">
+  <h2>📋 系统总结说明</h2>
+
+  <h3>项目定位</h3>
+  <p>AI 驱动的金融信任枢纽系统（FinTrust Hub）——财务顾问公司的整合平台 + AI 信任枢纽。</p>
+  <p>不替代银行核心 / 担保业务 / 保险核心 / 评估 / 法律 / 审计等具体业务系统，而是作为<strong>信任中介</strong>连接企业、银行、担保、保险四方。</p>
+  <p><strong>核心价值</strong>：让中小企业融资从"盲盒"变成"白盒"——通过 AI 评估 + 渐进解锁机制，降低信息不对称，培育金融机构对小企业的信任。</p>
+
+  <h3>技术栈</h3>
+  <p>
+    <span class="tag core">FastAPI</span>
+    <span class="tag core">Vue 3 + TS</span>
+    <span class="tag core">PostgreSQL</span>
+    <span class="tag">Redis</span>
+    <span class="tag">Temporal</span>
+    <span class="tag">EMQX/MQTT</span>
+    <span class="tag">Loki + Promtail</span>
+    <span class="tag">K8s/Helm</span>
+    <span class="tag">Docker Compose</span>
+    <span class="tag">psutil</span>
+  </p>
+
+  <h3>核心设计哲学</h3>
+  <ul>
+    <li><strong>结构驱动</strong>：配置优于训练，结构第一性</li>
+    <li><strong>白盒可逆</strong>：所有决策可追溯、可解释、可回滚</li>
+    <li><strong>知识从 LLM 蒸馏</strong>：将 LLM 能力固化为规则与结构化数据</li>
+    <li><strong>渐进调节</strong>：取类比象，P2 暂定性，P21 控制节律，P25 元变量演化</li>
+    <li><strong>API 接入优先</strong>：A 档 API 接入 + B 档自研护城河 + C 档独立兜底备选</li>
+    <li><strong>机构接入是增量而非前提</strong>：零机构接入时系统仍能为企业提供独立价值</li>
+    <li><strong>傻瓜式操作</strong>：不让用户做选择题，只让用户做判断题或填空题</li>
+    <li><strong>互联网免费 / 对赌思维</strong>：打穿传统行业壁垒</li>
+  </ul>
+
+  <h3>业务架构（四层）</h3>
+  <ul>
+    <li><strong>企业层</strong>：注册 → 数字化改造 → 融资入口解锁 → 持续培育</li>
+    <li><strong>银行层</strong>：信任培育期 4 阶段渐进解锁（L4 只读 → L3 咨询 → L2 小额自动 → L1 全自动）</li>
+    <li><strong>担保/保险层</strong>：押品评估、核保核赔、风险共担</li>
+    <li><strong>监管层</strong>：沙盒穿透报告、监管账户、授信乘数、冻结/解冻</li>
+  </ul>
+
+  <h3>关键硬约束（摘选）</h3>
+  <ul>
+    <li><span class="tag crit">CRITICAL</span> 所有中间件必须使用 async/await，禁用回调风格</li>
+    <li><span class="tag crit">CRITICAL</span> AI 决策弹窗队列上限为 3，超限降级为非阻塞 toast</li>
+    <li><span class="tag crit">CRITICAL</span> 不可逆决策（审批/风控）必须阻塞模态窗二次确认</li>
+    <li><span class="tag crit">CRITICAL</span> 所有 AI 通知 toast 需含 × 关闭 + 操作按钮，z-index=9500</li>
+    <li><span class="tag crit">CRITICAL</span> 合作模式（企业/银行/担保/保险）必须支持多选 pill 按钮组</li>
+    <li><span class="tag crit">CRITICAL</span> 边缘案例触发后必须在所有 Tab 顶部显示全局告警横幅</li>
+    <li><span class="tag crit">CRITICAL</span> 改造完成后必须回写 hasReformed / financingUnlocked</li>
+    <li>系统字体栈优先（避免 Google Fonts CDN 在国内 3.3s 首屏阻塞）</li>
+    <li>所有资源 URL 需加版本参数（?v=22）强制刷新缓存</li>
+  </ul>
+
+  <h3>📄 文档健康与实时对齐状态</h3>
+  <div id="doc-health-block">
+    <p style="color:#909399;">文档对齐数据加载中（运行 <code>--full</code> 后由代码索引实时生成）…</p>
+  </div>
+
+  <h3>模块完成度概览</h3>
+  <p>8 大业务模块：企业/银行/担保/保险/监管/改造/授信/评估——详见下方指标卡片与模块树。</p>
+  <p style="color: #909399; font-size: 12px; margin-top: 10px;">
+    本面板由 <code>tools/panorama/collect.py</code> 自动生成。如需刷新数据：运行
+    <code>python tools/panorama/collect.py --quick</code>（0.8s）或
+    <code>--full</code>（6s，含契约边+状态监控+文档对齐归档）。
+  </p>
+</div>
+
+<div class="metrics-grid" id="metrics-grid">
+  <div class="metric-card completion">
+    <h3>📊 总体完成度</h3>
+    <pre id="metric-completion">加载中...</pre>
+  </div>
+  <div class="metric-card recent">
+    <h3>📝 最近变更记录</h3>
+    <pre id="metric-recent">加载中...</pre>
+  </div>
+  <div class="metric-card branch">
+    <h3>🌿 Git 分支状态</h3>
+    <pre id="metric-branch">加载中...</pre>
+  </div>
+  <div class="metric-card risk">
+    <h3>🚨 风险/阻塞</h3>
+    <pre id="metric-risk">加载中...</pre>
+  </div>
+</div>
+
+<details class="diag-details" id="problems_and_diagnostics">
+  <summary>🔍 问题与诊断
+    <span class="diag-summary-line" id="diag-summary-line">
+      <span class="pill" id="pill-contracts">契约边 -</span>
+      <span class="pill" id="pill-incomplete">未完成 -</span>
+      <span class="pill" id="pill-missing">缺注释 -</span>
+      <span class="pill" id="pill-docs">文档 -</span>
+      &nbsp;（点击展开明细）
+    </span>
+  </summary>
+  <div class="diag-body">
+  <div class="diag-tabs">
+    <div class="diag-tab active" data-panel="contracts">契约边 (<span id="diag-contracts-count">0</span>)</div>
+    <div class="diag-tab" data-panel="incomplete">未完成项 (<span id="diag-incomplete-count">0</span>)</div>
+    <div class="diag-tab" data-panel="missing">缺失注释 (<span id="diag-missing-count">0</span>)</div>
+  </div>
+  <div class="diag-panel active" id="panel-contracts">
+    <p style="color: #909399; margin-bottom: 8px; font-size: 12px;">
+      前端 API 调用 ↔ 后端路由匹配。🔴 红色行 = 孤儿契约（前端调了但后端未注册），🟢 绿色行 = 已匹配。
+    </p>
+    <div id="diag-contracts-table">加载中...</div>
+  </div>
+  <div class="diag-panel" id="panel-incomplete">
+    <p style="color: #909399; margin-bottom: 8px; font-size: 12px;">
+      代码实测口径（逐文件扫描 TODO/桩/骨架标记）。🟡 = 部分实现，📋 = 骨架（NotImplementedError），🔜 = 占位（&lt;3 行有效代码）。
+    </p>
+    <div id="diag-incomplete-table">加载中...</div>
+  </div>
+  <div class="diag-panel" id="panel-missing">
+    <p style="color: #909399; margin-bottom: 8px; font-size: 12px;">
+      以下文件缺少中文注释（# 文件名：/ # 职责：），建议批量补全。
+    </p>
+    <ul class="missing-list" id="diag-missing-list"></ul>
+  </div>
+  </div>
+</details>
+
+<div class="main-content">
+  <div class="sidebar">
+    <h2>📁 模块树</h2>
+    <div class="perspective-bar" id="perspective-bar">
+      <div class="persp-btn" data-persp="god" title="只展开顶层目录，先看清系统由哪几大块组成">① 上帝视角</div>
+      <div class="persp-btn active" data-persp="arch" title="按架构分层浏览（展开到模块层）">② 架构师</div>
+      <div class="persp-btn" data-persp="dev" title="目录树全部展开，配合搜索精确定位">③ 开发者</div>
+    </div>
+    <div class="persp-hint" id="persp-hint"></div>
+    <input type="text" class="search-box" id="search-box"
+           placeholder="搜索文件名/中文名/类名/函数名...">
+    <div id="tree-container">加载中...</div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <h2>欢迎使用 FinTrust Hub 全景导航</h2>
+    <p>点击左侧文件树节点查看详情。</p>
+    <p style="margin-top: 12px; color: #909399;">
+      数据来源：本页面在 collect.py 生成时已嵌入静态数据。<br>
+      如需刷新：运行 <code>python tools/panorama/collect.py --quick</code>
+    </p>
+  </div>
+</div>
+
+<script>
+// 静态嵌入的兜底数据（collect.py 生成时写入）
+const EMBEDDED_SUMMARY = {summary_json};
+const EMBEDDED_TREE = {tree_data};
+
+// 渲染 4 大指标
+function renderMetrics(summary) {{
+  // 完成度：双口径交叉验证（代码实测为准, MATRIX 规划作对照）
+  const rate = (summary.completion_rate * 100).toFixed(1);
+  const bd = summary.completion_breakdown || {{}};
+  const ca = bd.code_actual || {{}};
+  let completionStr;
+  if (ca.total) {{
+    completionStr =
+      `📊 代码实测完成度：${{rate}}%（代码即事实）\\n` +
+      `├── ✅ 已实现: ${{ca.done}} 文件\\n` +
+      `├── 🟡 部分实现: ${{ca.partial}} 文件\\n` +
+      `├── 📋 骨架: ${{ca.skeleton}} 文件\\n` +
+      `└── 🔜 占位: ${{ca.placeholder}} 文件\\n` +
+      `   共 ${{ca.total}} 代码文件 / ${{summary.total_lines}} 行\\n` +
+      `───────────────\\n` +
+      `📋 规划口径(MATRIX): ${{bd.weighted || '-'}}%` +
+      (bd.matrix_stale ? ' ⚠️已过期' : '') + `\\n` +
+      `   ✅${{bd.done||0}} 🟡${{bd.partial||0}} 📋${{bd.doc||0}} 🔜${{bd.roadmap||0}}` +
+      ` / ${{bd.total||0}} 项任务`;
+    // 分层完成度 + 核心服务桩清单（防止"前端完成数稀释核心服务桩"）
+    const layers = ca.layers || {{}};
+    if (layers.core_services) {{
+      const cs = layers.core_services;
+      completionStr += `\\n───────────────\\n` +
+        `🧩 分层完成度：前端 ${{layers.frontend.weighted}}% · ` +
+        `后端 ${{layers.backend.weighted}}% · ` +
+        `🎯核心服务层 ${{cs.weighted}}%\\n` +
+        `   核心服务 ${{cs.total}} 个：✅${{cs.done}} 🟡${{cs.partial}} 📋${{cs.skeleton}} 🔜${{cs.placeholder}}`;
+      const stubs = ca.core_stubs || [];
+      if (stubs.length) {{
+        completionStr += `\\n🔌 桩/mock 兜底待真实接入（未完成硬证据）：` +
+          stubs.map(s => {{
+            const nm = s.path.split('/').pop().replace('.py','').replace('_service','');
+            const tag = s.status === 'skeleton' ? '📋' : s.status === 'placeholder' ? '🔜' : '🟡';
+            return tag + nm;
+          }}).join(' ');
+      }}
+    }}
+    const notes = bd.cross_check_notes || [];
+    if (notes.length) completionStr += `\\n───────────────\\n` + notes.join(`\\n`);
+  }} else {{
+    completionStr =
+      `📊 完成度：${{rate}}% (${{(summary.completed_modules||[]).length}}/${{summary.total_modules}} 个目录)\\n` +
+      `└── 📦 总文件: ${{summary.total_files}} / 总行: ${{summary.total_lines}}`;
+  }}
+  document.getElementById('metric-completion').textContent = completionStr;
+
+  // 最近变更
+  const commits = (summary.git_summary && summary.git_summary.recent_commits) || [];
+  let recentStr = '📝 最近变更：\\n';
+  commits.slice(0,5).forEach(c => {{
+    recentStr += `- ${{c.date}} | ${{c.author}} | ${{(c.message||'').slice(0,50)}}\\n`;
+  }});
+  if (!commits.length) recentStr += '- 无 Git 历史';
+  document.getElementById('metric-recent').textContent = recentStr;
+
+  // 分支
+  const g = summary.git_summary || {{}};
+  document.getElementById('metric-branch').textContent =
+    `🌿 当前分支: ${{g.branch || 'unknown'}}\\n` +
+    `📦 未提交变更: ${{g.uncommitted_count || 0}} 个文件\\n` +
+    `🚀 领先 origin: ${{g.ahead_of_origin || 0}} 个 commits\\n` +
+    `🔗 孤儿契约边: ${{summary.orphan_count || 0}} 条`;
+
+  // 风险
+  const risks = summary.risks || [];
+  let riskStr = '🚨 当前风险/阻塞：\\n';
+  if (!risks.length) {{
+    riskStr += '- 无阻断级错误';
+  }} else {{
+    risks.slice(0,10).forEach(r => {{
+      const icon = r.severity === 'blocker' ? '🔴' :
+                   r.severity === 'warning' ? '⚠️' : 'ℹ️';
+      riskStr += `- ${{icon}} [${{r.type||'unknown'}}] ${{(r.detail||'').slice(0,60)}}\\n`;
+    }});
+  }}
+  document.getElementById('metric-risk').textContent = riskStr;
+}}
+
+// 渲染问题与诊断区块
+function renderDiagnostics(summary) {{
+  const edges = summary.contract_edges || [];
+  const orphanCount = summary.orphan_count || 0;
+  const totalCount = summary.contract_edges_count || edges.length;
+
+  // 契约边计数
+  document.getElementById('diag-contracts-count').textContent =
+    totalCount + ' (孤儿 ' + orphanCount + ')';
+
+  // 契约边表格
+  const container = document.getElementById('diag-contracts-table');
+  if (!edges.length) {{
+    container.innerHTML = '<div class="empty">--quick 模式跳过契约边捕获，运行 --full 查看完整分析</div>';
+  }} else {{
+    let html = '<table class="diag-table"><thead><tr>' +
+      '<th>方法</th><th>路径</th><th>前端文件:行号</th>' +
+      '<th>后端文件:行号</th><th>状态</th>' +
+      '</tr></thead><tbody>';
+    edges.forEach(e => {{
+      const isOrphan = e.is_orphan;
+      const rowClass = isOrphan ? 'orphan' : 'matched';
+      const badge = isOrphan
+        ? '<span class="badge-orphan">🔴 孤儿</span>'
+        : '<span class="badge-matched">🟢 已匹配</span>';
+      const feLine = e.frontend_file
+        ? e.frontend_file + ':' + (e.frontend_line || 0) : '-';
+      const beLine = !isOrphan && e.backend_file
+        ? e.backend_file + ':' + (e.backend_line || 0) : '-';
+      const method = (e.http_method || '').toUpperCase();
+      html += '<tr class="' + rowClass + '">' +
+        '<td><code>' + method + '</code></td>' +
+        '<td><code>' + (e.path || '') + '</code></td>' +
+        '<td>' + feLine + '</td>' +
+        '<td>' + beLine + '</td>' +
+        '<td>' + badge + '</td>' +
+        '</tr>';
+    }});
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }}
+
+  // === 未完成项（代码实测: walk 文件树收集 impl_status != done）===
+  const incomplete = [];
+  (function walk(n) {{
+    if (n.is_file && n.impl_status && n.impl_status !== 'done') {{
+      incomplete.push(n);
+    }}
+    (n.children || []).forEach(walk);
+  }})(EMBEDDED_TREE);
+  const order = {{ skeleton: 0, placeholder: 1, partial: 2 }};
+  incomplete.sort((a, b) =>
+    (order[a.impl_status] ?? 9) - (order[b.impl_status] ?? 9));
+  document.getElementById('diag-incomplete-count').textContent = incomplete.length;
+  const incContainer = document.getElementById('diag-incomplete-table');
+  if (!incomplete.length) {{
+    incContainer.innerHTML = '<div class="empty">✅ 代码实测全部完成（无 TODO/桩/骨架标记）</div>';
+  }} else {{
+    const icons = {{ partial: '🟡', skeleton: '📋', placeholder: '🔜' }};
+    const labels = {{ partial: '部分实现', skeleton: '骨架', placeholder: '占位' }};
+    let html = '<table class="diag-table"><thead><tr>' +
+      '<th>状态</th><th>文件</th><th>中文名</th><th>检测标记</th>' +
+      '</tr></thead><tbody>';
+    incomplete.forEach(n => {{
+      const st = n.impl_status;
+      const rowCls = st === 'partial' ? '' : 'orphan';
+      html += '<tr class="' + rowCls + '"><td>' + (icons[st]||'?') + ' ' +
+        (labels[st]||st) + '</td><td><code>' + n.path + '</code></td>' +
+        '<td>' + (n.name_cn && n.name_cn !== '📝 待补充' ? n.name_cn : '-') +
+        '</td><td style="font-size:11px;color:#909399;">' +
+        (n.impl_markers || []).join(', ') + '</td></tr>';
+    }});
+    html += '</tbody></table>';
+    incContainer.innerHTML = html;
+  }}
+
+  // 缺失注释列表
+  const missing = summary.missing_annotations || [];
+  document.getElementById('diag-missing-count').textContent = missing.length;
+  const missingList = document.getElementById('diag-missing-list');
+  if (!missing.length) {{
+    missingList.innerHTML = '<li style="color: #67c23a;">✅ 所有文件均有中文注释</li>';
+  }} else {{
+    missingList.innerHTML = missing.map(f =>
+      '<li><code>' + f + '</code></li>').join('');
+  }}
+
+  // === 折叠栏摘要 pills ===
+  const dh = summary.doc_health || {{}};
+  const staleN = (dh.stale || 0) + (dh.report || 0);
+  setPill('pill-contracts', '契约边 ' + totalCount + (orphanCount ? '·孤儿'+orphanCount : ''),
+    orphanCount ? 'danger' : 'ok');
+  setPill('pill-incomplete', '未完成 ' + incomplete.length,
+    incomplete.length ? 'warn' : 'ok');
+  setPill('pill-missing', '缺注释 ' + missing.length,
+    missing.length ? 'warn' : 'ok');
+  setPill('pill-docs', '文档 ' + (dh.total_docs || 0) + '份·过期' + staleN,
+    staleN ? 'warn' : (dh.total_docs ? 'ok' : ''));
+}}
+
+function setPill(id, text, cls) {{
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'pill' + (cls ? ' ' + cls : '');
+}}
+
+// === 文档健康板块（系统总结区内, 实时对齐状态）===
+function renderDocHealth(summary) {{
+  const block = document.getElementById('doc-health-block');
+  const dh = summary.doc_health;
+  if (!dh || dh.error || !dh.total_docs) {{
+    block.innerHTML = '<p style="color:#909399;font-size:12px;">' +
+      '文档对齐数据未生成（--quick 模式复用缓存或跳过）。运行 ' +
+      '<code>python tools/panorama/collect.py --full</code> 扫描全部文档并自动归档时点报告。</p>';
+    return;
+  }}
+  const rateCls = dh.health_rate >= 80 ? 'ok' : dh.health_rate >= 50 ? 'warn' : 'danger';
+  let html = '<div class="doc-health-grid">' +
+    dhCard(dh.health_rate + '%', '文档健康率', rateCls) +
+    dhCard(dh.current, '当前有效', 'ok') +
+    dhCard(dh.stale, '已过期（需复核）', dh.stale ? 'danger' : 'ok') +
+    dhCard(dh.report, '时点报告（待归档）', dh.report ? 'warn' : 'ok') +
+    dhCard((dh.archive_total != null ? dh.archive_total : dh.archived_count),
+           '已归档报告（_archive）' + (dh.archived_count ? ' ·本次+' + dh.archived_count : ''),
+           (dh.archive_total || dh.archived_count) ? 'ok' : 'ok') +
+    dhCard(dh.ref_broken + '/' + dh.ref_total, '失效代码引用', dh.ref_broken ? 'warn' : 'ok') +
+    '</div>';
+
+  // 实时对齐状态
+  const reused = dh.reused ? '（--quick 复用上次扫描结果）' : '';
+  html += '<div class="dh-realtime"><span class="dot-live"></span>' +
+    '<strong>实时对齐状态：</strong>文档扫描于 ' + dh.generated_at + reused +
+    ' ｜ 代码最新变更日 ' + (dh.newest_code_at || '?') +
+    ' ｜ 每次运行 <code>collect.py</code> 自动重新对齐</div>';
+
+  // 过期/报告文档明细（可折叠）
+  const staleDetails = dh.stale_details || [];
+  if (staleDetails.length) {{
+    html += '<p style="margin-top:8px;"><span class="dh-toggle" id="dh-stale-toggle">' +
+      '▶ 查看 ' + staleDetails.length + ' 份需处理文档（过期 ' + dh.stale +
+      ' / 时点报告 ' + dh.report + '）</span></p>';
+    html += '<ul class="dh-list" id="dh-stale-list" style="display:none;">';
+    staleDetails.forEach(d => {{
+      const icon = d.health === 'report' ? '📦' : '⚠️';
+      html += '<li>' + icon + ' <code>' + d.rel_path + '</code>' +
+        (d.archived ? ' <span style="color:#67c23a;">已归档</span>' : '') +
+        '<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#909399;">' +
+        d.reason + '（' + d.mtime + '，失效引用 ' + d.broken_count +
+        ' 处）</span></li>';
+    }});
+    html += '</ul>';
+  }}
+
+  // 归档清单（本次新归档 + 归档区累计内容）
+  if ((dh.archived && dh.archived.length) || (dh.archive_names && dh.archive_names.length)) {{
+    html += '<p style="margin-top:6px;font-size:12px;">📦 <code>docs/_archive/</code> 归档区' +
+      '（可逆，随时恢复）：</p><ul class="dh-list">';
+    (dh.archive_names || []).forEach(n => {{
+      html += '<li>📦 <code>' + n + '</code></li>';
+    }});
+    (dh.archived || []).forEach(a => {{
+      if ((dh.archive_names || []).indexOf(a.name) === -1)
+        html += '<li>📦 <code>' + a.name + '</code> → ' + a.to + '</li>';
+    }});
+    html += '</ul>';
+  }}
+
+  // 下一步解决方案
+  const bd = summary.completion_breakdown || {{}};
+  const notes = bd.cross_check_notes || [];
+  html += '<div class="dh-nextsteps"><strong>📌 对齐结论与下一步：</strong><br>';
+  if (dh.stale > 0) {{
+    html += '1. 上述 <strong>' + dh.stale + ' 份过期文档</strong>引用的代码路径已失效' +
+      '（旧版 view-*.js 原型/旧目录结构），请人工复核：已完成使命的归档，仍有参考价值的更新引用路径；<br>';
+  }}
+  if (bd.matrix_stale) {{
+    html += '2. <strong>COMPLETION_MATRIX.md 已过期</strong>，完成度口径已切换为代码实测（逐文件扫描标记），建议下次迭代后重写 MATRIX 或归档；<br>';
+  }}
+  html += '3. 时点报告/变更日志由 <code>--full</code> 自动归档至 <code>docs/_archive/</code>，不物理删除；<br>' +
+    '4. 日常开发用 <code>--quick</code>（0.8s）刷新面板，发版前跑 <code>--full</code> 做一次全量对齐。';
+  if (notes.length) {{
+    html += '<br><span style="color:#909399;">交叉校准：' + notes.join('；') + '</span>';
+  }}
+  html += '</div>';
+
+  block.innerHTML = html;
+  const toggle = document.getElementById('dh-stale-toggle');
+  if (toggle) {{
+    toggle.onclick = function() {{
+      const list = document.getElementById('dh-stale-list');
+      const hidden = list.style.display === 'none';
+      list.style.display = hidden ? 'block' : 'none';
+      toggle.textContent = (hidden ? '▼' : '▶') + toggle.textContent.slice(1);
+    }};
+  }}
+}}
+
+function dhCard(num, lbl, cls) {{
+  return '<div class="dh-card ' + (cls || '') + '"><div class="num">' + num +
+    '</div><div class="lbl">' + lbl + '</div></div>';
+}}
+
+// 诊断区块 Tab 切换
+function setupDiagTabs() {{
+  document.querySelectorAll('.diag-tab').forEach(tab => {{
+    tab.onclick = function() {{
+      document.querySelectorAll('.diag-tab').forEach(t =>
+        t.classList.remove('active'));
+      document.querySelectorAll('.diag-panel').forEach(p =>
+        p.classList.remove('active'));
+      tab.classList.add('active');
+      const panelId = 'panel-' + tab.dataset.panel;
+      const panel = document.getElementById(panelId);
+      if (panel) panel.classList.add('active');
+    }};
+  }});
+}}
+
+// === 三视角：控制树默认展开深度 ===
+// god=只看顶层大块; arch=展开到模块层; dev=全展开
+const PERSP_DEPTH = {{ god: 1, arch: 3, dev: 99 }};
+const PERSP_HINT = {{
+  god: '① 上帝视角：仅展开顶层大块（backend / frontend / docs…），先看清系统由哪几大块组成',
+  arch: '② 架构师视角：展开到模块层（app/services、src/views…），按架构分层浏览',
+  dev: '③ 开发者视角：目录树全部展开，配合搜索框按文件名/中文名/类名/函数名定位'
+}};
+let currentPersp = 'arch';
+
+// 影响面阈值：被 >=HIGH 个文件引用 = 高风险改动（红色）
+const IMPACT_HIGH = 5;
+const IMPACT_MID = 2;
+
+// 渲染文件树（depth = 剩余展开层数, 目录 depth>0 默认展开）
+function renderTree(node, container, depth) {{
+  if (depth === undefined) depth = PERSP_DEPTH[currentPersp];
+  const item = document.createElement('div');
+  item.className = 'tree-node';
+  if (node.children && node.children.length > 0) {{
+    const expanded = depth > 0;
+    const toggle = document.createElement('div');
+    toggle.className = 'tree-toggle' + (expanded ? ' expanded' : '');
+    toggle.textContent = node.name + '/';
+    const childContainer = document.createElement('div');
+    childContainer.className = 'tree-children' + (expanded ? ' expanded' : '');
+    node.children.forEach(child => renderTree(child, childContainer, depth - 1));
+    toggle.onclick = function() {{
+      toggle.classList.toggle('expanded');
+      childContainer.classList.toggle('expanded');
+    }};
+    item.appendChild(toggle);
+    item.appendChild(childContainer);
+  }} else {{
+    const fileDiv = document.createElement('div');
+    fileDiv.className = 'tree-file';
+    const dot = document.createElement('span');
+    dot.className = 'status-dot';
+    const status = node.status || 'no_state';
+    dot.style.background = status === 'healthy' ? '#67c23a' :
+                            status === 'fault' ? '#f56c6c' :
+                            status === 'degraded' ? '#e6a23c' : '#c0c4cc';
+    fileDiv.appendChild(dot);
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'fname';
+    nameSpan.textContent = node.name +
+      (node.name_cn && node.name_cn !== '📝 待补充' ? ` (${{node.name_cn}})` : '');
+    fileDiv.appendChild(nameSpan);
+    // 影响面角标：被 N 处引用（红色=高风险改动）
+    const ibc = node.ibc || 0;
+    if (ibc >= IMPACT_MID) {{
+      const ib = document.createElement('span');
+      ib.className = 'impact-badge ' + (ibc >= IMPACT_HIGH ? 'high' : 'mid');
+      ib.textContent = '⬆被' + ibc + '引用';
+      ib.title = '该文件被 ' + ibc + ' 个文件引用，改动影响面大';
+      fileDiv.appendChild(ib);
+      if (ibc >= IMPACT_HIGH) fileDiv.classList.add('high-risk');
+    }}
+    // 实现状态标识
+    if (node.impl_status && node.impl_status !== 'done') {{
+      const badge = document.createElement('span');
+      badge.className = 'impl-badge impl-' + node.impl_status;
+      const icons = {{partial: '🟡', skeleton: '📋', placeholder: '🔜'}};
+      badge.textContent = icons[node.impl_status] || '?';
+      badge.title = (node.impl_markers || []).join(', ') || node.impl_status;
+      fileDiv.appendChild(badge);
+    }}
+    fileDiv.onclick = function() {{
+      document.querySelectorAll('.tree-file.active').forEach(el =>
+        el.classList.remove('active'));
+      fileDiv.classList.add('active');
+      showDetail(node);
+    }};
+    item.appendChild(fileDiv);
+  }}
+  container.appendChild(item);
+}}
+
+// 显示文件详情
+function showDetail(node) {{
+  const panel = document.getElementById('detail-panel');
+  let html = '<h2>' + (node.name_cn || node.name) + '</h2>';
+  html += '<div style="color: #909399; margin-bottom: 12px;">';
+  html += '路径：<code>' + (node.path || '') + '</code><br>';
+  if (node.language) html += '语言：' + node.language + '<br>';
+  if (node.line_count) html += '行数：' + node.line_count + '<br>';
+  html += '</div>';
+
+  // === 影响面（先看被多少文件引用, 再动手改）===
+  if (node.is_file) {{
+    const ibc = node.ibc || 0;
+    const ic = node.ic || 0;
+    let level, title, desc;
+    if (ibc >= IMPACT_HIGH) {{
+      level = 'high';
+      title = '🔴 高影响面：被 ' + ibc + ' 个文件引用 —— 修改前必须评估回归风险！';
+    }} else if (ibc >= IMPACT_MID) {{
+      level = 'mid';
+      title = '🟡 中影响面：被 ' + ibc + ' 个文件引用';
+    }} else if (ibc === 1) {{
+      level = 'low';
+      title = '🟢 低影响面：被 1 个文件引用';
+    }} else {{
+      level = 'low';
+      title = '⚪ 叶子文件：暂无其他文件引用（改动影响面最小）';
+    }}
+    html += '<div class="impact-panel ' + level + '"><strong>' + title + '</strong>';
+    if (ibc > 0 && node.ib && node.ib.length) {{
+      html += '<ul>' + node.ib.map(p => '<li><code>' + p + '</code></li>').join('');
+      if (ibc > node.ib.length) html += '<li>…另有 ' + (ibc - node.ib.length) + ' 个</li>';
+      html += '</ul>';
+    }}
+    html += '<div style="font-size:12px;color:#909399;margin-top:4px;">该文件自身依赖 ' +
+      ic + ' 个文件</div></div>';
+  }}
+  // 实现状态
+  if (node.impl_status) {{
+    const labels = {{
+      done: '✅ 已实现', partial: '🟡 部分实现',
+      skeleton: '📋 骨架', placeholder: '🔜 占位'
+    }};
+    const colors = {{
+      done: '#f0f9eb', partial: '#fdf6ec',
+      skeleton: '#ecf5ff', placeholder: '#f4f4f5'
+    }};
+    html += '<div style="margin: 8px 0; padding: 8px 12px; ' +
+            'background: ' + (colors[node.impl_status] || '#f4f4f5') +
+            '; border-radius: 4px; font-size: 13px;">' +
+            '<strong>实现状态：</strong>' + (labels[node.impl_status] || node.impl_status);
+    if (node.impl_markers && node.impl_markers.length) {{
+      html += '<br><span style="color: #909399; font-size: 12px;">检测标记：' +
+              node.impl_markers.join(', ') + '</span>';
+    }}
+    html += '</div>';
+  }}
+  if (node.responsibility_cn) {{
+    html += '<h3 style="margin-top: 16px; margin-bottom: 8px;">职责</h3>';
+    html += '<p>' + node.responsibility_cn + '</p>';
+  }}
+  if (node.name_cn === '📝 待补充') {{
+    html += '<div style="margin-top: 16px; padding: 12px; ' +
+            'background: #fdf6ec; border-radius: 4px;">' +
+            '📝 该文件缺中文注释，建议在文件首行添加：' +
+            '<code># 文件名：&lt;中文名&gt;</code></div>';
+  }}
+  panel.innerHTML = html;
+}}
+
+// 搜索过滤（文件名 / 中文名 / 路径 / 类名 / 函数名）
+function setupSearch(rootNode) {{
+  const box = document.getElementById('search-box');
+  box.oninput = function() {{
+    const q = box.value.trim().toLowerCase();
+    const container = document.getElementById('tree-container');
+    container.innerHTML = '';
+    if (!q) {{
+      renderTree(rootNode, container);  // 回到当前视角深度
+      return;
+    }}
+    const matched = [];
+    function walk(node) {{
+      const hay = (node.name + ' ' + (node.name_cn || '') + ' ' +
+                   (node.path || '') + ' ' + ((node.sym || []).join(' '))
+                  ).toLowerCase();
+      if (hay.includes(q)) matched.push(node);
+      if (node.children) node.children.forEach(walk);
+    }}
+    walk(rootNode);
+    if (matched.length === 0) {{
+      container.innerHTML = '<div class="empty">无匹配（可搜文件名/中文名/类名/函数名）</div>';
+    }} else {{
+      // 搜索结果全展开（开发者视角）
+      matched.slice(0, 50).forEach(m => renderTree(m, container, 99));
+    }}
+  }};
+}}
+
+// 三视角切换
+function setupPerspective(rootNode) {{
+  const hint = document.getElementById('persp-hint');
+  document.querySelectorAll('.persp-btn').forEach(btn => {{
+    btn.onclick = function() {{
+      document.querySelectorAll('.persp-btn').forEach(b =>
+        b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPersp = btn.dataset.persp;
+      hint.textContent = PERSP_HINT[currentPersp];
+      const container = document.getElementById('tree-container');
+      container.innerHTML = '';
+      renderTree(rootNode, container, PERSP_DEPTH[currentPersp]);
+      // 视角切换清空搜索框
+      const box = document.getElementById('search-box');
+      if (box.value) {{ box.value = ''; }}
+    }};
+  }});
+  hint.textContent = PERSP_HINT[currentPersp];
+}}
+
+// 初始化
+function init() {{
+  renderMetrics(EMBEDDED_SUMMARY);
+  renderDiagnostics(EMBEDDED_SUMMARY);
+  renderDocHealth(EMBEDDED_SUMMARY);
+  setupDiagTabs();
+  const container = document.getElementById('tree-container');
+  renderTree(EMBEDDED_TREE, container, PERSP_DEPTH[currentPersp]);
+  setupSearch(EMBEDDED_TREE);
+  setupPerspective(EMBEDDED_TREE);
+  // 尝试 fetch 更新（如果通过 http 访问）
+  if (location.protocol.startsWith('http')) {{
+    fetch('./data/summary.json').then(r => r.json()).then(s => {{
+      renderMetrics(s);
+      renderDiagnostics(s);
+      renderDocHealth(s);
+      document.getElementById('data-status').textContent = '✅ 已加载最新数据';
+    }}).catch(() => {{
+      document.getElementById('data-status').textContent = 'ℹ️ 使用静态嵌入数据';
+    }});
+  }}
+}}
+init();
+</script>
+</body>
+</html>
+"""

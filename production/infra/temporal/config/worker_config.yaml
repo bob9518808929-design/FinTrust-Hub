@@ -1,0 +1,85 @@
+# 文件名：worker_config.yaml 职责：Temporal Worker 连接配置,定义 Server 地址、命名空间、TaskQueue 与 TLS,不可用时降级 asyncio DAG
+#
+# 此文件由 backend/app/workers/temporal_worker.py 读取 (启动时),
+# 定义 Worker 连接 Temporal Server 的所有参数.
+#
+# 降级策略:
+#   temporal-client 不可用时 (lib temporalio 未安装 / Server 不可达),
+#   Worker 自动降级为 asyncio DAG 执行器 (见 temporal_worker.py 的 try/except).
+#
+# 设计依据: ROADMAP_REMAINING_V2.md R4.8 + ai_orchestrator_service.py
+# 测试覆盖: backend/tests/test_infra_config.py::test_temporal_worker_can_init
+
+# === Temporal Server 连接 ===
+server:
+  address: "localhost:7233"            # gRPC 主端口 (与 docker-compose.yml 对应)
+  namespace: "fintrust"               # 命名空间 (注册时用)
+  task_queue: "fintrust-dag-queue"    # Worker 监听的 TaskQueue
+  # TLS 配置 (生产环境启用; 本地开发 false)
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+    ca_file: ""
+    server_name: ""
+
+# === Worker 运行参数 ===
+worker:
+  max_workers: 100                    # Worker 进程内最大并发任务数
+  max_concurrent_activity_task_pollers: 5  # Activity 任务轮询器数
+  max_concurrent_workflow_task_pollers: 5  # Workflow 任务轮询器数
+  polling_interval_seconds: 0.2       # 长轮询间隔 (避免空轮询占用 CPU)
+  max_concurrent_activities: 50       # Activity 并发上限 (受 max_workers 限制)
+  max_concurrent_workflows: 50        # Workflow 并发上限
+  sticky_queue_size: 100             # 粘性任务队列大小 (优化连续节点执行)
+  enable_remote_activity_cancellation: true
+  graceful_shutdown_timeout_seconds: 30  # 关闭时等待活动任务完成的最大时长
+
+# === DAG 工作流配置 (对应 ai_orchestrator_service.py 的 3 个种子 DAG) ===
+workflows:
+  - dag_id: "SCF-QUICK-APPROVAL"
+    name: "供应链融资快速审批"
+    task_queue: "fintrust-dag-queue"
+    timeout_seconds: 3600
+    retry_policy:
+      max_attempts: 3
+      initial_interval_seconds: 1
+      max_interval_seconds: 10
+      backoff_coefficient: 2.0
+
+  - dag_id: "CREDIT-REPORT-L4"
+    name: "征信报告仅建议"
+    task_queue: "fintrust-dag-queue"
+    timeout_seconds: 1800
+    retry_policy:
+      max_attempts: 1                 # L4 仅建议不执行, 不重试
+      initial_interval_seconds: 1
+      max_interval_seconds: 5
+      backoff_coefficient: 1.5
+
+  - dag_id: "RIGOROUS-APPROVAL-L3"
+    name: "严格审批流程"
+    task_queue: "fintrust-dag-queue"
+    timeout_seconds: 86400            # L3 需人工确认, 超时拉长到 24h
+    retry_policy:
+      max_attempts: 2
+      initial_interval_seconds: 5
+      max_interval_seconds: 60
+      backoff_coefficient: 2.0
+
+# === 持久化 (DAG 状态恢复用) ===
+persistence:
+  enabled: true
+  backend: "postgresql"              # 持久化到 PostgreSQL (替代内存 _OrchStore)
+  connection_url: "postgresql://fintrust:fintrust@localhost:5432/fintrust"
+  table_name: "ai_dag_executions"
+  # _persist_to_postgres() 写入字段:
+  #   execution_id, dag_id, enterprise_id, status, results_by_node,
+  #   context, recommendation_summary, waiting_node_id, start_at, end_at
+
+# === 降级模式 (temporalio 不可用时) ===
+fallback:
+  enabled: true                       # 总是允许降级为 asyncio
+  mode: "asyncio_dag"                 # 降级到内置 asyncio DAG 执行器
+  store: "memory"                     # 降级时数据存内存 (_OrchStore 单例)
+  log_level: "warning"

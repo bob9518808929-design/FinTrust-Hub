@@ -1,0 +1,137 @@
+{
+  "startedAt": "2026-08-26T02:11:26.020Z",
+  "pages": {
+    "login": {
+      "url": "http://localhost:5173/m/login",
+      "pathname": "/m/login",
+      "title": "工人登录 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 3,
+      "inputs": 3,
+      "toastCount": 1,
+      "scrollHeight": 944,
+      "viewportW": 390,
+      "viewportH": 844
+    },
+    "login-after": {
+      "url": "http://localhost:5173/m/scan",
+      "pathname": "/m/scan",
+      "title": "扫码确权 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 2,
+      "inputs": 2,
+      "toastCount": 0,
+      "scrollHeight": 844,
+      "viewportW": 390,
+      "viewportH": 844
+    },
+    "scan": {
+      "url": "http://localhost:5173/m/scan",
+      "pathname": "/m/scan",
+      "title": "扫码确权 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 2,
+      "inputs": 2,
+      "toastCount": 1,
+      "scrollHeight": 844,
+      "viewportW": 390,
+      "viewportH": 844
+    },
+    "pts": {
+      "url": "http://localhost:5173/m/pts",
+      "pathname": "/m/pts",
+      "title": "积分钱包 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 6,
+      "inputs": 0,
+      "toastCount": 5,
+      "scrollHeight": 1022,
+      "viewportW": 390,
+      "viewportH": 844
+    },
+    "bot": {
+      "url": "http://localhost:5173/m/bot",
+      "pathname": "/m/bot",
+      "title": "我的分身 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 2,
+      "inputs": 1,
+      "toastCount": 1,
+      "scrollHeight": 844,
+      "viewportW": 390,
+      "viewportH": 844
+    },
+    "bot-after": {
+      "url": "http://localhost:5173/m/bot",
+      "pathname": "/m/bot",
+      "title": "我的分身 | FinTrust Hub v3.1",
+      "bodyBg": "rgb(3, 7, 18)",
+      "htmlBg": "rgb(3, 7, 18)",
+      "hasMobileLayout": true,
+      "hasAppContainer": false,
+      "hasMHeader": true,
+      "hasMTabbar": true,
+      "buttons": 5,
+      "inputs": 1,
+      "toastCount": 0,
+      "scrollHeight": 844,
+      "viewportW": 390,
+      "viewportH": 844
+    }
+  },
+  "consoleErrors": [
+    {
+      "page": "http://localhost:5173/m/pts",
+      "type": "warning",
+      "text": "[PtsWallet] loadAccount failed: BusinessError: 工人 W001 不存在\n    at client.interceptors.response.use.ElMessage.error.message (http://localhost:5173/src/api/client.ts:85:29)\n    at async Axios.request (http://localhost:5173/node_modules/.vite/deps/axios.js?v=44421048:3123:14)\n    at async get (http://localhost:5173/src/api/client.ts:159:10)\n    at async loadAccount (http://localhost:5173/src/views/mobile/PtsWalletView.vue:103:25)",
+      "location": "http://localhost:5173/src/views/mobile/PtsWalletView.vue"
+    },
+    {
+      "page": "http://localhost:5173/m/pts",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Content)",
+      "location": "http://localhost:8000/api/v1/eco-pts/orders?workerId=W001"
+    },
+    {
+      "page": "http://localhost:5173/m/pts",
+      "type": "warning",
+      "text": "[PtsWallet] loadOrders failed: HttpError: Request failed with status code 422\n    at http://localhost:5173/src/api/client.ts:128:27\n    at async Axios.request (http://localhost:5173/node_modules/.vite/deps/axios.js?v=44421048:3123:14)\n    at async get (http://localhost:5173/src/api/client.ts:159:10)\n    at async loadOrders (http://localhost:5173/src/views/mobile/PtsWalletView.vue:115:22)",
+      "location": "http://localhost:5173/src/views/mobile/PtsWalletView.vue"
+    }
+  ],
+  "networkErrors": [],
+  "flowIssues": [],
+  "buttonIssues": [],
+  "styleIssues": [],
+  "severity": {
+    "P0": [],
+    "P1": [],
+    "P2": []
+  },
+  "endedAt": "2026-08-26T02:11:51.717Z"
+}

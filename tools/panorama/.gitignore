@@ -1,0 +1,6 @@
+# 全景导航工具运行时产物（不入 git）
+.cache/
+data/
+# 但保留目录结构
+!.cache/.gitkeep
+!data/.gitkeep

@@ -1,0 +1,42 @@
+# FinTrust Hub 后端 Dockerfile
+# 多阶段构建: builder (安装依赖) + runtime (精简运行时)
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# 构建依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Python 依赖
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# === 运行时 ===
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# 运行时依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 从 builder 拷贝已安装的包
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# 拷贝应用代码
+COPY backend/ /app/
+
+# 健康检查
+HEALTHCHECK --interval=15s --timeout=5s --retries=5 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

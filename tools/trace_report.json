@@ -1,0 +1,730 @@
+{
+  "spec_path": ".trae\\specs\\build-fintech-trust-hub\\spec.md",
+  "total": 53,
+  "requirements": [
+    {
+      "req_id": "INFRA-01 云原生基座",
+      "title": "INFRA-01 云原生基座",
+      "status": "部分实现",
+      "priority": "P0",
+      "code_ref": "production/backend/app/main.py + production/infra/ (基础 FastAPI/CORS/JWT 已就绪, K8s/Docker Compose 缺失)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\main.py",
+        "production\\infra"
+      ],
+      "dangling_paths": [],
+      "line_no": 561
+    },
+    {
+      "req_id": "INFRA-02 AI引擎底座",
+      "title": "INFRA-02 AI引擎底座",
+      "status": "部分实现",
+      "priority": "P0",
+      "code_ref": "prod-be: ai-engine/services/llm_service.py (DeepSeek chat/analyze/score)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\ai-engine\\services\\llm_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 606
+    },
+    {
+      "req_id": "INFRA-04 改造沙箱仿真环境（v3.1 新增）",
+      "title": "INFRA-04 改造沙箱仿真环境（v3.1 新增）",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/reform_sandbox_service.py + app/api/v1/infra/reform_sandbox.py (R3.2 已实现: 沙箱快照+变更确认+commit/rollback+30 天自动 purge)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\reform_sandbox_service.py",
+        "production\\backend\\app\\api\\v1\\infra\\reform_sandbox.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 639
+    },
+    {
+      "req_id": "INFRA-05 无接口适配器（RPA 适配层，v3.1 新增，银行冷启动期破局）",
+      "title": "INFRA-05 无接口适配器（RPA 适配层，v3.1 新增，银行冷启动期破局）",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/views/eco/EcoRpaView.vue (前端骨架) | prod-be: app/services/eco_service.py (RPA application generator) | PDF 模板待补",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\eco\\EcoRpaView.vue",
+        "production\\backend\\app\\services\\eco_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 756
+    },
+    {
+      "req_id": "DATA-01 银企直连接口",
+      "title": "DATA-01 银企直连接口",
+      "status": "部分实现",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/enterprise_service.py (stub) | prod-fe: frontend/src/views/bank/BankWorkbenchView.vue | OAuth2 模块待补 (依赖银行 API)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\enterprise_service.py",
+        "production\\frontend\\src\\views\\bank\\BankWorkbenchView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 822
+    },
+    {
+      "req_id": "DATA-02 第三方数据源接入",
+      "title": "DATA-02 第三方数据源接入",
+      "status": "部分实现",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/invoice_verifier.py + gsxt_adapter.py + judiciary_adapter.py + ecds_adapter.py + data_source_registry.py + app/api/v1/data/external.py (R1.2 已实现: 4 适配器 mock + 热插拔注册表)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\invoice_verifier.py",
+        "production\\backend\\app\\api\\v1\\data\\external.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 853
+    },
+    {
+      "req_id": "DATA-03 OCR与文档解析",
+      "title": "DATA-03 OCR与文档解析",
+      "status": "部分实现",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/ocr_service.py + bank_statement_parser.py + contract_parser.py + invoice_parser.py + app/api/v1/data/ocr_parsers.py (R1.3 已实现: MOCK 引擎兜底+3 解析器, 流水解析率 ≥80%)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\ocr_service.py",
+        "production\\backend\\app\\api\\v1\\data\\ocr_parsers.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 889
+    },
+    {
+      "req_id": "MOD-01 资金监管模块",
+      "title": "MOD-01 资金监管模块",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/fund_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\fund_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 920
+    },
+    {
+      "req_id": "MOD-02 智能风控引擎",
+      "title": "MOD-02 智能风控引擎",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/risk_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\risk_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 984
+    },
+    {
+      "req_id": "MOD-03 征信与审批简化模块",
+      "title": "MOD-03 征信与审批简化模块",
+      "status": "部分实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/credit_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\credit_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1036
+    },
+    {
+      "req_id": "MOD-04 票据服务模块",
+      "title": "MOD-04 票据服务模块",
+      "status": "部分实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/invoice_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\invoice_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1081
+    },
+    {
+      "req_id": "MOD-05 应收款保险模块",
+      "title": "MOD-05 应收款保险模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/insurance_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\insurance_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1135
+    },
+    {
+      "req_id": "MOD-06 AI履约评分引擎",
+      "title": "MOD-06 AI履约评分引擎",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/performance_score_service.py + app/api/v1/modules/performance.py (R2.1 已实现: PD/IoY 评分 + 12 月趋势, LLM 不可用降级为规则)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\performance_score_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\performance.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1192
+    },
+    {
+      "req_id": "MOD-07 数据安全与隐私计算模块",
+      "title": "MOD-07 数据安全与隐私计算模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/privacy_compute_service.py + data_purge_service.py + app/api/v1/modules/privacy.py (R2.2 已实现: FF1 保格式+Shamir 3of5 分片+HE-SEAL 占位+purge 10 步审计)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\privacy_compute_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\privacy.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1241
+    },
+    {
+      "req_id": "MOD-08 区块链存证与司法取证模块",
+      "title": "MOD-08 区块链存证与司法取证模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/chain_service.py (实现)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\chain_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1335
+    },
+    {
+      "req_id": "MOD-08b 信用凭证联盟链加密数据包（v3.1 新增，跨行便携确权，NFT 合规版）",
+      "title": "MOD-08b 信用凭证联盟链加密数据包（v3.1 新增，跨行便携确权，NFT 合规版）",
+      "status": "部分实现 (Scenario, 前端骨架已实现)",
+      "priority": "P2",
+      "code_ref": "prod-fe: frontend/src/views/eco/EcoCredentialView.vue | prod-be: app/services/chain_service.py (VerifiableCredential)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\eco\\EcoCredentialView.vue",
+        "production\\backend\\app\\services\\chain_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1378
+    },
+    {
+      "req_id": "MOD-09 合作模式管理模块",
+      "title": "MOD-09 合作模式管理模块",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/cooperation_mode_service.py + app/api/v1/modules/cooperation.py (R2.3 已实现: 4 模式 FULL_TRUST/CO_LENDING/GUARANTEED/INSURED + 权限矩阵 Diff)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\cooperation_mode_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\cooperation.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1463
+    },
+    {
+      "req_id": "MOD-10 政策与行业因素模块",
+      "title": "MOD-10 政策与行业因素模块",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/policy_factor_service.py + app/api/v1/modules/policy.py (R2.4 已实现: 8 因子 seed + USCC 前缀+行业+月份匹配)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\policy_factor_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\policy.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1565
+    },
+    {
+      "req_id": "MOD-11 再融资再贴现闭环模块",
+      "title": "MOD-11 再融资再贴现闭环模块",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/refinance_service.py + app/api/v1/modules/refinance.py (R2.5 已实现: 6 月现金流预测+入口判定+AI 4 产品推荐+提交)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\refinance_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\refinance.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1660
+    },
+    {
+      "req_id": "APP-01 银行端门户",
+      "title": "APP-01 银行端门户",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "production/frontend/src/views/bank/BankWorkbenchView.vue (含 11 处 placeholder)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\bank\\BankWorkbenchView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 1712
+    },
+    {
+      "req_id": "APP-02 企业端门户",
+      "title": "APP-02 企业端门户",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "production/frontend/src/views/enterprise/ + ScanInput.vue (含 7 处 placeholder, mobile 路线图 P2)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\enterprise"
+      ],
+      "dangling_paths": [],
+      "line_no": 1741
+    },
+    {
+      "req_id": "APP-03 财务顾问运营台",
+      "title": "APP-03 财务顾问运营台",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "production/frontend/src/views/advisor/AdvisorWorkbenchView.vue",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\advisor\\AdvisorWorkbenchView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 1847
+    },
+    {
+      "req_id": "APP-04 监管沙盒",
+      "title": "APP-04 监管沙盒",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "production/frontend/src/views/regulatory/RegulatorySandboxView.vue",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\regulatory\\RegulatorySandboxView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 1912
+    },
+    {
+      "req_id": "CORE-01 AI自主操作编排引擎",
+      "title": "CORE-01 AI自主操作编排引擎",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/ai_orchestrator_service.py + app/api/v1/core/ai_orchestrator.py (R1.4 已实现: L1-L4 自主度+3 种子 DAG+决策日志 evidence_ids, Temporal 降级为 asyncio DAG)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\ai_orchestrator_service.py",
+        "production\\backend\\app\\api\\v1\\core\\ai_orchestrator.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 1959
+    },
+    {
+      "req_id": "CORE-02 人机协同网关",
+      "title": "CORE-02 人机协同网关",
+      "status": "已实现",
+      "priority": "P0",
+      "code_ref": "prod-be: app/services/human_ai_gateway.py + app/api/v1/core/human_ai.py (R1.5 已实现: 4 工作流 串/并/AnyOne/L3+24h 超时升级+代理审批+决策回溯链)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\human_ai_gateway.py",
+        "production\\backend\\app\\api\\v1\\core\\human_ai.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2006
+    },
+    {
+      "req_id": "DATA-04 物联网数据采集网关",
+      "title": "DATA-04 物联网数据采集网关",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/iot_gateway.py + app/api/v1/modules/iot_gateway.py (R2.7 已实现: 40 设备 seed+GPS/温湿度/能耗+命令执行, EMQX 降级为 HTTP 长轮询)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\iot_gateway.py",
+        "production\\backend\\app\\api\\v1\\modules\\iot_gateway.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2038
+    },
+    {
+      "req_id": "MOD-12 物联网感知与实物资产验证模块",
+      "title": "MOD-12 物联网感知与实物资产验证模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/iot_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\iot_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2072
+    },
+    {
+      "req_id": "MOD-13 多方机构协作模块",
+      "title": "MOD-13 多方机构协作模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/contract_service.py (stub)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\contract_service.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2126
+    },
+    {
+      "req_id": "MOD-14 人流（责任人流）模块",
+      "title": "MOD-14 人流（责任人流）模块",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/responsibility_chain_service.py + app/api/v1/modules/responsibility.py (R2.6 已实现: R0-R4 四阶段责任链+行为挖矿积分联动)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\responsibility_chain_service.py",
+        "production\\backend\\app\\api\\v1\\modules\\responsibility.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2195
+    },
+    {
+      "req_id": "APP-05 担保公司端门户",
+      "title": "APP-05 担保公司端门户",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/views/partner/GuaranteePortalView.vue (R2.8 已实现: 6 Tabs 申请受理/保前审查/反担保/代偿/保后监管/统计)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\partner\\GuaranteePortalView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 2478
+    },
+    {
+      "req_id": "APP-06 保险公司端门户",
+      "title": "APP-06 保险公司端门户",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/views/partner/InsurancePortalView.vue (R2.9 已实现: 6 Tabs 投保/核保/保单/理赔/保费结算/分析)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\partner\\InsurancePortalView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 2509
+    },
+    {
+      "req_id": "APP-07 关联机构端门户",
+      "title": "APP-07 关联机构端门户",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/views/institution/ (InstitutionWorkbenchView.vue)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\institution"
+      ],
+      "dangling_paths": [],
+      "line_no": 2540
+    },
+    {
+      "req_id": "APP-08 AI驾驶舱（全局观察台）",
+      "title": "APP-08 AI驾驶舱（全局观察台）",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "production/frontend/src/views/cockpit/CockpitView.vue",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\cockpit\\CockpitView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 2565
+    },
+    {
+      "req_id": "CORE-03 企业可选配置引擎（Modular Decoupling & Opt-in Engine）",
+      "title": "CORE-03 企业可选配置引擎（Modular Decoupling & Opt-in Engine）",
+      "status": "已实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/opt_in_config_engine.py + app/api/v1/core/opt_in_config.py (R2.10 已实现: 6 数据流×16 模块开关+4 合作方式独立配置+Diff)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\opt_in_config_engine.py",
+        "production\\backend\\app\\api\\v1\\core\\opt_in_config.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 2596
+    },
+    {
+      "req_id": "CORE-04 全局\"一键求助\"与操作指引浮层（v3.1 新增）",
+      "title": "CORE-04 全局\"一键求助\"与操作指引浮层（v3.1 新增）",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/composables/useCoachMark.ts, frontend/src/components/common/CoachMark.vue",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\composables\\useCoachMark.ts",
+        "production\\frontend\\src\\components\\common\\CoachMark.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 2679
+    },
+    {
+      "req_id": "CORE-05 傻瓜化 UI/UX 组件规范（v3.1 新增）",
+      "title": "CORE-05 傻瓜化 UI/UX 组件规范（v3.1 新增）",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/styles/main.scss, frontend/src/styles/variables.scss, frontend/src/styles/reset.scss",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\styles\\main.scss",
+        "production\\frontend\\src\\styles\\variables.scss",
+        "production\\frontend\\src\\styles\\reset.scss"
+      ],
+      "dangling_paths": [],
+      "line_no": 2723
+    },
+    {
+      "req_id": "MOD-16 企业改造引擎（主模块，v3.0 新增）",
+      "title": "MOD-16 企业改造引擎（主模块，v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 2789
+    },
+    {
+      "req_id": "MOD-16.0 改造预检与分级准入网关（v3.1 新增，R0 前置门禁）",
+      "title": "MOD-16.0 改造预检与分级准入网关（v3.1 新增，R0 前置门禁）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 2862
+    },
+    {
+      "req_id": "MOD-16.1 企业全景画像引擎（v3.0 新增）",
+      "title": "MOD-16.1 企业全景画像引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 2955
+    },
+    {
+      "req_id": "MOD-16.2 银行准入差距诊断引擎（v3.0 新增）",
+      "title": "MOD-16.2 银行准入差距诊断引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3077
+    },
+    {
+      "req_id": "MOD-16.3 改造方案生成引擎（v3.0 新增）",
+      "title": "MOD-16.3 改造方案生成引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3158
+    },
+    {
+      "req_id": "MOD-16.4 任务调度引擎（v3.0 新增）",
+      "title": "MOD-16.4 任务调度引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3234
+    },
+    {
+      "req_id": "MOD-16.5 任务执行引擎族（v3.0 新增）",
+      "title": "MOD-16.5 任务执行引擎族（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3301
+    },
+    {
+      "req_id": "MOD-16.6 动态重规划引擎（v3.0 新增）",
+      "title": "MOD-16.6 动态重规划引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3401
+    },
+    {
+      "req_id": "MOD-16.7 法律合规审核引擎（v3.0 新增）",
+      "title": "MOD-16.7 法律合规审核引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3434
+    },
+    {
+      "req_id": "MOD-16.8 进度监控与预警引擎（v3.0 新增）",
+      "title": "MOD-16.8 进度监控与预警引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3490
+    },
+    {
+      "req_id": "MOD-16.9 银行撮合引擎（v3.0 新增）",
+      "title": "MOD-16.9 银行撮合引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3531
+    },
+    {
+      "req_id": "MOD-16.10 改造案例沉淀与学习引擎（v3.0 新增）",
+      "title": "MOD-16.10 改造案例沉淀与学习引擎（v3.0 新增）",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/reform.py + reform_service.py + simulation/js/reform-engine.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\reform.py",
+        "simulation\\js\\reform-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 3603
+    },
+    {
+      "req_id": "MOD-15 独立兜底引擎模块",
+      "title": "MOD-15 独立兜底引擎模块",
+      "status": "已实现(production)",
+      "priority": "P1",
+      "code_ref": "prod-fe: frontend/src/views/fallback/ (FallbackConsoleView.vue)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\fallback"
+      ],
+      "dangling_paths": [],
+      "line_no": 4519
+    },
+    {
+      "req_id": "INFRA-01b 外部 API 适配层（External API Adapter Layer）",
+      "title": "INFRA-01b 外部 API 适配层（External API Adapter Layer）",
+      "status": "部分实现",
+      "priority": "P1",
+      "code_ref": "prod-be: app/services/api_adapter_registry.py + app/api/v1/infra/api_adapters.py (R2.11 已实现: A1-A15 15 适配器+滑动限流+3 次重试+断路器+fallback, 真实外部 API 凭证依赖)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\services\\api_adapter_registry.py",
+        "production\\backend\\app\\api\\v1\\infra\\api_adapters.py"
+      ],
+      "dangling_paths": [],
+      "line_no": 4576
+    },
+    {
+      "req_id": "MOD-16 供应链金融子系统 (SCF)",
+      "title": "MOD-16 供应链金融子系统 (SCF)",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/scf.py + scf_service.py + simulation/js/scf-engine.js (SCF v6.0 子系统)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\scf.py",
+        "simulation\\js\\scf-engine.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 4763
+    },
+    {
+      "req_id": "DATA-05 供应链企业数据库",
+      "title": "DATA-05 供应链企业数据库",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/backend/app/api/v1/scf.py + scf_service.py + simulation/js/scf-data.js",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\backend\\app\\api\\v1\\scf.py",
+        "simulation\\js\\scf-data.js"
+      ],
+      "dangling_paths": [],
+      "line_no": 4904
+    },
+    {
+      "req_id": "APP-09 供应链金融工作台 (Tab11)",
+      "title": "APP-09 供应链金融工作台 (Tab11)",
+      "status": "已实现(production)",
+      "priority": "P0",
+      "code_ref": "production/frontend/src/views/scf/ScfWorkbenchView.vue (含 8 处 placeholder 待细化)",
+      "code_ref_exists": true,
+      "code_ref_locations": [
+        "production\\frontend\\src\\views\\scf\\ScfWorkbenchView.vue"
+      ],
+      "dangling_paths": [],
+      "line_no": 4942
+    }
+  ]
+}

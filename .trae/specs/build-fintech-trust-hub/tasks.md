@@ -1,0 +1,3708 @@
+# Tasks - AI驱动的金融信任枢纽系统 (FinTrust Hub)
+
+> **执行说明**：每个任务均自包含，可由独立代理执行。任务描述中包含：输入依赖、交付物、验证标准、对应spec章节。同一Phase内无依赖关系的任务可并行执行。
+
+---
+
+## Phase 1: 基础设施搭建（所有后续任务的前提）
+
+### Task 1: 项目脚手架与云原生基座
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: INFRA-01
+**输入依赖**: 无
+**交付物**:
+- 项目根目录结构（前端 `frontend/`、后端 `backend/`、AI引擎 `ai-engine/`、基础设施 `infra/`）
+- Docker Compose本地开发环境（PostgreSQL + Redis + Kafka + MinIO）
+- Kubernetes部署模板（deployment.yaml + service.yaml + ingress.yaml）
+- API网关配置（Kong或APISIX，含认证插件、限流插件、日志插件）
+- 配置中心（Nacos）初始化
+- 服务注册发现基础配置
+**验证标准**:
+- `docker-compose up` 可启动所有基础服务
+- API网关可路由请求到后端健康检查端点
+- 配置中心可读取到默认配置项
+**技术约束**: Python 3.11+, Node.js 18+, PostgreSQL 15+, Redis 7+
+
+### Task 2: CI/CD流水线搭建
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: INFRA-01
+**输入依赖**: Task 1
+**交付物**:
+- GitLab CI / Jenkins pipeline配置文件
+- 前端构建→单元测试→Docker镜像→推送仓库
+- 后端构建→单元测试→代码质量检查(SonarQube)→Docker镜像→推送仓库
+- K8s自动部署脚本（dev/staging/prod环境隔离）
+**验证标准**:
+- 提交代码后自动触发CI，全流程通过
+- 镜像成功推送到镜像仓库
+- dev环境自动部署并可访问
+
+### Task 3: AI引擎底座搭建
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: INFRA-02
+**输入依赖**: Task 1
+**交付物**:
+- LLM推理服务（FastAPI封装，对接DeepSeek/通义千问API，OpenAI兼容格式）
+- ML推理服务（加载XGBoost/LightGBM模型，输入特征向量，输出评分）
+- 特征工程平台基础（特征存储schema、特征计算pipeline）
+- 模型版本管理（MLflow集成，模型注册、版本对比、A/B测试）
+- 统一AI引擎API：`POST /ai/score`, `POST /ai/analyze`, `POST /ai/chat`
+**验证标准**:
+- 调用LLM推理API返回正确结果
+- 加载示例ML模型并成功推理
+- MLflow可记录模型版本
+**接口契约**:
+```
+POST /ai/score
+Input:  {model: "risk_score_v1", features: {field1: val, ...}}
+Output: {score: 0.85, level: "A", confidence: 0.92, reasons: [...]}
+
+POST /ai/analyze
+Input:  {task: "doc_classify", doc_type: "bank_statement", content: "..."}
+Output: {result: {..., structured_data: {...}}
+```
+
+---
+
+## Phase 2: 数据接入层（依赖Phase 1）
+
+### Task 4: 银企直连接口服务
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-01
+**输入依赖**: Task 1
+**交付物**:
+- 银行授权模块（OAuth2.0流程，企业授权银行数据读取）
+- 银行账户聚合服务（对接第三方聚合API如聚水潭/银企联云，初期覆盖工/建/农/中/交/招商）
+- 交易流水抓取服务（定时任务T+1批量 + 准实时Webhook T+0）
+- 数据湖写入接口（结构化交易记录写入PostgreSQL + ClickHouse）
+- API：`GET /data/bank/accounts?enterpriseId=`, `GET /data/bank/transactions?accountId=&dateRange=`
+**验证标准**:
+- 模拟银行授权流程成功
+- 拉取模拟交易流水并正确结构化存储
+- API返回符合接口规范的数据格式
+
+### Task 5: 第三方数据源接入服务
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-02
+**输入依赖**: Task 1
+**交付物**:
+- 数据源适配器框架（统一接口，可插拔新增数据源）
+- 发票验真适配器（对接国家税务总局发票查验API）
+- 工商信息适配器（对接国家企业信用信息公示系统，含股权穿透）
+- 司法查询适配器（对接裁判文书网/失信被执行人查询）
+- 票交所/ECDS适配器（票据真伪和状态查询）
+- 物流数据适配器（对接顺丰/京东物流API，获取签收GPS和电子签收单）
+- 水电煤缴费适配器（经授权获取缴费记录）
+- 统一API：`GET /data/external/{source}?query={...}`
+**验证标准**:
+- 每个适配器可独立调用并返回结构化数据
+- 适配器框架支持热插拔（新增数据源不改核心代码）
+- 数据源不可用时优雅降级（返回缓存或默认值）
+
+### Task 6: OCR与文档解析服务
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-03
+**输入依赖**: Task 1, Task 3
+**交付物**:
+- OCR服务封装（PaddleOCR或云OCR，支持PDF/图片输入）
+- 银行流水解析器（OCR→NLP提取：交易日期、金额、对手方、摘要→结构化JSON）
+- 合同解析器（提取：合同金额、付款条件、交货期限、买卖双方）
+- 发票解析器（提取：发票号、金额、开票日期、买卖双方、税额）
+- 文档影像存档（原始文件存入MinIO，关联结构化数据）
+- API：`POST /data/ocr/parse {doc_type, file}`, `GET /data/ocr/result/{taskId}`
+**验证标准**:
+- 上传PDF银行流水，正确提取80%以上交易记录
+- 上传合同图片，正确提取关键字段
+- 解析结果与原始文档关联可追溯
+
+---
+
+## Phase 3: 核心业务模块 - 资金监管与风控（依赖Phase 2）
+
+### Task 7: 资金监管模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-01
+**输入依赖**: Task 4（银企直连）, Task 1
+**交付物**:
+- 监管账户管理（CRUD：创建、查询、冻结、解冻、关闭监管账户）
+- 白名单管理（CRUD：添加/删除/修改白名单条目，按类别分类：供应商/工资/税金/水电/物流/其他）
+- 白名单校验引擎（转账时自动判断对手方是否在白名单内）
+- 动态水位计算服务（输入：实时回款、订单、库存数据→输出：可划拨额度、可划拨比例）
+  - 回款正常→释放额度（最高100%）
+  - 回款恶化（逾期>15%）→收紧比例（最低30%）
+  - 计算频率：每次新交易触发 + 每小时定时刷新
+- 数字契约引擎（将贷款合同条款转化为可执行规则，触发条件满足时自动执行动作）
+  - 规则DSL：`WHEN cashflow_gap > threshold THEN lock_funds(ratio) AND notify_bank`
+- 转账拦截与人工复核流程（白名单外转账→拦截→生成复核工单→银行端审批）
+- API：`POST /fund/transfer`, `GET /fund/account/{id}`, `PUT /fund/quota/{id}`, `POST /fund/contract/execute`
+**验证标准**:
+- 白名单内转账自动放行，白名单外转账被拦截
+- 动态水位根据回款数据正确调整
+- 数字契约在现金流缺口超阈值时自动执行锁定动作
+- 所有操作有完整审计日志
+
+### Task 8: 智能风控引擎
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-02
+**输入依赖**: Task 3（AI引擎）, Task 4（银企直连）, Task 5（第三方数据）
+**交付物**:
+- 57维交易特征提取器（从交易记录提取8类57个特征）
+  - 时间维度(8) / 金额维度(10) / 对手方维度(12) / 频率维度(8) / 摘要维度(7) / 历史偏差(6) / 行业维度(3) / 关联维度(3)
+- 异常检测ML模型（输入57维特征→输出异常分数0-1，阈值可配置）
+- 资金抽逃识别引擎（3种特征检测）：
+  - "空心化"检测：监管账户只有过桥还款流入，日常经营支出不走该账户
+  - "回款断崖"检测：回款额下滑但开票/纳税数据增长
+  - "结算紊乱"检测：采购付款周期突然异常变化
+- 现金流悬崖预测模型（基于历史现金流+应收款到期+应付款到期，预测未来30天缺口）
+- 关联方欺诈检测（基于Neo4j图数据库，构建资金流向图谱，检测资金回流到未报备关联方）
+- 预警生成与推送服务（黄/红牌预警→推送到银行端+财务顾问端）
+- API：`GET /risk/score/{enterpriseId}`, `GET /risk/alerts`, `POST /risk/analyze`
+**验证标准**:
+- 57维特征提取覆盖所有维度，特征值合理
+- 注入测试异常交易，模型正确识别并生成预警
+- 现金流预测模型误差 < 15%
+- 图谱查询可发现2跳以内的关联方资金回流
+
+---
+
+## Phase 4: 数据安全与存证（依赖Phase 3，可与Phase 5并行）
+
+### Task 9: 数据安全与隐私计算模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-07
+**输入依赖**: Task 1, Task 7
+**交付物**:
+- 同态加密服务（Paillier同态加密，支持加密数据上的加法运算）
+  - 银行端收到加密风险特征，可在加密态计算风险评分
+- 格式保留加密服务（FF1算法，NIST标准）
+  - 企业名称→虚拟代号（保持汉字格式）
+  - 银行账号→虚拟代号（保持数字格式）
+- 分级脱敏视图引擎（基于角色权限返回不同数据视图）
+  - 企业端：完整自有数据
+  - 银行端：脱敏风险指标 + 加密背书
+  - 财务顾问：脱敏运营数据
+  - 监管沙盒：脱敏穿透报告（6217****1234格式 + 加密确权背书）
+- 差分隐私模块（AI训练时注入噪声保护个体隐私）
+- API：`POST /security/desensitize`, `POST /security/homomorphic/compute`, `GET /security/view/{role}/{dataType}`
+**验证标准**:
+- 同态加密后计算结果与明文计算结果一致
+- 格式保留加密后数据格式不变（汉字→汉字，数字→数字）
+- 不同角色查看同一数据返回不同脱敏视图
+- 逆向解密需要完整密钥
+
+### Task 10: 区块链存证与司法取证模块
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-08
+**输入依赖**: Task 1, Task 9
+**交付物**:
+- 哈希存证服务（关键数据SHA-256哈希→加盖时间戳→上传司法联盟链）
+  - 对接蚂蚁链/至信链SDK
+  - 存证数据类型：交易记录、合同、发票、审批记录、预警记录
+- 数据完整性验证服务（重新计算哈希→与链上哈希对比→判定是否篡改）
+- 多密钥分片托管系统（Shamir's Secret Sharing, t=3, n=3）
+  - 三方（企业/银行/财务顾问）各持一片密钥
+  - 日常状态任何单方无法解密
+  - 密钥碎片存储于HSM或多方独立云KMS
+- 司法取证解密流程
+  - 输入：法院调查令 + 三方密钥碎片
+  - 输出：指定时间段的原始解密数据
+  - 全过程记录审计日志（日志本身也上链）
+- API：`POST /blockchain/anchor`, `GET /blockchain/verify/{dataHash}`, `POST /blockchain/forensic/decrypt`
+**验证标准**:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 关键数据成功上链，返回交易哈希和区块高度
+- 篡改数据后完整性验证失败
+- 三方密钥碎片单独无法解密，三方合并后成功解密
+- 取证审计日志完整记录操作链
+
+---
+
+## Phase 5: 征信与票据服务（依赖Phase 3，可与Phase 4并行）
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+### Task 11: 征信与审批简化模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-03
+**输入依赖**: Task 4, Task 5, Task 8
+**交付物**:
+- 动态信用画像服务（实时计算企业信用评分）
+  - 输入：回款稳定性(6个月波动率)、付款履约率、经营活跃度、现金流为正持续时长、上下游集中度、票据/应收款质量
+  - 输出：现金流健康度评分(0-100)、评分维度分解、趋势曲线
+- 监管数据包生成器
+  - 自动生成《资金流水分析报告》（带时间戳、区块链存证哈希）
+  - 自动生成《上下游交易图谱》（可视化PNG + JSON数据）
+  - 以银行可读标准格式（JSON/XML）输出
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 贷后自动化管理服务
+  - 自动监控贷后财务指标（按周/按月）
+  - 生成《贷后风险周报》（风险等级、变化趋势、行动建议）
+  - 银行端推送通知
+- API：`GET /credit/portrait/{enterpriseId}`, `GET /credit/report/{type}/{enterpriseId}`, `GET /credit/postloan/weekly/{enterpriseId}`
+**验证标准**:
+- 信用评分模型输入合理特征后输出0-100评分
+- 监管数据包含完整资金流水分析和交易图谱
+- 贷后周报自动生成并推送
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+### Task 12: 票据服务模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-04
+**输入依赖**: Task 5（票交所接口）, Task 3（AI引擎）
+**交付物**:
+- 票据验真确权服务
+  - 接入票交所/ECDS接口核验票据真伪
+  - 基于系统内贸易背景（合同、发票、物流）生成"确权证明"
+  - 票据数据模型：billId, billType, billNumber, amount, issueDate, dueDate, drawer, payee, acceptor, endorserChain, verificationStatus
+- AI智能撮合贴现引擎
+  - 输入：企业持有票据信息（剩余期限、承兑人信用、金额）
+  - AI自动拆包，匹配合作银行池中的最优贴现方案
+  - 输出：推荐方案排序（成本最低→速度最快）
+- 票据池动态质押服务
+  - 持有多张散票的企业可建立票据池
+  - 票据总价值达标后银行按比例放款
+  - 支持随借随还（动态调整质押率和可用额度）
+- 票据生命周期管理（签发→背书→贴现→质押→到期→兑付）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- API：`POST /bill/verify`, `POST /bill/discount/match`, `POST /bill/pool/create`, `GET /bill/list/{enterpriseId}`
+**验证标准**:
+- 票据验真可正确识别真伪
+- AI撮合贴现能根据票据特征推荐最优银行
+- 票据池质押额度随票据增减动态调整
+- 票据全生命周期状态流转正确
+
+---
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+## Phase 6: 应收款保险与AI履约评分（依赖Phase 5）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+### Task 13: 应收款保险模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-05
+**输入依赖**: Task 5, Task 6（OCR）, Task 12（票据服务）, Task 9（数据安全）
+**交付物**:
+- 四流合一验证引擎
+  - 输入：发票流、合同流、物流流、资金流（历史付款记录）
+  - NLP+规则交叉验证四流一致性
+  - 输出：验证通过/失败 + 不一致原因 + 账龄计算 + 资产质量筛选（90天内、付款方优质）
+- 线上化投保服务
+  - 对接保险公司API（初期对接1家财险公司）
+  - AI根据付款方历史违约率自动计算浮动保费
+  - 企业在线确认→保单即时生效→保单数据上链存证
+- 保险-贴现匹配引擎
+  - 输入：已投保应收账款包
+  - AI智能拆包（如1000万分多份，按买方信用和保险覆盖分配）
+  - 匹配合作银行池：带保险→低利率银行；不带保险→高利率银行
+  - 自动比价→推荐最优方案→资金到账
+- 贷后风险对冲预警
+  - 回款变慢时自动给保险公司推送"风险敞口扩大"提示
+  - 保险公司可提前介入催收
+- 消极确权机制
+  - 系统发送加密应收款信息至买方财务系统
+  - 48小时未异议→视为默认确认
+  - 记录发送时间和确认状态
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 动态回款封闭机制
+  - 与银行合作的资金归集锁定
+  - 回款进账后按约定比例（如80%）自动划转还贷
+  - 剩余部分释放给企业
+- API：`POST /ar/verify`, `POST /ar/insure`, `POST /ar/discount/match`, `POST /ar/negative-confirm`, `POST /ar/collection/lock`
+**验证标准**:
+- 四流合一验证能正确识别一致/不一致
+- 投保流程端到端走通（API模拟保险公司接口）
+- AI拆包逻辑合理（大额拆小、按信用分配）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 消极确权48小时倒计时正确执行
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 回款封闭自动按比例划转
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+### Task 14: AI履约评分引擎
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-06
+**输入依赖**: Task 5（税务/工商）, Task 8（风控引擎）, Task 3（AI引擎）
+**交付物**:
+- 发票验真锁死服务
+  - 接入税务接口验证发票已认证（买方已入账抵税）
+  - 以"税务认证"替代"公章确权"作为交易真实性硬证据
+- 付款规律画像服务
+  - AI分析过去2年买方付款流水
+  - 提取付款周期规律性（如T+60必付款、从未逾期）
+  - 生成《历史付款纪律报告》
+- 物流交割时空定位服务
+  - 对接物流平台提取货物签收GPS轨迹
+  - 提取电子签收单
+  - 证明货物已入库签收
+- 违约概率（PD）模型
+  - 输入特征：买方企业属性(上市/国企/民营)、过去24月付款记录、行业景气度、账龄、四流完整度、宏观经济指标
+  - 输出：违约概率(PD) + 确权等级(A/B/C) + 置信度
+  - A级：上市+低波动→准现金（无需确权）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  - B级：四流完整但无盖章→输出具体PD值
+  - C级：四流不全或信用差→高风险标记
+- API：`GET /performance/invoice-verify/{invoiceId}`, `GET /performance/payment-profile/{buyerId}`, `POST /performance/score/{assetId}`
+**验证标准**:
+- 发票验真能正确判断税务认证状态
+- 付款规律画像准确提取周期性特征
+- PD模型输出合理的违约概率（0-1之间）
+- 确权等级A/B/C分类逻辑正确
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+---
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+## Phase 7: 合作模式与政策因素（依赖Phase 3，可与Phase 4-6并行）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+### Task 15: 合作模式管理模块
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-09
+**输入依赖**: Task 1
+**交付物**:
+- 企业合作模式管理
+  - 4种模式：财务托管(custody)、财务顾问(advisory)、金融顾问(financing_advisory)、财务规划(planning)
+  - 每种模式对应不同的权限和数据开放范围
+  - 支持模式切换（含历史记录、平滑过渡、权限自动调整）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 银行合作模式管理
+  - 5种模式：业务发现(discovery)、业务咨询(consulting)、业务委托(delegation)、贷前审查(pre_loan)、贷后监管(post_loan)
+  - 支持模式切换
+- 权限矩阵引擎
+  - 输入：企业合作模式 + 银行合作模式
+  - 输出：动态权限矩阵（各方可见数据字段、可执行操作、操作所需审批方）
+  - 权限变更记录审计日志
+- 合作关系管理（CRUD：创建、查询、修改、终止合作关系）
+- API：`POST /cooperation/create`, `PUT /cooperation/{id}/mode`, `GET /cooperation/{id}/permissions`, `GET /cooperation/list`
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 4种企业模式 × 5种银行模式 = 20种组合，每种组合权限矩阵正确定义
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 模式切换后权限立即生效
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 权限变更审计日志完整
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+### Task 16: 政策与行业因素模块
+**Spec引用**: MOD-10
+**输入依赖**: Task 1, Task 5（部分数据源）
+**交付物**:
+- 政策规则引擎
+  - 内置初始政策规则集（房地产限制、高新技术鼓励、消费鼓励、低端制造去产能化等）
+  - 规则字段：ruleId, policyType(restrict/encourage/neutral), industry[], region[], impactLevel, effectiveDate, expiryDate, source, systemAction(warn/block/fast_track/additional_review)
+  - 规则匹配服务：输入企业行业代码+融资请求类型→输出政策限制/鼓励/建议
+- 银行季节性行规服务
+  - 内置季节性模式：年终避障(11-12月)、季度末冲量(3/6/9月末)、春节前资金紧张(1-2月)、集中审批日(每月15/20日)
+  - 季节性提醒服务：根据当前日期自动推送季节性建议给企业和银行
+  - 支持自定义银行专属季节性模式
+- 行业景气度信号服务
+  - 行业景气指数查询（PMI、行业增长率、库存周期）
+  - 信号字段：signalId, industryCode, signalType, value, trend, updatedAt, impactOnRisk
+  - 风控引擎集成接口：输入行业代码→输出景气度因子
+  - 国际因素：原材料进出口关税变化、国际制裁等
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 政策动态更新服务
+  - 政策监控渠道（爬虫/API/人工录入）
+  - 新政策自动通知受影响的企业和银行
+  - 政策变更历史追溯
+- API：`GET /policy/check?industry=&action=`, `GET /policy/seasonal?bankId=`, `GET /policy/industry-signal?industryCode=`, `POST /policy/update`
+**验证标准**:
+- 房地产企业融资请求被标记为"限制性融资+额外审查"
+- 高新技术企业被标记为"鼓励+绿色通道"
+- 11-12月系统自动提示"年末融资窗口收窄"
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 行业下行期风控评分权重自动提高
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+---
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+## Phase 8: 再融资闭环与模块集成（依赖Phase 3-7）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+### Task 17: 再融资再贴现闭环模块
+**Spec引用**: MOD-11
+**输入依赖**: Task 7, Task 12, Task 13, Task 14
+**交付物**:
+- 全流程融资入口服务
+  - 在系统任意业务节点（资金监管中/贷后管理中/票据持有中/应收款待收中）提供统一"再融资入口"
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  - 调用各模块API获取当前可用融资额度
+- AI融资方案推荐引擎
+  - 输入：企业当前状态（票据持有、应收款待收、监管账户余额、回款趋势、信用评分、可用银行授信、政策因素）
+  - 综合评估6种融资方案：票据贴现、应收款保理、过桥贷款、票据池质押、信用贷款、供应链金融
+  - 输出：推荐方案排序（成本最低→速度最快→额度最大），每方案含预估额度、利率、到账时间
+- 再贴现自动触发
+  - 现金流悬崖预测触发时主动推送再贴现建议
+  - 企业一键确认→自动发起贴现流程
+- 再融资全流程编排（串联票据服务→应收款保险→银行审批→资金到账）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- API：`POST /refinance/entry`, `GET /refinance/options/{enterpriseId}`, `POST /refinance/execute/{planId}`
+**验证标准**:
+- 任意业务节点可触发再融资入口
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- AI推荐方案合理排序且预估额度/利率/到账时间准确
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 现金流悬崖预测自动推送再贴现建议
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 再融资全流程端到端走通
+
+### Task 18: 模块集成与数据流编排
+**Spec引用**: 系统架构总览 - 模块间数据流与契约
+**输入依赖**: Task 7, Task 8, Task 11, Task 12, Task 13, Task 14, Task 15, Task 16, Task 17
+**交付物**:
+- 事件驱动编排服务（基于Kafka消息队列，串联模块间异步事件）
+  - 事件定义：交易发生→风控分析→预警生成→银行通知→融资建议推送
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  - 事件消费者注册与路由
+- 模块间API网关路由配置
+  - 统一API入口，内部路由到各微服务
+  - 请求链路追踪（Jaeger/SkyWalking）
+- 数据一致性保障
+  - 分布式事务（Saga模式）：跨模块操作（如贴现→资金划转→保单更新）的最终一致性
+  - 补偿事务：失败回滚
+- 集成测试用例（覆盖核心闭环流程）
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 核心闭环流程端到端走通：企业数据→风控分析→预警→融资建议→票据贴现→保险投保→银行放款→资金监管
+- 各模块间API调用符合接口契约
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 分布式事务失败时正确执行补偿
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+---
+
+## Phase 9: 应用层前端开发（依赖Phase 3-8后端API）
+
+### Task 19: 银行端门户前端
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-01
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 风控仪表盘页面（在管企业数、总监管资金额、当前预警数、风险分布热力图、近期到期融资清单）
+- 审批工作台页面（企业动态信用画像、监管数据包查看、AI风险评分、建议授信额度、一键审批/退回）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 贷后管理页面（《贷后风险周报》展示、预警通知列表、还款进度跟踪）
+- 报告中心页面（资金流水分析报告、上下游交易图谱、穿透报告下载）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 登录认证与权限管理
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 仪表盘数据实时展示
+- 审批工作台可查看企业画像并执行审批
+- 贷后周报正确展示
+- ECharts可视化图表正常渲染
+
+### Task 20: 企业端门户前端
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-02
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 资金看板页面（监管账户余额、可划拨额度动态水位、近期回款预测、待办融资事项）
+- 一键融资页面（再融资入口→AI推荐方案→选择→一键申请）
+- 票据管理页面（票据列表含真伪状态/到期日/可贴现额度、批量贴现、票据池质押）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 应收款管理页面（应收款列表、四流验证状态、投保状态、贴现进度）
+- 保险投保页面（应收款投保、保费计算、保单查看）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 财务规划页面（现金流预测、融资日历、财务健康度趋势）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 登录认证与权限管理
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+- 资金看板动态水位实时更新
+- 一键融资流程端到端走通
+- 票据管理支持批量操作
+- 各页面数据与后端API正确对接
+
+### Task 21: 财务顾问运营台前端
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-03
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 全局仪表盘页面（在管企业数、合作银行数、撮合融资金额、服务费收入、预警事件统计）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 撮合工作台页面（企业融资需求列表、银行产品列表、AI推荐匹配、确认发起撮合）
+- 客户管理页面（企业客户列表、合作模式管理、合作历史）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 佣金结算页面（服务费自动计算、结算单生成、对账、开票）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 数据洞察页面（脱敏后行业数据、客户画像、融资趋势分析）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 登录认证与权限管理
+**验证标准**:
+- 仪表盘数据实时展示
+- 撮合工作台可查看需求并执行撮合
+- 佣金结算计算正确
+- 数据洞察页面脱敏后数据正确展示
+
+### Task 22: 监管沙盒前端
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-04
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 脱敏式穿透报告页面（大额可疑交易报告、账户号6217****1234格式、加密确权背书展示）
+- 合规检查页面（审计追踪链可视化、从数据采集→AI决策→资金划转全链路日志）
+- 区块链存证验证页面（输入数据→计算哈希→与链上对比→显示验证结果）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 司法取证管理页面（法院调查令录入、三方密钥碎片提交、解密结果查看、审计日志）
+- 权限管理页面（角色权限配置、数据可见性矩阵）
+**验证标准**:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 脱敏报告正确脱敏且附加密背书
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 审计追踪链完整可视化
+- 区块链验证功能正确
+- 司法取证流程端到端走通
+
+---
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+## Phase 10: 测试与部署（依赖Phase 1-9）
+
+### Task 23: 集成测试与端到端测试
+**Spec引用**: 全部
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task 18, Task 19, Task 20, Task 21, Task 22
+**交付物**:
+- 核心闭环测试用例集（覆盖以下端到端流程）：
+  1. 企业接入→银企直连→资金监管→日常运营→白名单转账→动态水位调整
+  2. 资金抽逃检测→预警推送→银行端查看→信用降级
+  3. 企业持有票据→验真确权→AI撮合贴现→资金到账
+  4. 应收款上传→四流验证→线上投保→保险-贴现匹配→资金到账
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  5. 买方不确权→消极确权→AI履约评分→保险公司承保决策
+  6. 现金流缺口预测→再融资入口→AI推荐→一键融资
+  7. 数据脱敏→银行端查看脱敏视图→司法纠纷→密钥重组→解密取证
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  8. 政策因素校验→房地产限制/高新技术鼓励
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  9. 银行季节性提醒→年末融资窗口收窄
+  10. 合作模式切换→权限矩阵动态调整
+- 自动化测试脚本（pytest后端 + Cypress前端）
+- 性能测试脚本（Locust/JMeter，验证1000 QPS并发）
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 10个端到端测试用例全部通过
+- 1000 QPS并发下系统响应时间 < 500ms
+- 无严重/致命级别Bug
+
+### Task 24: 部署与运维文档
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: INFRA-01
+**输入依赖**: Task 23
+**交付物**:
+- 生产环境K8s部署清单（所有微服务deployment/service/configmap/secret）
+- 数据库初始化脚本（建表DDL + 初始数据DML）
+- 消息队列Topic初始化脚本
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 监控告警配置（Prometheus + Grafana，含系统指标+业务指标）
+- 日志收集配置（ELK/Loki，含结构化日志格式）
+- 运维手册（服务启停、扩缩容、故障排查、数据备份恢复）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 灾备方案（跨可用区部署、数据库主从复制、定期备份）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+- 生产环境一键部署脚本执行成功
+- 监控仪表盘正常展示系统指标
+- 日志可按服务/级别/时间检索
+- 备份恢复测试通过
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+---
+
+## 新增任务（Phase 1-9 补充）
+
+### Task 3c: 企业可选配置引擎（CORE-03）— 全面解耦核心
+**Spec引用**: CORE-03, 第三准则
+**输入依赖**: Task 1
+**交付物**:
+- 数据流可选配置服务
+  - 企业接入时通过《数据授权协议》勾选开放的数据流（资金/合同/发票/物流/物联/人流）
+  - 自动计算"信用维度完整度"（已开放流数 / 6）
+  - 信用维度完整度影响融资能力（1流=基础、3流=标准、5流=增强、6流=最优）
+- 模块独立启停服务
+  - 每个核心模块可独立启用/停用
+  - 资金监管支持3级（强监管/弱监管/不监管）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  - 未选模块不消耗资源、不采集数据
+- 合作方式独立配置服务
+  - 银行/担保/保险/关联机构逐类独立配置，支持"不接入"选项
+- 服务深度可调服务
+  - 4级监管深度（仅展示→预警→拦截→智能合约）
+  - 报告频率可选（日/周/月/季）
+  - AI自主度上限可设（L1~L4）
+  - 数据可见范围字段级配置
+- 激励推荐服务
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - AI根据当前信用维度完整度主动推荐"开放XX数据流可提升融资XX%"
+- 配置变更审计服务
+  - 所有配置变更记录审计日志，需协议确认
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - 已开放数据流不可单方面撤回
+- EnterpriseConfig数据结构实现（dataFlows/creditCompleteness/modules/cooperation/serviceDepth/financingImpact/configHistory）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- API：`GET /config/{enterpriseId}`, `PUT /config/{enterpriseId}/dataflows`, `PUT /config/{enterpriseId}/modules`, `PUT /config/{enterpriseId}/cooperation`, `PUT /config/{enterpriseId}/depth`, `GET /config/{enterpriseId}/recommendation`
+**验证标准**:
+- 企业可勾选开放的数据流，系统正确计算信用维度完整度
+- 模块可独立启停，未选模块不执行任何操作
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 合作方可逐类独立配置"不接入"
+- 服务深度4级可调
+- AI主动推荐开放更多数据流的融资提升
+- 配置变更记录完整审计日志
+- EnterpriseConfig数据结构完整正确
+
+### Task 3b: AI自主操作层（CORE-01 + CORE-02）— 系统核心
+**Spec引用**: CORE-01, CORE-02, 核心设计哲学
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task 1, Task 3
+**交付物**:
+- AI自主操作编排引擎（CORE-01）：
+  - 基于Temporal/Airflow的任务调度引擎，支持DAG任务编排
+  - AI自主任务调度服务（识别业务事件→创建并调度任务）
+  - L1完全自主操作执行器（白名单转账放行、日常监控、日报周报生成）
+  - L2自主+通知执行器（黄牌预警、小额贴现<100万、保单匹配）
+  - 决策日志记录（每个操作记录taskId/triggerEvent/input/reasoning/decision/output/confidence/explainTrace）
+  - LLM自然语言决策解释生成
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - 自主度配置管理（可动态调整各操作的L1-L4级别）
+- 人机协同网关（CORE-02）：
+  - 自主度动态路由引擎（操作类型+金额+风险等级→L1-L4级别）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - 人工审批工作流（L3/L4级操作→生成审批工单→推送审批工作台→同意/否决/修改）
+  - 决策回溯服务（查询历史AI决策完整链路，支持假设分析）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - 人类越权覆盖（24小时内发起决策复议，AI重新评估，人类可覆盖）
+  - Elasticsearch决策日志存储（支持时间旅行查询）
+- 统一API：`POST /ai-operator/execute`, `GET /ai-operator/tasks`, `GET /ai-operator/decision/{taskId}/trace`, `POST /human-gateway/approve/{taskId}`
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- L1操作AI自主执行无需人工介入
+- L2操作执行后自动通知人类
+- L3/L4操作正确路由到人工审批工作台
+- 决策链路完整可回溯（输入→推理→决策→结果）
+- 人类可在24小时内覆盖AI决策
+- 自主度级别可动态调整
+
+### Task 6b: 物联网数据采集网关（DATA-04）
+**Spec引用**: DATA-04
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task 1
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- MQTT Broker搭建（EMQX，支持MQTT 5.0协议）
+- IoT设备管理服务（设备注册、认证、设备影子、OTA升级）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- GPS物流轨迹采集服务（接收GPS设备上报的位置数据，关联运单存储）
+- 仓储环境监控服务（温湿度/重量传感器数据采集，异常波动预警）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 设备运行状态采集服务（生产设备开机时长/产量/能耗数据）
+- IoT时序数据存储（写入ClickHouse，支持高频写入和时序查询）
+- 边缘计算网关支持（数据过滤、异常检测、压缩传输）
+- 设备注册表（设备类型、位置、归属企业、数据频率）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- API：`POST /iot/device/register`, `GET /iot/device/{deviceId}/data`, `GET /iot/track/{waybillId}`
+**验证标准**:
+- IoT设备可通过MQTT协议接入并上报数据
+- GPS轨迹数据正确采集并与运单关联
+- 仓储环境异常波动触发预警
+- 时序数据高效写入和查询
+- 边缘网关可预处理数据
+
+### Task 8b: 物联网感知与实物资产验证模块（MOD-12）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-12
+**输入依赖**: Task 6b（IoT网关）, Task 8（风控引擎）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- 五流合一验证引擎（合同流+发票流+物流流+资金流+物联流交叉验证）
+  - 输入：五流数据 → 输出：一致性结果+不一致原因+AI置信度
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 货物存证服务（RFID入库+重量确认+摄像头拍照+温湿度记录→《实物资产存证报告》→上链）
+- 物流轨迹与运单匹配服务（GPS轨迹 vs 运单起运地/目的地/时间→路线合理性验证）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 生产设备运行验证服务（IoT设备数据 vs 发票开票量→经营真实性判断）
+- 仓储异常预警服务（温度骤变/重量突减/非工作时间出入库→预警）
+- IoT数据上链存证（关键IoT数据哈希上链）
+- 实物资产存证数据模型（evidenceId/assetId/iotData/fiveStreamsMatch/confidence/blockchainHash）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- API：`POST /iot-verify/five-streams`, `POST /iot-verify/asset-evidence`, `GET /iot-verify/track-match/{waybillId}`
+**验证标准**:
+- 五流合一验证正确识别一致/不一致
+- 货物存证报告完整含IoT数据
+- GPS轨迹与运单异常路线被识别
+- 设备运行数据与发票开票量交叉验证
+- 仓储异常触发预警
+- IoT数据成功上链
+
+### Task 14b: 多方机构协作模块（MOD-13）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-13
+**输入依赖**: Task 1, Task 15（合作模式）
+**交付物**:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 担保公司协作流程
+  - AI评估担保需求→推送申请→受理→保前审查→保函出具→上链→增信后重新匹配银行→保后AI监管
+  - 代偿处理流程（AI准备材料→通知→代偿→追偿→反担保处置）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 保险公司协作流程
+  - AI验真资产包→推送保险公司→AI辅助核保→保单出具→上链→打包推银行
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - 理赔协同（AI准备理赔材料+IoT存证+逾期证明→推送→跟踪→资金分配）
+- 评估机构协作流程（AI委派评估任务→推送脱敏数据→回传报告→整合）
+- 律师事务所协作流程（AI委派法律任务→推送文件→回传法律意见→整合）
+- 会计师事务所协作流程（AI委派审计任务→推送脱敏财务数据→回传审计报告→整合）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 机构协作任务管理（CRUD + 状态流转：pending→accepted→in_progress→completed/rejected/expired）
+- 机构协作数据结构（taskId/taskType/institutionId/entityId/request/response/blockchainHash）
+- API：`POST /institution/task`, `GET /institution/task/{id}`, `PUT /institution/task/{id}/status`, `POST /institution/task/{id}/response`
+**验证标准**:
+- 担保流程端到端走通（申请→审查→保函→保后）
+- 保险流程端到端走通（投保→核保→保单→理赔）
+- 各关联机构任务正确委派和回传
+- 机构任务状态流转正确
+- 保函/保单/报告数据上链存证
+
+### Task 19b: AI驾驶舱前端（APP-08）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-08
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- Vue 3 + TypeScript + Element Plus项目搭建
+- AI操作全景页面（实时任务流、今日完成操作统计、L1-L4操作分布、系统健康状态）
+- 决策链路回溯页面（触发事件→输入数据→特征提取→模型推理→规则匹配→置信度→决策→结果，全链路可视化）
+- 人工裁决工作台页面（待裁决列表、AI建议包、同意/否决/修改操作）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 自主度监控与调整页面（各操作类型自主度级别、AI决策准确率趋势、动态调整）
+- 异常操作告警页面（异常详情、AI自动恢复措施、人工干预入口）
+- 登录认证与权限管理
+**验证标准**:
+- AI操作全景实时更新
+- 决策链路完整可视化展示
+- 人工裁决可执行同意/否决/修改
+- 自主度可动态调整
+- 异常告警即时弹出
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+
+### Task 19c: 担保公司端门户前端（APP-05）
+**Spec引用**: APP-05
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 担保申请受理页面（企业信用画像、AI风险评估、融资需求、反担保建议）
+- 保前审查页面（财务数据包、IoT实物验证报告、交易图谱、AI辅助审查报告）
+- 反担保管理页面（反担保物登记、IoT价值监控、处置流程）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 代偿处理页面（代偿工单、AI准备材料、金额计算、追偿方案）
+- 保后监管页面（AI自动《保后风险周报》、风险趋势、预警）
+- 登录认证与权限管理
+**验证标准**:
+- 担保申请正确受理和展示
+- 保前审查数据完整
+- 反担保物可登记和IoT监控
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 代偿流程端到端走通
+- 保后周报自动展示
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+### Task 19d: 保险公司端门户前端（APP-06）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-06
+**输入依赖**: Task 18（后端API就绪）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 投保受理页面（资产包详情、AI验真报告、五流合一验证、建议保费）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 核保审查页面（AI履约评分、PD违约概率、买方画像、行业景气度）
+- 保单管理页面（保单列表、保单号/保额/保费/有效期/区块链哈希）
+- 理赔处理页面（理赔工单、AI理赔材料、金额计算、进度跟踪）
+- 风险敞口监控页面（在保资产总览、敞口分布、行业集中度、预警事件）
+- 登录认证与权限管理
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 投保申请正确受理
+- 核保审查数据完整
+- 保单列表正确展示含区块链哈希
+- 理赔流程端到端走通
+- 风险敞口可视化展示
+
+### Task 19e: 关联机构端门户前端（APP-07）
+**Spec引用**: APP-07
+**输入依赖**: Task 18（后端API就绪）
+**交付物**:
+- Vue 3 + TypeScript + Element Plus项目搭建
+- 任务接收页面（待办任务列表、任务类型、脱敏企业信息、截止日期、报酬）
+- 数据处理页面（脱敏数据包在线查看，不下载到本地）
+- 报告回传页面（结构化报告回传：评估报告/法律意见书/审计报告）
+- 物流运单确认页面（运单信息确认、IoT GPS轨迹关联、签收证明生成）
+- 通用适配（支持物流公司/评估机构/律所/会计所等不同机构类型）
+- 登录认证与权限管理
+**验证标准**:
+- 任务正确接收和展示
+- 脱敏数据在线查看（不可下载）
+- 报告回传功能完整
+- 物流运单确认可关联GPS轨迹
+- 不同机构类型通用适配
+
+---
+
+## Task Dependencies
+
+```
+Phase 1 (基础设施 + AI自主操作层):
+  Task 1 ──→ Task 2 (CI/CD)
+  Task 1 ──→ Task 3 (AI引擎)
+  Task 1 + Task 3 ──→ Task 3b (AI自主操作层 CORE-01+02) ← 系统核心，优先
+
+Phase 2 (数据接入 + IoT):
+  Task 1 ──→ Task 4 (银企直连)
+  Task 1 ──→ Task 5 (第三方数据源)
+  Task 1 + Task 3 ──→ Task 6 (OCR解析)
+  Task 1 ──→ Task 6b (IoT数据采集网关)
+
+Phase 3 (核心业务 + IoT验证):
+  Task 4 ──→ Task 7 (资金监管)
+  Task 3 + Task 4 + Task 5 ──→ Task 8 (风控引擎)
+  Task 6b + Task 8 ──→ Task 8b (物联网感知与实物验证)
+
+Phase 4 (数据安全): [可与Phase 5并行]
+  Task 1 + Task 7 ──→ Task 9 (数据安全)
+  Task 1 + Task 9 ──→ Task 10 (区块链存证)
+
+Phase 5 (征信票据): [可与Phase 4并行]
+  Task 4 + Task 5 + Task 8 ──→ Task 11 (征信审批)
+  Task 5 + Task 3 ──→ Task 12 (票据服务)
+
+Phase 6 (保险评分):
+  Task 5 + Task 6 + Task 12 + Task 9 ──→ Task 13 (应收款保险)
+  Task 5 + Task 8 + Task 3 ──→ Task 14 (AI履约评分)
+
+Phase 7 (合作政策 + 多方机构): [可与Phase 4-6并行]
+  Task 1 ──→ Task 15 (合作模式)
+  Task 1 + Task 5 ──→ Task 16 (政策因素)
+  Task 1 + Task 15 ──→ Task 14b (多方机构协作)
+
+Phase 8 (集成闭环):
+  Task 7 + Task 12 + Task 13 + Task 14 ──→ Task 17 (再融资闭环)
+  Task 3b+7+8+8b+11+12+13+14+14b+15+16+17 ──→ Task 18 (模块集成)
+
+Phase 9 (前端):
+  Task 18 ──→ Task 19 (银行端) [可并行]
+  Task 18 ──→ Task 20 (企业端) [可并行]
+  Task 18 ──→ Task 21 (运营台) [可并行]
+  Task 18 ──→ Task 22 (监管沙盒) [可并行]
+  Task 18 ──→ Task 19b (AI驾驶舱) [可并行]
+  Task 18 ──→ Task 19c (担保公司门户) [可并行]
+  Task 18 ──→ Task 19d (保险公司门户) [可并行]
+  Task 18 ──→ Task 19e (关联机构门户) [可并行]
+
+Phase 10 (测试部署):
+  Task 18+19+20+21+22+19b+19c+19d+19e ──→ Task 23 (集成测试)
+  Task 23 ──→ Task 24 (部署运维)
+```
+
+### 可并行执行的Task组
+| 并行组 | Tasks | 前置条件 |
+|---|---|---|
+| 并行组A | Task 2, Task 3, Task 3b | Task 1 (+Task 3 for 3b) |
+| 并行组B | Task 4, Task 5, Task 6, Task 6b | Task 1 (+Task 3 for Task 6) |
+| 并行组C | Task 7, Task 8, Task 8b | Task 4 (+Task 3,5 for Task 8; +Task 6b for 8b) |
+| 并行组D | Task 9+10, Task 11+12, Task 15, Task 16, Task 14b | Phase 3完成 (+Task 15 for 14b) |
+| 并行组E | Task 13, Task 14 | Phase 5完成 |
+| 并行组F | Task 19, Task 20, Task 21, Task 22, Task 19b, Task 19c, Task 19d, Task 19e | Task 18完成 |
+
+---
+
+## 多代理并行开发任务分配方案
+
+### 分配策略
+1. **先建骨架，再填血肉**：先由1个核心团队完成基础设施层（INFRA-01/02）+ 数据模型 + API契约定义
+2. **按业务领域垂直分配**：每个代理负责一个完整的业务闭环（从数据接入到应用层到外部生态）
+3. **契约先行**：模块间接口契约（API定义、消息格式、事件Schema）在开发前由架构师统一定义
+4. **集成测试由独立团队负责**：设独立的集成测试代理，负责各模块联调和端到端测试
+
+### 代理任务分配矩阵（7个并行代理）
+
+| 代理 | 负责模块 | 核心交付物 | 依赖项 | 预估周期 |
+|---|---|---|---|---|
+| **代理1：骨架团队（架构+基础设施）** | INFRA-01, INFRA-02, CORE-01, CORE-02, CORE-03 | K8s集群、API网关、数据库集群、消息队列、AI推理服务、任务编排引擎、人机协同路由、可选配置服务、全局接口契约定义 | 无（先行） | 8周 |
+| **代理2：资金监管与风控闭环** | DATA-01, DATA-03, MOD-01, MOD-02, APP-01(风控), APP-02(资金看板) | 银企直连接口、监管账户管理、动态水位、57维异常检测、资金抽逃识别、银行风控仪表盘、企业资金看板 | 代理1的INFRA-01和CORE-01/02 | 10周 |
+| **代理3：征信与融资服务闭环** | DATA-02, MOD-03, MOD-04, MOD-11, APP-03 | 第三方数据源接入、动态信用画像、票据验真确权、智能贴现撮合、票据池质押、再融资入口、运营台仪表盘 | 代理2的MOD-02 + 代理1的INFRA | 10周 |
+| **代理4：保险与物联网感知闭环** | DATA-04, MOD-05, MOD-06, MOD-12, APP-06 | MQTT Broker、IoT设备接入、五流合一验证、保险投保贴现流水线、消极确权、PD模型、实物资产存证、保险公司门户 | 代理2的MOD-02 + 代理3的MOD-03 | 10周 |
+| **代理5：区块链与多方机构协作闭环** | MOD-07, MOD-08, MOD-09, MOD-13, APP-05, APP-07 | 同态加密、格式保留加密、密钥分片、司法联盟链存证、司法取证、合作模式配置、担保公司门户、关联机构门户 | 代理1的INFRA-01(KMS)，其他独立 | 8周 |
+| **代理6：政策行业与监管沙盒闭环** | MOD-10, APP-04, APP-08 | 政策规则引擎、银行季节性行规、行业景气度信号、脱敏穿透报告、合规检查、AI操作全景、决策链路回溯、人工裁决工作台 | 所有其他代理的模块（消费者/观察者） | 8周 |
+| **代理7：独立集成测试团队** | 端到端测试、集成测试、性能测试、安全测试 | 测试用例库、自动化测试脚本、端到端场景验证、压测报告、安全渗透测试报告 | 所有代理模块完成后联调 | 贯穿全程，最后4周集中 |
+
+### 代理间依赖关系图
+
+```
+                    ┌─────────────────────┐
+                    │  代理1：骨架团队     │
+                    │  (基础设施+AI引擎+   │
+                    │   AI自主编排+人机协同)│
+                    └──────────┬──────────┘
+                               │ 提供：K8s/API网关/消息队列/KMS/任务编排/人机协同
+         ┌─────────────────────┼─────────────────────┐
+         │                     │                     │
+         ▼                     ▼                     ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ 代理2：资金监管   │ │ 代理3：征信融资   │ │ 代理4：保险物联   │
+│ 与风控闭环       │ │ 与票据服务闭环   │ │ 与感知闭环       │
+│ (依赖代理1)      │ │ (依赖代理1+代理2)│ │ (依赖代理1+代理2 │
+└─────────────────┘ └─────────────────┘ │  +代理3)        │
+                                         └─────────────────┘
+         │                     │                     │
+         └─────────────────────┼─────────────────────┘
+                               │ 提供：各业务模块数据/事件
+                               ▼
+                    ┌─────────────────────────────────┐
+                    │ 代理5：区块链+多方机构协作       │
+                    │ (依赖代理1，与其他代理数据交互)  │
+                    └─────────────────────────────────┘
+                               │ 提供：加密/存证/取证/协作
+                               ▼
+                    ┌─────────────────────────────────┐
+                    │ 代理6：政策行业与监管沙盒闭环    │
+                    │ (依赖所有代理，消费者/观察者)   │
+                    └─────────────────────────────────┘
+
+         ┌─────────────────────────────────────────────┐
+         │ 代理7：独立集成测试团队                      │
+         │ (依赖所有代理完成后联调，贯穿全程)           │
+         └─────────────────────────────────────────────┘
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+```
+
+### 并行开发关键管控
+
+1. **每日同步机制**：每天早上15分钟站会，对齐进度、暴露阻塞；每周一次跨代理集成演示
+2. **Mock服务先行**：代理1在提供真实服务前，先提供Mock服务和桩代码(Stub)，让各代理可并行开发
+3. **集成测试分期**：
+   - 第一期（第8周）：代理1+代理2联调（核心资金监管闭环）
+   - 第二期（第12周）：代理1+代理2+代理3联调（融资闭环完整）
+   - 第三期（第16周）：全量代理联调（完整系统）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+4. **代码规范与质量门禁**：
+   - 统一代码规范（Python PEP8 + Java Google Style）
+   - 单元测试覆盖率 > 80%
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+   - 每次MR必须通过CI自动化测试（含静态代码扫描）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+   - 每周一次代码审查交叉会议
+5. **技术决策统一**：架构师委员会每周一次技术评审会，裁决跨模块技术争议
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+### 核心原则
+- 按领域垂直切分，以业务闭环为单位分配，尽量减少跨代理依赖
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 契约先行，Mock并行，集成分期
+- 骨架先行，血肉并行
+
+---
+
+## Phase B: 须自研护城河模块（B1-B12，基于 spec v2.0）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **本阶段对应 industry-comparison.md v2.0 三档分类中的「🟡 须自研档」**,是 FinTrust Hub 区别于行业系统的独有创新,集中 60% 开发精力。所有任务基于 spec.md v2.0 修正版,与 Phase 1-10 并行,但优先级最高。
+>
+> **v2.0 详细版说明**: 本节将每个 B 任务拆解为子任务(Subtask S1-Sn),每个子任务含独立交付物、关键数据结构、单元测试用例,便于多代理并行开发与逐项验收。
+
+---
+
+### Task B1: AI 驾驶舱 L1-L4 自主度分级引擎
+**Spec引用**: CORE-01 + CORE-02 [spec.md#L7-L28](../../../spec.md) + [L1168-L1234](../../../spec.md) + spec v2.0 修正
+**输入依赖**: Phase 1 Task 3 (AI 引擎底座)
+**总工作量**: 5 天 (子任务 S1.1-S1.5 并行)
+
+#### 子任务分解
+
+**S1.1 — L1-L4 路由决策表 + 双因子路由器** (1 天)
+- 交付物: `AutonomyRouter` 类,基于 `决策影响金额 × 风险等级` 二维决策表
+- 关键数据结构:
+  ```typescript
+  interface AutonomyRouteTable {
+    // 金额阈值: 100万 / 500万
+    // 风险等级: low / normal / high_risk / restricted
+    // 路由结果: L1(完全自主) / L2(自主+通知) / L3(建议+审批) / L4(仅建议)
+    routes: Array<{
+      amountRange: [number, number] | "any";
+      riskLevel: RiskLevel | "any";
+      level: "L1" | "L2" | "L3" | "L4";
+      examples: string[];  // 该路由的典型场景
+    }>;
+  }
+  ```
+- 单元测试: 100万以下 + premium → L1；100-500万 → L3；>500万 → L4；高风险强制 L4
+
+**S1.2 — 自主度边界引擎** (1 天)
+- 交付物: `AutonomyBoundary.evaluate(amount, riskLevel) → {level, requiresHuman, notifyAfter, reasoning}`
+- 关键算法: 双因子加权 + 企业上限覆盖
+  ```typescript
+  function evaluate(amount, riskLevel, enterpriseConfig): AutonomyResult {
+    const baseLevel = lookupRouteTable(amount, riskLevel);
+    const cappedLevel = Math.max(baseLevel, parseLevel(enterpriseConfig.autonomyCeiling));
+    return {
+      level: cappedLevel,
+      requiresHuman: ["L3", "L4"].includes(cappedLevel),
+      notifyAfter: ["L2", "L3", "L4"].includes(cappedLevel),
+      reasoning: [/* 推理链数组 */]
+    };
+  }
+  ```
+- 单元测试: 企业上限"L2" → 即使金额<100万也不会路由到 L1
+
+**S1.3 — 决策建议包生成器** (1 天)
+- 交付物: `DecisionPackage` 类,L3/L4 推送到审批台的标准包
+- 关键数据结构:
+  ```typescript
+  interface DecisionPackage {
+    packageId: string;
+    level: "L3" | "L4";
+    analysis: AnalysisResult;        // AI 分析结果
+    recommendation: string;         // 建议文本
+    confidence: number;             // 0-1
+    reasoningChain: ReasoningNode[];// 推理链
+    dataSources: DataSourceRef[];   // 引用的数据源
+    submittedAt: ISO8601;
+    status: "pending" | "approved" | "rejected";
+  }
+  ```
+- 单元测试: L3 包必含 reasoningChain + confidence；L4 包必含多方案对比
+
+**S1.4 — L1-L4 操作类型映射** (1 天)
+- 交付物: `ActionTypeMapper` 类,定义每种 AI 操作的默认 L 级别
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 映射表:
+  ```
+  L1 完全自主: 白名单内转账放行 / 日常监控 / 日报生成 / 低风险票据验真
+  L2 自主+通知: 黄牌预警 / 小额贴现撮合(<100万) / 保单匹配
+  L3 建议+审批: 红牌预警 / 中额融资(100-500万) / 白名单外转账复核
+  L4 仅建议: 大额融资(>500万) / 合作模式变更 / 政策规则调整
+  ```
+- 单元测试: 任一操作类型可正确映射到对应 L 级别
+
+**S1.5 — 路由决策日志写入 + B6 集成** (1 天)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 交付物: 路由决策调用 B6 `POST /core/ai/log` 写入推理链
+- 集成测试: 路由决策后,B6 可查询到完整 reasoningChain
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**接口契约**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+```
+POST /core/autonomy/evaluate
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+Input:  {entityId, actionType, amount, riskLevel}
+Output: {level: "L1"|"L2"|"L3"|"L4", requiresHuman: bool, notifyAfter: bool, reasoning: [...], packageId?: string}
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+POST /core/autonomy/decision-package/{packageId}/approve
+POST /core/autonomy/decision-package/{packageId}/reject
+```
+
+**集成测试**:
+- [T1] 100万以下 premium 企业 → L1 路由,无需人类
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- [T2] 100-500万 → L3 路由,推送审批台
+- [T3] >500万 → L4 路由,仅建议
+- [T4] 高风险企业强制 L4(覆盖金额)
+- [T5] 企业上限"L2"时,<100万操作也走 L2
+- [T6] 路由决策记录完整推理链,B6 可回溯
+
+---
+
+### Task B2: 字段级数据可见性矩阵
+**Spec引用**: CORE-03 [spec.md#L88](../../../spec.md) 服务深度 + spec v2.0 修正
+**输入依赖**: Task B1 (自主度引擎,因为可见性影响 AI 路由)
+**总工作量**: 3 天 (子任务 S2.1-S2.4)
+
+#### 子任务分解
+
+**S2.1 — 14 字段 × 3 机构矩阵数据模型** (1 天)
+- 交付物: `VisibilityMatrix` 数据结构 + 持久化
+- 14 字段定义:
+  ```
+  1. 基本信息工商注册 2. 银行流水 3. 发票数据 4. 合同数据 5. 物流 GPS 6. IoT 传感
+  7. 责任链确认 8. 信用评分 9. 财务报表 10. 纳税记录 11. 社保缴纳 12. 水电煤
+  13. 司法失信 14. 关联方股权穿透
+  ```
+- 关键数据结构:
+  ```typescript
+  interface VisibilityMatrix {
+    entityId: string;
+    matrix: {
+      bank:      FieldVisibility[14];  // 每个: "visible" | "masked" | "hidden"
+      guarantor: FieldVisibility[14];
+      insurance: FieldVisibility[14];
+    };
+    updatedAt: ISO8601;
+    auditLog: VisibilityAuditEntry[];  // 不可单方面撤回已开放字段
+  }
+  ```
+
+**S2.2 — 6 快捷预设引擎** (0.5 天)
+- 交付物: `VisibilityPreset` 库
+- 预设:
+  ```
+  1. 银行核心 KYC       (银行:全显 / 担保:脱敏 / 保险:脱敏)
+  2. 担保押品评估       (银行:脱敏 / 担保:全显 / 保险:脱敏)
+  3. 保险核保核赔       (银行:脱敏 / 担保:脱敏 / 保险:全显)
+  4. 全量开放           (三方全显)
+  5. 最小可见           (三方仅基本信息+信用评分)
+  6. 分层可见推荐       (按 AI 推荐配置)
+  ```
+
+**S2.3 — 字段级脱敏引擎** (1 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交付物: `FieldDesensitizer` 类,同字段对不同机构显示不同
+- 脱敏规则:
+  ```
+  visible → 原值显示
+  masked  → 银行账号 6217****1234 / 企业名 ★★科技 / 金额 ¥XX万
+  hidden  → 不返回该字段
+  ```
+- 单元测试: 同一企业银行流水对银行 visible / 对保险 masked / 对担保 hidden
+
+**S2.4 — 三栏并排脱敏预览 API + 配置变更审计** (0.5 天)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 交付物: `preview` API + 审计日志记录器
+- 审计规则: 字段从 visible 改为 masked/hidden 须记录,企业不可单方面撤回已开放字段(外部已使用)
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**接口契约**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+```
+GET  /core/visibility/{entityId}
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+POST /core/visibility/{entityId}
+Input: {bank: [...14], guarantor: [...14], insurance: [...14]}
+POST /core/visibility/{entityId}/preview
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+Input: {targetInstitution: "bank"|"guarantor"|"insurance"}
+Output: {desensitizedFields: [...], maskedFields: [...], hiddenFields: [...]}
+POST /core/visibility/{entityId}/preset
+Input: {presetId: 1|2|3|4|5|6}
+```
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**集成测试**:
+- [T1] 企业可独立配置三方可见字段
+- [T2] 6 预设可一键应用
+- [T3] 同字段对三方显示不同
+- [T4] 配置变更记录审计日志
+- [T5] 撤回已开放字段被拒绝
+
+---
+
+### Task B3: 责任链全景图(人流/第零流)
+**Spec引用**: MOD-14 [spec.md#L1381-L1580](../../../spec.md)
+**输入依赖**: Phase 1 Task 1 (项目脚手架)
+**总工作量**: 3 天 (子任务 S3.1-S3.4)
+
+#### 子任务分解
+
+**S3.1 — 12 责任节点矩阵 + 默认责任人** (1 天)
+- 交付物: `ResponsibilityNode` 数据模型 + 12 节点定义
+- 12 节点矩阵:
+  ```
+  业务环节 × 责任人:
+  资金/财务 + 采购/采购 + 入库/仓储 + 生产线/生产 + 成品/品控 + 销售/销售 + 回款/财务 = 7 业务节点
+  扩展: 资金/出纳 + 采购/采购 + 入库/品控 + 生产线/生产 + 成品/仓储 + 销售/销售 + 回款/财务 = 7 扩展节点
+  合计 12 节点(可配置)
+  ```
+- 关键数据结构:
+  ```typescript
+  interface ResponsibilityNode {
+    nodeId: string;
+    businessStage: "fund" | "purchase" | "warehouse" | "production" | "qc" | "sales" | "repayment";
+    responsible: { id: string, name: string, role: string };
+    status: "pending" | "confirmed" | "timeout" | "absent";
+    confirmedAt: ISO8601 | null;
+    traceCode: string | null;     // 追溯码(SHA-256 后 8 位)
+    creditDelta: number;         // +2/+3 / -5
+  }
+  ```
+
+**S3.2 — 责任人确认 API + 追溯码生成** (1 天)
+- 交付物: `confirm` API + `TraceCodeGenerator` 工具
+- 关键算法: 追溯码 = SHA-256(nodeId + responsibleId + timestamp).substr(0, 8)
+- 单元测试: 确认后生成 8 位追溯码 + 信用分联动(+2/+3)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**S3.3 — 完整度计算引擎 + 3 阈值触发** (0.5 天)
+- 交付物: `CompletenessCalculator` 类
+- 关键算法: completeness = confirmedNodes / 12
+- 阈值:
+  ```
+  ≥ 80% → 触发融资条件增强(+8 分 + 评级提升)
+  ≥ 90% → 生成《责任合规报告》
+  < 50% → 触发预警
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 单元测试: 11/12 确认 → 91.67% → 生成报告 + +8 分
+
+**S3.4 — 责任链全景图可视化 API** (0.5 天)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 交付物: `chain` API,返回节点状态 + 责任人 + 时间戳 + 追溯码 + 完整度
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+**接口契约**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+```
+GET  /mod14/chain/{entityId}
+Output: {nodes: ResponsibilityNode[], completeness: 0.85, enhancementTriggered: bool}
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+POST /mod14/confirm/{nodeId}
+Input: {responsibleId, signature, note}
+Output: {traceCode, creditDelta: +3, newCompleteness: 0.85}
+GET  /mod14/compliance-report/{entityId}  // 完整度≥90%才可调用
+```
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**集成测试**:
+- [T1] 12 节点都可独立确认
+- [T2] 确认后生成追溯码 + 信用分联动
+- [T3] 完整度 ≥80% 触发融资条件增强
+- [T4] 完整度 ≥90% 生成《责任合规报告》
+- [T5] 完整度 <50% 触发预警
+- [T6] 超时/缺席 -5 分
+
+---
+
+### Task B4: 五流合一 + 边缘案例模拟
+**Spec引用**: MOD-02 [spec.md#L514-L562](../../../spec.md) + CORE-04
+**输入依赖**: Phase 2 Task 4/5 (数据接入)
+**总工作量**: 4 天 (子任务 S4.1-S4.4)
+
+#### 子任务分解
+
+**S4.1 — 五流验证引擎** (1.5 天)
+- 交付物: `FiveFlowValidator` 类,五流(资金/合同/发票/物流/物联)交叉验证
+- 关键算法: 5 流匹配度 = (匹配的金额+合同+发票+物流+物联对子) / 总对子数
+- 单元测试: 五流全匹配 → 100%;资金流缺失 → 80%;物联断 → 60%
+
+**S4.2 — 边缘案例库 10+ 场景** (1 天)
+- 交付物: `EdgeCaseLibrary` 库
+- 案例清单:
+  ```
+  1. 资金抽逃(fund_flight)         - 监管账户余额骤降 → 信用分 -30
+  2. IoT 断线(iot_disconnect)     - 五流降级四流 → 确权等级上限 B
+  3. 结算紊乱(settlement_chaos)   - 采购付款周期异常 → 信用分 -10
+  4. 合同伪造(contract_forgery)   - 合同 hash 不匹配 → 信用分 -50
+  5. 空心化(hollow_out)            - 监管账户只过桥还款 → 信用分 -20
+  6. 回款断崖(repayment_cliff)     - 回款下降但开票增长 → 信用分 -15
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  7. 关联方回流(related_return)    - 2 跳关联回流 → 信用分 -25
+  8. 票据重复贴现(bill_double_discount) - 票据号重复 → 信用分 -40
+  9. 消极确权(passive_confirmation) - 48h 倒计时到期 → 自动确权
+  10. 责任链断裂(chain_break)     - 多节点未确认 → 信用分 -10
+  ```
+
+**S4.3 — 边缘案例触发器 + 全局告警横幅引擎** (1 天)
+- 交付物: `EdgeCaseTrigger` 类 + `GlobalAlertBanner` 类
+- 关键算法: 触发 → 五流降级 → 信用分下降 → 全局告警横幅(所有 Tab 顶部可见)
+- 单元测试: 触发资金抽逃 → 横幅红色 + 信用分 -30 + 跳转 Tab7
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+**S4.4 — 告警修复 + 自动清除** (0.5 天)
+- 交付物: `AlertAutoClear` 钩子,状态修复后自动清除横幅
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 单元测试: 修复方法调用后横幅自动消失
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+**接口契约**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+```
+POST /mod02/edge-case/trigger
+Input: {caseType: "fund_flight"|"iot_disconnect"|..., entityId}
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+Output: {alertId, affectedStreams: [...], creditDelta: -30, severity: "red"|"orange"|"yellow"}
+GET  /alerts/global
+Output: {alerts: [{id, title, severity, targetTab, dismissible, createdAt}]}
+POST /alerts/{id}/dismiss     // 仅清除横幅,不影响状态
+POST /alerts/{id}/handle      // 跳转对应 Tab
+DELETE /alerts/{id}            // 状态修复后自动清除
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+```
+
+**集成测试**:
+- [T1] 五流验证可识别 10+ 边缘案例
+- [T2] 触发资金抽逃 → 全局告警横幅红色 + 信用分 -30
+- [T3] 横幅在所有 Tab 顶部可见,可跳转/可忽略
+- [T4] 修复后告警自动清除
+- [T5] IoT 断线 → 五流降级四流 + 确权等级上限 B
+
+---
+
+### Task B5: 全局告警横幅 + 多 Tab 跳转
+**Spec引用**: CORE-04 + APP-03
+**输入依赖**: Task B4 (边缘案例)
+**总工作量**: 2 天 (子任务 S5.1-S5.3)
+
+#### 子任务分解
+
+**S5.1 — 全局告警状态管理器** (0.5 天)
+- 交付物: `AlertStateManager` 单例
+- 关键方法:
+  ```typescript
+  class AlertStateManager {
+    addAlert(alert: AlertInput): string;       // 返回 alertId
+    dismissAlert(alertId: string): void;      // 仅清除横幅
+    clearAlerts(predicate: (a: Alert) => bool): void;  // 状态修复时清除
+    getAllAlerts(): Alert[];
+    onAlertChange(callback: (alerts: Alert[]) => void): void;  // 订阅
+  }
+  ```
+
+**S5.2 — 告警横幅前端组件** (1 天)
+- 交付物: `AlertBanner.vue` 组件
+- 三色等级:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  ```
+  红色 (red)    - 严重:资金抽逃/合同伪造 → 跳转 Tab7
+  橙色 (orange) - 中度:担保兜底激活/IoT 断线 → 跳转 Tab8/Tab2
+  黄色 (yellow) - 轻度:责任链节点超时 → 跳转 Tab1
+  ```
+- 关键 UI:
+  - 可堆叠(最多 3 条,超过则显示"+N 条更多")
+  - 入场动画(从顶部滑入)
+  - "→ 处理" 跳转按钮 + "✕" 关闭按钮
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**S5.3 — 多 Tab 跳转引擎 + 自动清除钩子** (0.5 天)
+- 交付物: `AlertRouter` 类,根据告警类型路由到对应 Tab
+- 路由表:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  fund_flight     → Tab7 (AI 驾驶舱)
+  iot_disconnect  → Tab2 (流程模拟器)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  chain_break     → Tab1 (企业端)
+  guarantee_fallback → Tab8 (兜底引擎,如启用)
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 自动清除钩子: `AlertAutoClearHook.register(caseType, repairMethod)`
+
+**接口契约**:
+```
+State: runtime.alerts = Alert[]
+Action: addAlert / dismissAlert / clearAlerts
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+Event: onAlertChange(callback)
+```
+
+**集成测试**:
+- [T1] 同一告警在所有 9 个 Tab 顶部都可见
+- [T2] 跳转按钮正确路由到目标 Tab
+- [T3] 忽略按钮仅清除横幅,不影响状态
+- [T4] 修复方法调用后告警自动清除
+- [T5] 3 条以上告警堆叠时显示"+N 条更多"
+
+---
+
+### Task B6: AI 操作日志可回溯(推理链 + 置信度)
+**Spec引用**: CORE-01 [spec.md#L26-L28](../../../spec.md) 可解释性要求
+**输入依赖**: Task B1 (自主度引擎)
+**总工作量**: 3 天 (子任务 S6.1-S6.3)
+
+#### 子任务分解
+
+**S6.1 — AI 操作日志存储模型** (1 天)
+- 交付物: `AIOperationLog` 持久化表 + 写入 API
+- 关键数据结构:
+  ```typescript
+  interface AIOperationLog {
+    operationId: string;          // ULID
+    action: string;               // 如 "loan_routing" / "guarantee_fallback"
+    level: "L1" | "L2" | "L3" | "L4";
+    confidence: number;           // 0-1
+    enterprise: { id, name };
+    reasoning: ReasoningNode[];   // 推理链数组
+    dataSources: DataSourceRef[]; // 引用的数据源
+    modelVersion: string;         // 模型版本号
+    timestamp: ISO8601;
+    relatedFallbackChainId?: string;  // 若关联兜底降级链
+  }
+  
+  interface ReasoningNode {
+    step: number;
+    fact: string;          // 事实陈述
+    inference: string;     // 推理结论
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+    evidence: Evidence[];  // 证据引用
+    confidence: number;    // 该步置信度
+  }
+  ```
+
+**S6.2 — 推理链可视化 API + 置信度计算** (1.5 天)
+- 交付物: `ReasoningChainVisualizer` + `ConfidenceCalculator`
+- 置信度公式:
+  ```
+  confidence = 0.4 * dataCompleteness + 0.4 * modelConfidence + 0.2 * historicalAccuracy
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  ```
+- 单元测试: 数据完整度 0.8 + 模型置信 0.85 + 历史准确 0.9 → confidence ≈ 0.85
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**S6.3 — 决策回溯 API** (0.5 天)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 交付物: `trace` API,任何 AI 决策可追溯完整推理过程 + 原始数据源
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**接口契约**:
+```
+POST /core/ai/log
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+Input: {action, level, confidence, enterprise, reasoning: [...], dataSources: [...]}
+Output: {operationId}
+
+GET /core/ai/operations?entityId=&level=&action=&timeRange=
+Output: {operations: AIOperationLog[]}
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+GET /core/ai/operations/{operationId}/trace
+Output: {fullReasoningChain, dataSources, modelVersion, confidenceBreakdown}
+```
+
+**集成测试**:
+- [T1] 任何 AI 决策都记录完整推理链
+- [T2] 推理链可展开查看(每步 fact+inference+evidence)
+- [T3] 置信度计算准确(三因子加权)
+- [T4] 决策可回溯到原始数据源
+- [T5] 关联兜底降级链时可跳转查看 fallbackChain
+
+---
+
+### Task B7: 可选配置引擎 - 数据流 + 模块启停
+**Spec引用**: CORE-03 [spec.md#L60-L108](../../../spec.md) 数据流可选配置 + 模块可选配置
+**输入依赖**: Phase 1 Task 1
+**总工作量**: 2 天 (子任务 S7.1-S7.2)
+
+#### 子任务分解
+
+**S7.1 — 数据流可选配置(6 流 checkbox + 完整度计算 + 激励机制)** (1 天)
+- 交付物: `DataFlowConfig` 类
+- 6 流:
+  ```
+  1. 资金流(银行流水) 2. 合同流(电子合同) 3. 发票流(税务发票)
+  4. 物流流(GPS签收) 5. 物联流(IoT传感) 6. 责任流(责任人确认)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  ```
+- 关键算法:
+  ```
+  dataFlowCompleteness = openFlows / 6
+  激励: 1 流=基础融资 / 3 流=标准 / 5 流=增强 / 6 流=最优
+  expectedCreditEnhancement = completeness * 0.15  // 最高 +15%
+  ```
+
+**S7.2 — 模块可选配置(资金监管 4 级 / 票据 / 保险 / IoT / 区块链 / AI 自主度上限)** (1 天)
+- 交付物: `ModuleConfig` 类
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 关键配置:
+  ```
+  fundSupervision: "level1"|"level2"|"level3"|"level4"
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  billService: bool
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  accountsReceivableInsurance: bool
+  iot: bool
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  blockchain: bool
+  autonomyCeiling: "L1"|"L2"|"L3"|"L4"  // 上限覆盖
+  ```
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 单元测试: 资金监管 level4 → 全功能(白名单+水位+契约);level1 → 仅基础监管
+
+**接口契约**:
+```
+GET  /core/config/{entityId}/data-flows
+POST /core/config/{entityId}/data-flows
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+Input: {fundFlow: bool, contractFlow: bool, ..., responsibilityFlow: bool}
+GET  /core/config/{entityId}/modules
+POST /core/config/{entityId}/modules
+```
+
+**集成测试**:
+- [T1] 6 数据流可独立勾选
+- [T2] 完整度自动计算
+- [T3] 激励机制生效
+- [T4] 资金监管 4 级配置可用
+- [T5] AI 自主度上限覆盖 B1 路由
+
+---
+
+### Task B8: 可选配置引擎 - 合作模式(含 S5 自营兜底)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-09 [spec.md#L844-L940](../../../spec.md) + spec v2.0 修正 S5(自营兜底第 5 模式)
+**输入依赖**: Task B7
+**总工作量**: 1 天
+
+#### 子任务分解
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**S8.1 — 合作模式多选配置(企业 4 + 银行 5 + 担保 5 含自营兜底 + 保险 5 含自营兜底 + 关联机构按需)** (1 天)
+- 交付物: `CooperationMode` 类
+- 关键数据结构:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  ```typescript
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  interface CooperationMode {
+    enterprise: Array<"self_op"|"bank_loan"|"guarantee"|"insurance">;
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+    bank: Array<"direct"|"consortium"|"participating"|"guarantee_assisted"|"insurance_assisted"|"self_backup">;
+    guarantor: Array<"full"|"partial"|"counter"|"shared"|"self_backup">;
+    insurance: Array<"full"|"partial"|"co-insurance"|"re-insurance"|"self_backup">;
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+    relatedInstitutions: string[];  // 按需
+  }
+  ```
+- 多选 UI: pill 按钮组(高亮状态显示已选)
+- 单元测试: 担保方选 self_backup → C1 担保兜底自动激活;自营兜底不可与外部机构服务深度等同
+
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**接口契约**:
+```
+GET  /core/config/{entityId}/cooperation
+POST /core/config/{entityId}/cooperation
+Input: CooperationMode
+```
+
+**集成测试**:
+- [T1] 4 种合作模式可多选
+- [T2] 选择 self_backup → 对应 C 兜底子模块激活
+- [T3] 兜底模式服务深度限制为简化版
+- [T4] 切换企业后保持选中状态
+
+---
+
+### Task B9: 可选配置引擎 - 服务深度 + 字段级可见范围
+**Spec引用**: CORE-03 [spec.md#L88](../../../spec.md) 服务深度 + Task B2 字段级可见性
+**输入依赖**: Task B2 + Task B7
+**总工作量**: 1 天
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+#### 子任务分解
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**S9.1 — 服务深度可选配置(监管 4 级 / 报告频率 / AI 自主度上限 / 字段级可见范围)** (1 天)
+- 交付物: `ServiceDepthConfig` 类
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 关键配置:
+  ```
+  supervisionDepth: "level1"|"level2"|"level3"|"level4"
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  reportFrequency: "daily"|"weekly"|"monthly"|"quarterly"
+  autonomyCeiling: "L1"|"L2"|"L3"|"L4"
+  fieldVisibility: VisibilityMatrix  // 引用 Task B2
+  ```
+- 单元测试: 监管 level4 → 报告频率 daily + AI 自主度上限 L2 + 字段全显
+
+**接口契约**:
+```
+GET  /core/config/{entityId}/service-depth
+POST /core/config/{entityId}/service-depth
+GET  /core/config/{entityId}/completeness
+Output: {dataFlowCompleteness: 0.83, expectedCreditEnhancement: "+12.5%"}
+```
+
+**集成测试**:
+- [T1] 4 级服务深度可配置
+- [T2] 报告频率可调
+- [T3] AI 自主度上限覆盖 B1 路由
+- [T4] 字段级可见范围引用 B2 矩阵
+- [T5] 完整度自动计算
+
+---
+
+### Task B10: 非阻塞 toast + 阻塞 modal 决策矩阵
+**Spec引用**: UI 设计准则 + spec v2.0 修正
+**输入依赖**: Task B1 (自主度引擎,因为 L1-L4 决定 modal/toast)
+**总工作量**: 1 天 (子任务 S10.1-S10.3)
+
+#### 子任务分解
+
+**S10.1 — AIModal 统一管理器 + 阻塞队列(上限 3)** (0.3 天)
+- 交付物: `AIModal` 单例
+- 关键方法:
+  ```typescript
+  class AIModal {
+    show(modal: ModalInput): string;              // 立即显示
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+    enqueue(modal: ModalInput): string;           // 入队,上限 3
+    toast(toast: ToastInput): string;             // 非阻塞 toast
+    closeToast(toastId: string): void;
+    closeModal(modalId: string): void;
+  }
+  ```
+
+**S10.2 — 决策矩阵路由器** (0.4 天)
+- 交付物: `DecisionMatrixRouter` 类,基于"操作可逆性 + 影响金额 + 风险等级"路由
+- 路由表:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+  不可逆 + 大额 + 高风险 → 阻塞 modal + 后果预览 + 二次确认(橙色/紫色带⚠️)
+  可逆 + 小额 + 低风险 → 轻量知情确认 modal(蓝色/紫色)
+  通知类事件 → 非阻塞 toast(右下角滑入,6.5s 自动消失)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  关键决策 + 队列保护 → 阻塞 modal 队列(上限 3)
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+**S10.3 — 非阻塞 toast 通知系统** (0.3 天)
+- 交付物: `Toast` 组件
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 关键 UI:
+  - 右下角滑入
+  - 堆叠(最多 5 条)
+  - 自动消失(6.5s 可配置)
+  - 动作按钮("✓ 采纳并跳转" / "× 关闭")
+  - z-index=9500(低于 modal 10000)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**接口契约**:
+```
+AIModal.show({type, title, body, buttons: [{label, onClick, color}]})
+AIModal.enqueue({...})  // 队列上限 3,超限降级 toast
+AIModal.toast({type, title, text, color, duration_ms, actionLabel, onAction})
+```
+
+**集成测试**:
+- [T1] 不可逆操作弹阻塞 modal + 后果预览表
+- [T2] 可逆操作弹轻量知情确认 modal
+- [T3] 通知类事件弹非阻塞 toast
+- [T4] modal 队列超 3 自动降级为 toast
+- [T5] toast 可堆叠 + 自动消失 + 动作按钮
+
+---
+
+### Task B11: 穿透报告 + 监管沙盒
+**Spec引用**: APP-04 [spec.md#L1150-L1166](../../../spec.md)
+**输入依赖**: Task B6 (AI 操作日志) + Phase 4 Task 10 (区块链存证)
+**总工作量**: 4 天 (子任务 S11.1-S11.4)
+
+#### 子任务分解
+
+**S11.1 — 脱敏式穿透报告生成器** (1.5 天)
+- 交付物: `PenetrationReportGenerator` 类
+- 关键算法: 自动脱敏企业敏感字段,只保留监管必要信息
+- 脱敏规则:
+  ```
+  企业名 → ★★科技
+  银行账号 → 6217****1234
+  法人姓名 → 张★
+  金额 → ¥XX万
+  ```
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**S11.2 — 监管沙盒视图 + 全链路日志** (1 天)
+- 交付物: `RegulatorySandbox` 视图,展示数据采集 → AI 决策 → 资金划转的全链路日志
+- 关键展示:
+  ```
+  ① 数据采集事件 → ② AI 决策事件 → ③ 资金划转事件 → ④ 区块链存证事件
+  每个事件含: 时间戳 / 操作类型 / 操作人/AI / 哈希指纹 / Merkle 根
+  ```
+
+**S11.3 — 区块链存证验证 API** (1 天)
+- 交付物: `verify` API,任何数据可验证上链哈希
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 关键算法: SHA-256 + 蚂蚁链/至信链 SDK + Merkle 根
+
+**S11.4 — 报告 4 决策按钮 + 状态写入** (0.5 天)
+- 交付物: 4 决策按钮(确认归档 / 需补充信息 / 标记误报 / 取消) + 状态机
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 状态转换:
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  待审阅 → 已归档 / 需补充 / 标记误报 / 取消(终态)
+  需补充 → 待审阅(补充后重新审阅)
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+**接口契约**:
+```
+POST /app04/penetration-report/generate
+Input: {entityId, scope}
+Output: {reportId, riskFeatures, desensitizedData, merkleRoot, chainTxHash}
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+GET /app04/penetration-report/{reportId}
+POST /app04/penetration-report/{reportId}/decision
+Input: {decision: "archive"|"need_more"|"false_positive"|"cancel", note}
+POST /app04/penetration-report/verify
+Input: {dataHash, chainTxHash}
+Output: {verified: bool, blockHeight, timestamp}
+```
+
+**集成测试**:
+- [T1] 报告自动脱敏,不含企业敏感字段
+- [T2] 全链路日志可追溯(4 类事件)
+- [T3] 区块链存证可验证
+- [T4] 4 决策按钮可写入状态
+- [T5] "需补充"状态可回到"待审阅"
+
+---
+
+### Task B12: AI 撮合推荐(银企双向匹配)
+**Spec引用**: MOD-04 [spec.md#L605-L655](../../../spec.md) + MOD-11
+**输入依赖**: Task B6 (AI 操作日志) + Phase 5 Task 11 (征信)
+**总工作量**: 4 天 (子任务 S12.1-S12.4)
+
+#### 子任务分解
+
+**S12.1 — 银企双向匹配引擎** (1.5 天)
+- 交付物: `BiDirectionalMatcher` 类
+- 双向:
+  ```
+  企业 → 银行: 基于企业信用画像 + 融资需求,匹配最匹配的银行产品
+  银行 → 企业: 基于银行风险偏好,反向匹配符合条件的企业池
+  ```
+- 关键算法:
+  ```
+  matchScore = 0.3 * creditMatch + 0.25 * industryMatch + 0.2 * amountMatch + 0.15 * termMatch + 0.1 * historyMatch
+  ```
+
+**S12.2 — AI 撮合推荐器 + 置信度 + 推理链** (1 天)
+- 交付物: `AIMatchRecommender` 类
+- 关键输出:
+  ```typescript
+  interface MatchResult {
+    bankId: string;
+    product: string;
+    matchScore: number;       // 0-1
+    confidence: number;       // 0-1
+    reasoning: ReasoningNode[];
+    estimatedRate: number;
+    estimatedAmount: number;
+    estimatedTerm: number;
+  }
+  ```
+
+**S12.3 — 多方案对比 + 一键跳转融资流程** (1 天)
+- 交付物: `MultiPlanComparison` 视图 + 跳转按钮
+- 关键 UI: 3-5 方案对比表 + "采纳并跳转融资流程"按钮
+
+**S12.4 — 佣金数据写入财务顾问运营指标** (0.5 天)
+- 交付物: `CommissionWriter` 类,撮合成功后写入 B10 运营指标
+- 关键算法: 佣金 = 撮合金额 × 费率(0.5%-2%)
+
+**接口契约**:
+```
+POST /mod04/match
+Input: {entityId, financingNeed: {amount, term, purpose}}
+Output: {matches: MatchResult[], reasoningChain, recommendedPlan}
+
+POST /mod04/match/reverse
+Input: {bankId, riskPreference}
+Output: {entityMatches: [{entityId, matchScore, reasoning}]}
+
+POST /mod04/match/{matchId}/accept
+Output: {financingId, commissionAmount}
+```
+
+**集成测试**:
+- [T1] 企业可发起融资需求,系统匹配多家银行
+- [T2] 匹配结果含置信度 + 推理链
+- [T3] 银行端可反向匹配企业池
+- [T4] 多方案对比视图可用
+- [T5] 撮合成功可一键跳转融资流程
+- [T6] 佣金数据写入财务顾问运营指标
+
+---
+
+## Phase C: 独立兜底备选模块（C1-C7，基于 spec v2.0 MOD-15）
+
+> **本阶段对应「🔴 独立兜底档」**,占 15% 开发精力。仅在合作方不接入时启用,保证系统独立运行能力。
+
+> **任务详细内容位置**: C1-C7 各子任务的完整交付物 / 接口契约 / 验证标准 / 子任务分解 位于本文件下方"## 三、外部接入建议"块(因 Phase C 前置设计 + 子任务详情统一归口于外部接入建议章)。本主块仅列出 Task 清单,详情见下表。
+>
+> | Task | 名称 | 工作量 | 详情位置 |
+> |------|------|--------|----------|
+> | C1 | 担保兜底 | 2 天 | 三、外部接入建议 / Task C1 |
+> | C2 | 保险兜底 | 2 天 | 三、外部接入建议 / Task C2 |
+> | C3 | 评估兜底 | 1.5 天 | 三、外部接入建议 / Task C3 |
+> | C4 | 法律兜底 | 1 天 | 三、外部接入建议 / Task C4 |
+> | C5 | 审计兜底 | 1 天 | 三、外部接入建议 / Task C5 |
+> | C6 | 合同模板兜底 | 1 天 | 三、外部接入建议 / Task C6 |
+> | C7 | 替代征信兜底 | 1 天 | 三、外部接入建议 / Task C7 |
+> | **合计** | 7 子模块 | 10.5 天 | — |
+
+---
+
+## Phase C 前置设计：C1-C7 核心兜底引擎架构设计思路
+
+> **目的**: 在展开 C1-C7 各子模块详细任务前,先明确整个独立兜底引擎的核心架构,确保 7 个子模块按统一规范实现、由 MOD-15 主控统一调度、与 INFRA-01b 外部 API 适配层协同降级。本节是 spec v2.0 修正 S1+S6 的工程落地设计。
+
+### C0.1 设计目标与边界
+
+| 维度 | 设计目标 | 不在范围内 |
+|------|---------|-----------|
+| 一致性 | 7 个 C 子模块遵循统一接口规范(apply/activate/status/report) | 不要求各子模块业务逻辑相同 |
+| 可独立启停 | 管理员可在「兜底引擎配置台」单独启停任一 C 子模块 | 不支持运行中切换(任务执行期间锁定) |
+| 降级链统一 | 所有外部 API 失败 → C 兜底 → 独立运行 → 拒绝服务,4 级链路由 MOD-15 统一调度 | 不绕过降级链直接拒绝 |
+| 报告标注统一 | 所有兜底报告强制带「⚠️ 自营兜底·非外部机构背书」徽章 + 能力边界表 | 不允许无标注兜底报告流转 |
+| 与 INFRA-01b 协同 | 由 INFRA-01b 的 fallbackModule 字段决定降级到哪个 C | C 子模块不直接监听 API 状态 |
+| 与 B 模块协同 | C 报告写入 B6 (AI 操作日志) + B11 (穿透报告) | C 不重复实现 AI 日志/穿透报告 |
+| 与 MOD-13 协同 | MOD-13 任务路由器调用 C 子模块,前置意愿评估(S2)决定是否走兜底 | C 子模块不直接做意愿评估 |
+
+### C0.2 整体架构图
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  MOD-15 独立兜底引擎 (BackupEngine)                                      │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  ① 兜底调度器 (FallbackDispatcher)                                  │ │
+│  │  - receive(task) → 评估 fallbackModule → 路由到对应 C 子模块        │ │
+│  │  - 4 级降级链状态机:API_OK → RETRY → C_FALLBACK → INDEPENDENT → REFUSE │
+│  │  - fallbackChain 字段完整记录降级路径                                │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                  ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  ② C 子模块注册表 (CRegistry)                                       │ │
+│  │  - C1 担保兜底 / C2 保险兜底 / C3 评估兜底 / C4 法律兜底            │ │
+│  │  - C5 审计兜底 / C6 合同兜底 / C7 替代征信兜底                      │ │
+│  │  - 每个子模块: {id, spec, status: standby|active, enabled, stats} │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                  ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  ③ 报告标注引擎 (ReportAnnotator)                                   │ │
+│  │  - 强制注入「⚠️ 自营兜底·非外部机构背书」徽章                       │ │
+│  │  - 强制注入「能力边界表」(✅ 含 / ❌ 不含)                          │ │
+│  │  - 强制注入「外部接入建议」(推动 XX 机构接入 API-XX 以获得完整能力) │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                  ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  ④ 独立运行模式控制 (IndependentMode)                              │ │
+│  │  - enabled: bool (S3 修正,企业端可切换)                            │ │
+│  │  - degradedServices[] / availableServices[] 双列表                 │ │
+│  │  - 切换时强制 15 个外部 API 状态置为 disconnected + C 全部 active   │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                  ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │  ⑤ 配置台 + 统计 (BackupConfigBoard)                                │ │
+│  │  - 7 个 C 子模块启停 UI (APP-03 子页签)                             │ │
+│  │  - 触发次数 / 成功率 / 平均耗时 / 最近 10 次降级链回溯              │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────┘
+                                  ↓
+            (写入) B6 AI 操作日志 + B11 穿透报告 + 联动日志
+                                  ↑
+            (监听) INFRA-01b 外部 API 状态变更事件 → 触发降级链
+                                  ↑
+            (调用) MOD-13 任务路由器 → 走兜底子模块
+```
+
+### C0.3 4 级降级链状态机
+
+```
+┌────────────┐  外部 API 调用失败  ┌────────────┐  重试 3 次仍失败  ┌────────────┐  C 兜底也失败  ┌────────────┐  无法生成建议  ┌────────────┐
+│  L1 API 接入 │ ──────────────→ │  L2 重试    │ ──────────────→ │  L3 C 兜底  │ ──────────────→ │ L4 独立运行 │ ──────────────→ │ L5 拒绝服务 │
+│  🟢 默认    │                  │  🟡 临时    │                  │  🟠 降级    │                  │  🔴 严重    │                  │  ⚫ 不可恢复 │
+└────────────┘                  └────────────┘                  └────────────┘                  └────────────┘                  └────────────┘
+                                                                                                       │
+                                                                                                       ↓
+                                                                                          返回「服务建议」给用户
+                                                                                          (不执行实际操作)
+                                                                                          仅作为 AI 撮合建议
+```
+
+**降级链字段记录** (写入 `InstitutionTask.fallbackChain`):
+```typescript
+interface FallbackChain {
+  taskId: string;
+  levels: Array<{
+    level: 1 | 2 | 3 | 4 | 5;
+    label: "API接入" | "重试" | "C兜底" | "独立运行" | "拒绝服务";
+    enteredAt: ISO8601;
+    exitedAt: ISO8601 | null;
+    reason: string;              // 进入该级别的原因
+    fallbackModuleId?: string;   // 若进入 L3,记录哪个 C 子模块被激活
+    retryCount?: number;         // 若进入 L2,记录重试次数
+  }>;
+  currentLevel: 1 | 2 | 3 | 4 | 5;
+  finalOutcome: "success" | "refused" | "advice_only";
+}
+```
+
+### C0.4 C 子模块统一接口规范
+
+所有 7 个 C 子模块必须实现以下统一接口(由 MOD-15 调用):
+
+```typescript
+interface FallbackModule {
+  id: "C1" | "C2" | "C3" | "C4" | "C5" | "C6" | "C7";
+  name: string;
+  specRef: string;              // 引用 spec 模块,如 "MOD-13 + S1"
+  status: "standby" | "active";
+  enabled: boolean;             // 管理员启停
+  fallbackToApi: string;        // 关联的外部 API,如 "API-11"
+  servicesProvided: string[];   // ✅ 含的能力清单
+  capabilityBounds: string[];  // ❌ 不含的能力清单
+
+  // 核心方法
+  apply(task: InstitutionTask): Promise<TaskResult>;       // 受理申请
+  activate(taskId: string): Promise<ActivationResult>;     // 激活(出函/出单)
+  getStatus(taskId: string): Promise<StatusResult>;        // 查询状态
+  generateReport(taskId: string): Promise<Report>;        // 生成报告(强制带标注)
+
+  // 生命周期钩子
+  onActivate(): void;            // 激活时回调(联动日志 + 全局告警)
+  onDeactivate(): void;         // 休眠时回调
+  onIndependentMode(enabled: bool): void;  // 独立运行模式切换时
+}
+```
+
+### C0.5 兜底报告标注规范 (S5 修正落地)
+
+所有 C 子模块生成的报告必须包含以下 3 个固定区块:
+
+```markdown
+# [报告标题,如「简化版保函」]
+
+> ⚠️ **自营兜底·非外部机构背书**
+> 本报告由 FinTrust Hub 独立兜底引擎 (MOD-15 / C1 担保兜底) 生成,非外部担保公司出具。
+
+## 一、报告正文
+[实际报告内容]
+
+## 二、能力边界
+| ✅ 含 | ❌ 不含 |
+|--------|---------|
+| 担保申请提交 | 司法代偿流程 |
+| 保前审查 4 项 | 资产处置 |
+| 反担保物登记(基础) | 专业担保风控模型 |
+| 保后监控(AI) | 担保资金真池 |
+
+## 三、外部接入建议
+若需完整担保能力,请推动 [API-11 担保公司业务系统] 接入以获得:
+- 司法代偿流程
+- 资产处置
+- 专业担保风控模型
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 担保资金真池
+```
+
+### C0.6 与其他模块的协同时序
+
+```
+企业端发起担保增信
+    ↓
+MOD-13 任务路由器
+    ↓
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+S2 接入意愿评估 (InstitutionTask.preAssessment)
+    ├─ 高意愿 → 走 API-11 担保公司业务系统
+    │            ├─ 成功 → 返回外部担保公司保函
+    │            └─ 失败 → 进入降级链 L2
+    └─ 低意愿 → 直接进入降级链 L3
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+                    ↓
+            MOD-15 FallbackDispatcher
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+                    ↓
+            路由到 C1 担保兜底子模块
+                    ↓
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+            C1.apply(task) → C1.activate(taskId) → C1.generateReport(taskId)
+                    ↓
+            ReportAnnotator 注入「⚠️ 自营兜底」徽章 + 能力边界表 + 外部接入建议
+                    ↓
+            写入 B6 (AI 操作日志,记录 L2/85 置信度 + 4 条推理链)
+                    ↓
+            写入 B11 (穿透报告,作为兜底事件追溯)
+                    ↓
+            联动日志输出 [兜底] 标签 + 全局告警横幅(橙色,带"→ 处理"跳转 Tab8)
+```
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+### C0.7 兜底引擎与三档投入占比的关系
+
+| 档位 | 模块数 | 工时 | 占比 | 与兜底引擎的关系 |
+|------|--------|------|------|-------------------|
+| 🟢 API 接入档 | 15 | 320h | 18% | 提供 fallbackModule 字段,失败时触发降级链 |
+| 🟡 自研护城河档 | 12 | 1280h | 72% | 提供 B6 日志 + B11 穿透报告 + B12 撮合建议承接 |
+| 🔴 独立兜底档 | 7 | 180h | 10% | 由 MOD-15 主控统一调度,实现统一接口规范 |
+| **合计** | 34 | 1780h | 100% | — |
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **设计哲学**: 不重复造轮子(API档),也不放弃独立运行能力(兜底档),把精力集中在独有创新(自研档)。兜底档虽只占 10% 工时,但保证了系统在零外部机构接入时的最低运行能力。
+
+---
+
+### Task C1: 担保兜底子模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-15 [spec v2.0 修正 S6](../../../spec.md) + MOD-13 兜底场景
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task B6 (AI 操作日志) + Phase 1 Task 1
+**交付物**:
+- 简化版保前审查规则引擎(4 项基础审查:资质/财务/反担保/风评)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 反担保物基础登记(无 GPS 监控)
+- 简化版保函生成器(明确标注"自营兜底")
+- AI 保后监控(替代人工保后团队)
+**接口契约**:
+```
+POST /mod15/c1/guarantee/apply
+POST /mod15/c1/guarantee/activate
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+GET  /mod15/c1/guarantee/{id}/status
+```
+**验证标准**:
+- 担保公司不接入时,系统可启用 C1 兜底
+- 生成保函明确标注"自营兜底"
+- 银行端可见"自营兜底"标记
+**工作量**: 2 天
+
+### Task C2: 保险兜底子模块
+**Spec引用**: MOD-15 + MOD-13 兜底场景
+**输入依赖**: Task C1
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- 简化版核保规则引擎(基于 AI 履约评分)
+- 简化版保单生成器(标注"自营兜底")
+- 理赔材料 AI 准备器
+- 保单状态机(出单/续保,无批改/退保)
+**工作量**: 2 天
+
+### Task C3: 评估兜底子模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-15 + MOD-13 评估兜底场景 (spec v2.0 修正 S1)
+**输入依赖**: Task C1 (统一接口规范) + Phase 2 Task 5 (第三方数据源)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**总工作量**: 1.5 天
+
+#### 子任务分解
+
+**S3.1 — 资产评估算法(财务 + 行业基准 + 历史交易数据)** (0.5 天)
+- 交付物: `AssetEvaluator` 类,实现 `FallbackModule` 接口
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 关键算法:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+  assetValue = 0.5 * financialBased + 0.3 * industryBenchmark + 0.2 * historicalTransaction
+  置信度 = 0.65 (算法评估,显著低于权威评估师的 0.95)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+- 单元测试: 财务 1000万 + 行业基准 950万 + 历史交易 980万 → 评估值约 976万 + 置信度 0.65
+
+**S3.2 — 评估报告生成器(脱敏版)** (0.5 天)
+- 交付物: `EvaluationReportGenerator` 类
+- 强制标注: 「⚠️ 算法评估,需银行自行复核」+ 能力边界表 + 外部接入建议
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**S3.3 — 与 B6/B11 集成 + 状态上报** (0.5 天)
+- 交付物: 评估结果写入 B6 AI 操作日志 + B11 穿透报告
+- 单元测试: 评估完成 → B6 可查询到 operationId → B11 穿透报告含评估事件
+
+**接口契约**:
+```
+POST /mod15/c3/evaluate
+Input: {entityId, assetType, financialData}
+Output: {reportId, assetValue, confidence: 0.65, fallbackTag: "算法评估·非权威评估师"}
+GET  /mod15/c3/evaluate/{reportId}
+```
+
+**集成测试**:
+- [T1] 资产评估算法基于三因子计算
+- [T2] 评估报告明确标注「算法评估,需银行自行复核」
+- [T3] 评估结果写入 B6 + B11
+- [T4] 评估报告不可省略能力边界表
+
+---
+
+### Task C4: 法律兜底子模块
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-15 + MOD-13 法律兜底场景 (spec v2.0 修正 S1)
+**输入依赖**: Task C1 (统一接口规范)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**总工作量**: 1 天
+
+#### 子任务分解
+
+**S4.1 — 合同模板库 + 合规规则引擎** (0.5 天)
+- 交付物: `ContractTemplateLibrary` + `ComplianceRuleEngine` 类
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 模板库: 购销合同 / 借款合同 / 担保合同 / 抵押合同 4 类标准模板
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 合规规则: 主体资格 / 经营范围 / 经营资质 / 反洗钱 / 关联交易 5 项基础审查
+
+**S4.2 — 法律意见书模板生成器** (0.5 天)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 交付物: `LegalOpinionGenerator` 类
+- 强制标注: 「⚠️ 模板生成,非律师出具」+ 能力边界表 + 外部接入建议
+- 意见书结构:
+  ```
+  1. 合同主体审查结论
+  2. 合同条款合规性审查结论
+  3. 风险提示
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  4. 建议(明确建议推动 API-13 法律意见书生成接入)
+  ```
+
+**接口契约**:
+```
+POST /mod15/c4/legal-review
+Input: {entityId, contractId, reviewScope}
+Output: {reportId, reviewResults, riskWarnings, fallbackTag: "模板生成·非律师出具"}
+POST /mod15/c4/legal-opinion
+Input: {entityId, scope}
+Output: {opinionId, opinionText, fallbackTag}
+```
+
+**集成测试**:
+- [T1] 合同模板库 4 类模板可下载可填写
+- [T2] 合规规则引擎 5 项审查可用
+- [T3] 法律意见书明确标注「模板生成,非律师出具」
+- [T4] 意见书必含风险提示 + 外部接入建议
+
+---
+
+### Task C5: 审计兜底子模块
+**Spec引用**: MOD-15 + MOD-13 审计兜底场景 (spec v2.0 修正 S1)
+**输入依赖**: Task C1 (统一接口规范)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**总工作量**: 1 天
+
+#### 子任务分解
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**S5.1 — 财务规则引擎(异常检测 + 趋势分析)** (0.5 天)
+- 交付物: `FinancialRuleEngine` 类
+- 异常检测规则:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+  1. 应收账款/营业收入 > 50% → 异常
+  2. 存货周转率 < 行业基准 50% → 异常
+  3. 毛利率 < 同行业平均 30% → 异常
+  4. 现金流/净利润 < 0.5 → 异常
+  5. 关联交易占比 > 30% → 异常
+  ```
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 趋势分析: 同比 + 环比 + 3 年复合增长率
+
+**S5.2 — 财务鉴证报告生成器(脱敏版)** (0.5 天)
+- 交付物: `AuditReportGenerator` 类
+- 强制标注: 「⚠️ 规则引擎审计,非注册会计师出具」+ 能力边界表 + 外部接入建议
+
+**接口契约**:
+```
+POST /mod15/c5/audit
+Input: {entityId, auditScope, financialData}
+Output: {reportId, auditFindings, trendAnalysis, fallbackTag: "规则引擎审计·非CPA签字"}
+GET  /mod15/c5/audit/{reportId}
+```
+
+**集成测试**:
+- [T1] 财务规则引擎 5 项异常检测可用
+- [T2] 趋势分析同比/环比/复合增长率正确
+- [T3] 鉴证报告明确标注「规则引擎审计,非 CPA 签字」
+- [T4] 报告必含异常检测结论 + 趋势分析 + 外部接入建议
+
+---
+
+### Task C6: 合同模板兜底子模块
+**Spec引用**: MOD-15 + MOD-13 合同流兜底 (spec v2.0 修正 S1)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task C1 (统一接口规范) + Task C4 (法律兜底)
+**总工作量**: 1 天
+
+#### 子任务分解
+
+**S6.1 — 合同模板库(标准化合同,可下载可填写)** (0.5 天)
+- 交付物: `ContractLibrary` 类
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 模板类型: 购销合同 / 借款合同 / 担保合同 / 抵押合同 / 租赁合同 5 类
+- 关键功能:
+  ```
+  1. 模板下载(Word/PDF 格式)
+  2. 在线填写(关键字段: 甲乙双方/金额/期限/利率/违约责任)
+  3. 自动生成(基于企业数据填充模板)
+  4. 历史版本管理
+  ```
+
+**S6.2 — 合同关键信息 AI 提取 + 强制标注** (0.5 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交付物: `ContractInfoExtractor` 类 + 强制标注
+- 关键信息提取:
+  ```
+  - 甲乙双方信息
+  - 合同金额 + 币种
+  - 期限 + 起止日期
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  - 利率 + 还款方式
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  - 违约责任
+  - 争议解决方式
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+  ```
+- 强制标注: 「⚠️ 无电子签章,需线下盖章」+ 能力边界表 + 外部接入建议
+
+**接口契约**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+```
+GET  /mod15/c6/templates
+Output: {templates: [{type, name, downloadUrl, fields[]}]}
+POST /mod15/c6/contract/generate
+Input: {entityId, templateType, data}
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+Output: {contractId, downloadUrl, extractedInfo, fallbackTag: "无电子签章·需线下盖章"}
+POST /mod15/c6/contract/{contractId}/extract
+Output: {extractedInfo: {parties, amount, term, rate, ...}}
+```
+
+**集成测试**:
+- [T1] 5 类合同模板可下载可填写
+- [T2] AI 提取合同关键信息准确率 > 80%
+- [T3] 兜底合同明确标注「无电子签章,需线下盖章」
+- [T4] e签宝不接入时,系统可启用 C6 兜底
+
+### Task C7: 替代征信兜底子模块
+**Spec引用**: DATA-02 [spec v2.0 修正 S3](../../../spec.md) + MOD-15
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Phase 2 Task 5 (第三方数据源)
+**交付物**:
+- 公开数据源聚合器(司法失信/工商异常/税务逾期/水电煤欠费)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 替代征信评分算法
+- 替代征信报告生成器(标注"基于公开数据,非央行征信")
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 双指标存储(creditScore + alternativeCreditScore 分离)
+**工作量**: 2 天
+
+### Task MOD-15: 兜底引擎主控
+**Spec引用**: MOD-15 [spec v2.0 修正 S6](../../../spec.md)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task C1-C7 全部完成
+**交付物**:
+- 兜底子模块启停管理 API
+- 兜底降级链触发器(重试 3 次/指数退避/降级到兜底/独立运行/拒绝服务)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 兜底报告标注引擎(统一"自营兜底"标记)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 兜底引擎配置台 UI(APP-03 子页签)
+**接口契约**:
+```
+GET  /mod15/config
+POST /mod15/config/{moduleId}/toggle  // 启停
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+POST /mod15/fallback                  // 降级链触发
+GET  /mod15/stats                     // 使用统计
+```
+**验证标准**:
+- 7 个兜底子模块可独立启停
+- 降级链可触发 + 完整记录 fallbackChain
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 报告统一标注"自营兜底"
+- 配置台可统计触发次数/成功率/平均耗时
+**工作量**: 2 天
+
+---
+
+## Phase A: API 接入适配层（A1-A15，基于 spec v2.0 INFRA-01b）
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **本阶段对应「🟢 API 接入档」**,占 25% 开发精力。统一管理 15 个外部 API 接入。
+
+### Task INFRA-01b: 外部 API 适配层
+**Spec引用**: INFRA-01b [spec v2.0 修正 S7](../../../spec.md)
+**输入依赖**: Phase 1 Task 1 (项目脚手架)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- APIAdapterRegistry 表(apiId/endpoint/authType/rateLimit/timeout/retryPolicy/fallbackModule)
+- 限流与容错引擎(QPS/日配额/429 拒绝/10s 降级)
+- 超时降级器(3 次重试/指数退避/降级到 fallbackModule)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- API 健康检查器(每 5 分钟/green-yellow-red)
+- 外部 API 监控面板(APP-08 子页签)
+**工作量**: 2 天
+
+### Task A1: 银企直连接入适配器
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-01 + INFRA-01b
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A1 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 工行/建行/农行/中行/交行/招商 6 家银行 + 聚水潭/银企联云聚合
+- 端点: `GET /api/v1/data/bank/accounts, /api/v1/data/bank/transactions`
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**工作量**: 1 天
+
+---
+
+
+### Task A2: 税务发票验真适配器
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-02 + MOD-13
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A2 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 接入 国家税务总局发票查验 API
+- 端点: `POST /api/v1/data/external/invoice/verify`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A3: 工商信息适配器
+**Spec引用**: DATA-02 + MOD-13
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- A3 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 国家企业信用信息公示系统 (含股权穿透)
+- 端点: `GET /api/v1/data/external/gsxt/{uscc}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A4: 司法查询适配器
+**Spec引用**: DATA-02 + MOD-13
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- A4 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 裁判文书网 / 失信被执行人查询
+- 端点: `GET /api/v1/data/external/judiciary/{entityName}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A5: 票交所/ECDS 适配器
+**Spec引用**: DATA-02 + MOD-04
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A5 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 票交所/电子商业汇票系统
+- 端点: `GET /api/v1/data/external/ecds/{billNo}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A6: 物流 GPS 适配器
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: DATA-04 + MOD-12
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A6 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 顺丰/京东物流 API (签收 GPS + 电子签收单)
+- 端点: `GET /api/v1/data/external/logistics/{waybillNo}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A7: 水电煤缴费适配器
+**Spec引用**: DATA-02 + MOD-13
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- A7 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 经授权获取缴费记录
+- 端点: `GET /api/v1/data/external/utility/{entityId}`
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A8: 海关数据适配器
+**Spec引用**: DATA-02 + MOD-13
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- A8 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 海关报关数据 (外贸企业适用)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 端点: `GET /api/v1/data/external/customs/{entityId}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A9: 电子签章适配器
+**Spec引用**: MOD-13 合同流 + INFRA-01b
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- A9 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 e签宝 / 法大大
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 端点: `POST /api/v1/data/external/esign/sign, GET /api/v1/data/external/esign/verify`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+---
+
+
+### Task A10: OCR 适配器
+**Spec引用**: DATA-03 + INFRA-01b
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A10 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 阿里云 OCR / 腾讯云 OCR
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 端点: `POST /api/v1/data/ocr/parse, GET /api/v1/data/ocr/result/{taskId}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A11: LLM 适配器
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+**Spec引用**: INFRA-02 + ECO-09
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- A11 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 DeepSeek / 通义千问 (OpenAI 兼容格式)
+- 端点: `POST /api/v1/ai/score, POST /api/v1/ai/analyze, POST /api/v1/ai/chat`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 1 天
+**路线图**: 详见 docs/P1_ROADMAP_TECH_IMPL.md
+
+---
+
+
+### Task A12: 区块链存证适配器
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-08 + INFRA-01b
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A12 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 蚂蚁链 / 至信链 / 天平链 (3 选 1)
+- 端点: `POST /api/v1/mod08/evidence/put, GET /api/v1/mod08/evidence/{txHash}/verify`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 1 天
+**路线图**: 详见 docs/P1_ROADMAP_TECH_IMPL.md
+
+---
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+
+### Task A13: 保单查询适配器
+**Spec引用**: MOD-05 + MOD-13 保险
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A13 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 信保 / 太保 / 平安
+- 端点: `GET /api/v1/data/external/insurance/policy/{policyNo}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+> **Code Status**: PARTIAL (auto-synced by tools/checklist_sync.py)
+- 超时 3 次重试后降级到 fallback
+**工作量**: 0.5 天
+
+---
+
+
+### Task A14: 担保状态适配器
+**Spec引用**: MOD-13 担保 + INFRA-01b
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A14 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 需谈判接入 (可能走 C1 兜底)
+- 端点: `GET /api/v1/data/external/guarantee/{guaranteeId}`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 1 天
+**注意**: 担保公司接入意愿低,优先实现 C1 担保兜底
+
+---
+
+
+### Task A15: 监管报送 SaaS 适配器
+**Spec引用**: APP-04 监管沙盒 + INFRA-01b
+**输入依赖**: Task INFRA-01b (APIAdapterRegistry + 限流容错引擎)
+**交付物**:
+- A15 适配器类(实现 `APIAdapter` 接口: `fetch`/`verify`/`fallback`)
+- 接入 人行/银保监报送接口 (按地区接入)
+- 端点: `POST /api/v1/operations/regulatory/submit`
+- 限流配置(QPS / 日配额 / 超时阈值)
+- 降级策略(API 不可用时降级到对应 C 兜底子模块,或返回缓存)
+**验证标准**:
+- 适配器可独立调用并返回结构化数据
+- 限流触发后返回 429 + 降级提示
+- 超时 3 次重试后降级到 fallback
+**工作量**: 1 天
+
+---
+
+
+
+---
+
+## Phase B/C/A 任务依赖关系图
+
+```
+Phase 1 (基础设施) ──┬─→ Phase B (须自研 B1-B12) ──┐
+                     │                              │
+                     ├─→ Phase A (API 适配层)       ├─→ Phase 10 (集成测试)
+                     │   (INFRA-01b + A1-A15)       │
+                     │                              │
+                     └─→ Phase C (独立兜底 C1-C7) ──┘
+                         (MOD-15 主控)
+
+并行执行:
+  - Phase B 与 Phase 2-9 并行,优先级最高
+  - Phase A 在 Phase 1 后启动,与 Phase 2 数据接入合并
+  - Phase C 在 Phase B 部分模块完成后启动(C1 依赖 B6)
+
+依赖关系:
+  B1 (L1-L4 自主度) → B6 (AI 日志) → B11 (穿透报告)
+  B1 (L1-L4 自主度) → B10 (modal/toast 决策矩阵)
+  B4 (五流+边缘案例) → B5 (全局告警横幅)
+  B7-B9 (可选配置) → B2 (字段级可见性)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  C1-C7 (兜底子模块) → MOD-15 (兜底主控)
+  INFRA-01b (API 适配层) → A1-A15 (各 API 适配器)
+```
+
+---
+
+## Phase B/C/A 验收清单
+
+### Phase B 须自研模块验收
+- [ ] B1 L1-L4 自主度路由器可正确路由(100万→L1, 100-500万→L3, >500万→L4)
+- [ ] B1 路由决策记录完整推理链
+- [ ] B2 14 字段 × 3 机构多选矩阵可配置
+- [ ] B2 6 快捷预设可一键应用
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] B2 同字段对不同机构显示不同(脱敏)
+- [ ] B3 12 责任节点都可确认
+- [ ] B3 确认后生成追溯码 + 信用分联动
+- [ ] B3 完整度 ≥80% 触发融资条件增强
+- [ ] B4 五流验证可识别边缘案例
+- [ ] B4 触发资金抽逃 → 全局告警横幅出现
+- [ ] B5 横幅在所有 9 个 Tab 顶部可见
+- [ ] B5 跳转按钮正确路由
+- [ ] B5 修复后告警自动清除
+- [ ] B6 任何 AI 决策都记录完整推理链
+- [ ] B6 推理链可展开查看
+- [ ] B7-B9 6 数据流可独立勾选
+- [ ] B7-B9 合作模式可切换(含自营兜底第 5 模式)
+- [ ] B10 不可逆操作弹阻塞 modal + 后果预览
+- [ ] B10 通知类事件弹非阻塞 toast
+- [ ] B10 modal 队列超 3 自动降级为 toast
+- [ ] B11 穿透报告自动脱敏
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] B11 4 决策按钮可写入状态
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] B12 银企双向匹配可执行
+- [ ] B12 匹配结果含置信度 + 推理链
+
+### Phase C 独立兜底模块验收
+- [ ] C1 担保公司不接入时可启用 C1 兜底
+- [ ] C1 生成保函明确标注"自营兜底"
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] C2 保险公司不接入时可启用 C2 兜底
+- [ ] C2 生成保单明确标注"自营兜底"
+- [ ] C3-C5 评估/法律/审计兜底可独立运行
+- [ ] C6 合同模板可下载可填写
+- [ ] C7 央行征信不开放时可启用替代征信
+- [ ] C7 双指标存储(creditScore + alternativeCreditScore)
+- [ ] MOD-15 7 个兜底子模块可独立启停
+- [ ] MOD-15 降级链可触发 + 完整记录 fallbackChain
+- [ ] MOD-15 报告统一标注"自营兜底"
+- [ ] MOD-15 配置台可统计触发次数/成功率/平均耗时
+
+### Phase A API 适配层验收
+- [ ] INFRA-01b 15 个外部 API 都注册到 APIAdapterRegistry
+- [ ] INFRA-01b 限流与容错引擎生效(QPS/日配额/429)
+- [ ] INFRA-01b 超时降级器生效(3 次重试/指数退避)
+- [ ] INFRA-01b API 健康检查器每 5 分钟执行
+- [ ] A1 银企直连可对接工行/建行/聚水潭
+- [ ] A2-A4 税务/工商/司法数据可查询
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- [ ] A6 物流 GPS 可对接顺丰/京东
+- [ ] A9 电子签章可对接 e签宝
+- [ ] A11 LLM 可对接 DeepSeek/通义千问
+- [ ] A12 区块链可对接蚂蚁链
+- [ ] A13 保单查询可对接信保/太保
+- [ ] A14 担保状态可对接(或降级到 C1 兜底)
+
+---
+
+## Phase SCF: 供应链金融子系统（独立闭环，基于 spec v6.0 MOD-16 + DATA-05 + APP-09）
+
+> **执行说明**: SCF 子系统作为平行于 Tab0 改造引擎的独立业务闭环，包含企业入口、数据库、画像、关系图谱四大要素。任务分 4 阶段递进实施，预估总工作量 6-7 天。
+
+### Task SCF-01: SCF 数据基座搭建
+**Spec引用**: DATA-05 供应链企业数据库
+**输入依赖**: 无（独立子系统，与现有 Phase 1-10 解耦）
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 1 天
+**交付物**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 新建 `simulation/js/scf-data.js`，定义 SCF 初始 Mock 数据:
+  - SCF_ENTERPRISES: 至少 5 家上下游企业 (供应商 3 家 + 经销商 2 家)，含供应链属性、信用体系、贸易统计、数据授权
+  - SCF_RELATIONSHIPS: 至少 3 条供应链关系 (核心企业-上游/下游)，含关系强度、贸易条款
+  - SCF_TRADES: 至少 10 条贸易记录，含五流验证状态
+  - SCF_BLACKLIST: 至少 2 条黑名单记录 (虚假贸易 + 关联方循环)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - SCF_CASES: 至少 3 个 SCF 标杆案例
+- 在 `simulation/js/mock-data.js` 新增:
+  - SCF_PRODUCTS: 5 类产品配置 (保理/反保理/预付款/存货/订单融资)，含融资比例、基础费率、前置条件
+  - SCF_MARKET: 市场动态数据 (行业景气指数 + 资金面松紧 + 政策导向 + 季节性需求)
+- 在 `simulation/js/state.js` 新增状态分区:
+  - `State.scfDatabase`: 4 层数据库架构 (enterprises/relationships/trades/blacklist/whitelist/products/riskEvents/graph)
+  - `State.scfEngine`: 引擎状态 (status/currentAnchorId/selectedPartnerId/engineStatus SC1-SC10/financingRequests/matchmakingResults)
+- 实现 localStorage 持久化 (`fintrust_scf_db_v1`) + "重置 SCF 数据库"功能
+**验证标准**:
+- SCF 数据可正确加载到 State.scfDatabase
+- 页面刷新后 SCF 数据可从 localStorage 恢复
+- "重置数据库"按钮可恢复初始 Mock 数据
+- 5 家上下游企业 + 3 条关系 + 10 条贸易记录 + 2 条黑名单数据完整
+
+### Task SCF-02: SC1 供应链画像引擎
+**Spec引用**: MOD-16 (13 维画像 + 三层信用)
+**输入依赖**: Task SCF-01
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 0.5 天
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**交付物**:
+- 新建 `simulation/js/scf-engine.js`，实现 SC1 供应链画像引擎:
+  - `buildProfile(ent)`: 计算 13 维画像 (8 维继承 Tab0 + 5 维新增)
+  - `calcBaseDims(ent)`: 从企业数据计算基础 8 维 (复用 R1 算法)
+  - `calcSCFDims(ent)`: 计算供应链 5 维 (交易稳定性/贸易真实性/合作忠诚度/履约可靠度/网络位置分)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - `calcThreeLayerCredit(ent, anchorId)`: 三层信用分计算 (独立/传导/场景)
+  - `calculateTransmittedCredit(anchorId, partnerId, relationship)`: 信用传导算法
+  - `generateTags(ent)`: 自动生成企业标签
+- 画像结果存储到 `ent.profile` 字段
+**验证标准**:
+- 13 维画像计算结果合理 (8 维与 Tab0 评分卡一致，5 维新增维度有业务含义)
+- 三层信用分: 传导信用分介于独立信用分和核心企业信用分之间
+- 标签自动生成 (如"优质供应商"/"高忠诚度"/"低风险"等)
+
+### Task SCF-03: SC2 黑白名单引擎 + SC3 信用传导引擎
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: MOD-16 (黑白名单管理 + 三层信用体系)
+**输入依赖**: Task SCF-01, Task SCF-02
+**总工作量**: 0.5 天
+**交付物**:
+- 实现 SC2 黑白名单引擎:
+  - `checkBlacklist(entId)`: 检查企业是否在黑名单
+  - `addToBlacklist(entId, reason, evidence, triggerRule)`: 加入黑名单
+  - `addToWhitelist(entId, reason)`: 加入白名单
+  - `checkAdmission(entId)`: 准入判定 (白名单优先 > 黑名单拒绝 > 信用分阈值)
+  - `appealBlacklist(entId, reason)`: 申诉机制
+  - 5 类黑名单触发条件实现
+- 实现 SC3 信用传导引擎:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - `calculateTransmittedCredit(anchorId, partnerId)`: 信用传导计算
+  - `calculateCooperationBonus(anchorCredit, volume, years)`: 合作加成
+  - `calculateStabilityFactor(relationship)`: 合作稳定系数
+  - `calculateSceneCredit(transmittedScore, tradeVerification, collateralCoverage)`: 场景信用
+  - 传导结果存储到 `SCF_CREDIT_PROPAGATION` 表
+**验证标准**:
+- 黑名单 5 类触发条件可正确触发 (虚假贸易/严重逾期/关联方循环/失信/低信用)
+- 白名单企业准入通过，黑名单企业准入拒绝
+- 信用传导: 合作年限越长、交易量越大，传导信用分越高
+- 申诉机制可正常提交和审核
+
+### Task SCF-04: SC4 贸易验证引擎 + SC5 产品路由引擎
+**Spec引用**: MOD-16 (贸易验证 + 产品路由)
+**输入依赖**: Task SCF-01
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 0.5 天
+**交付物**:
+- 实现 SC4 贸易验证引擎:
+  - `verifyTrade(tradeId)`: 贸易真实性验证
+  - `checkPOInvoiceMatch(trade)`: 采购订单-发票匹配
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - `checkLogisticsContractMatch(trade)`: 物流-合同匹配
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - `checkTradeHistoryConsistency(trade)`: 交易历史一致性
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+  - `checkFundFlowValidity(trade)`: 资金流向验证
+  - 复用 `State.verifyFiveStreams()` 作为基础验证
+  - 验证结果分级: verified/partial/unverified
+- 实现 SC5 产品路由引擎:
+  - `matchProducts(trade, enterprise)`: 产品匹配算法
+  - 5 类产品匹配规则 (保理/反保理/预付款/存货/订单)
+  - 匹配度评分 (0-1) + 排序
+  - 产品前置条件检查
+**验证标准**:
+- 五流验证通过 + 贸易专项验证通过 → trade.verificationLevel = 'verified'
+- 贸易类型为 receivable + 验证通过 → 匹配保理融资 (matchScore≥0.9)
+- 核心企业信用分≥750 + 贸易类型为 payable → 匹配反保理 (matchScore≥0.85)
+- 产品前置条件不满足时 matchScore 降低或拒绝匹配
+
+### Task SCF-05: SC6 定价引擎 + SC7 风险扩散引擎 + SC8 机构撮合引擎
+**Spec引用**: MOD-16 (动态定价 + 风险扩散 + 机构撮合)
+**输入依赖**: Task SCF-03, Task SCF-04
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 0.5 天
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**交付物**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 实现 SC6 定价引擎:
+  - `calculateRate(product, trade, enterprise, anchor)`: 利率动态计算
+  - 核心企业信用调整 + 贸易验证溢价 + 黑白名单调整 + 季节性波动 + 市场流动性调整
+  - 复用 `SEASONAL_WINDOWS` 季节性数据
+- 实现 SC7 风险扩散引擎:
+  - `analyzeRiskDiffusion(nodeId, riskEvent)`: 风险传导分析
+  - `calculateImpactRange(nodeId)`: 影响范围计算 (基于关系图谱)
+  - `generateRiskWarning(nodeId, event)`: 风险预警生成
+  - 预警级别: 黄/橙/红
+- 实现 SC8 机构撮合引擎:
+  - `simulateSCFBids(trade, product, enterprise)`: 多方机构竞标
+  - 扩展 `State.simulateBankBids()` 支持保理公司 + 担保 + 保险
+  - 报价排序 + AI 推荐
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+- 利率计算: 核心企业信用>800 时利率折扣 -0.3%，贸易验证 verified 时溢价 -0.2%
+- 风险扩散: 核心企业风险事件可传播到所有上下游，影响范围按关系强度加权
+- 机构撮合: 至少 3 家机构报价，按利率排序，AI 推荐最优
+
+### Task SCF-06: SC9 履约监控引擎 + SC10 案例学习引擎
+**Spec引用**: MOD-16 (履约监控 + 闭环回流 + 案例学习)
+**输入依赖**: Task SCF-05
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 0.5 天
+**交付物**:
+- 实现 SC9 履约监控引擎:
+  - `monitorPerformance(tradeId, loanId)`: 贷后贸易持续验证
+  - `trackRepayment(loanId)`: 还款进度跟踪
+  - `detectOverdue(loanId)`: 逾期检测 (>90天触发黑名单)
+  - `feedbackToSC2SC3(loanId)`: 闭环回流 (违约→SC2拉黑, 按时还款→SC3信用提升)
+- 实现 SC10 案例学习引擎:
+  - `searchCases(enterprise, trade, product)`: SCF 案例检索
+  - `extractBestPractices(case)`: 最佳实践提取
+  - `addCase(scfBusiness)`: 完成的 SCF 业务入库
+  - 案例检索算法 (KNN，参考 R10)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 履约监控: 还款进度可跟踪，逾期>90天自动触发 SC2 黑名单
+- 闭环回流: 按时还款 → SC3 信用分提升; 违约 → SC2 拉黑
+- 案例检索: 可按行业/产品/角色检索相似案例，返回 Top3
+
+### Task SCF-07: Tab11 供应链金融工作台 UI
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**Spec引用**: APP-09 供应链金融工作台
+**输入依赖**: Task SCF-02 ~ Task SCF-06 (所有引擎就绪)
+**总工作量**: 1.5 天
+**交付物**:
+- 在 `simulation/index.html` 新增:
+  - Tab11 容器 `<div id="view-scf" class="view-container"></div>`
+  - Tab 导航按钮 (🚛 Tab11 供应链金融工作台)
+  - 脚本引用: scf-data.js / scf-engine.js / scf-graph.js / view-scf.js
+  - 缓存版本号升级 (v=38)
+- 在 `simulation/js/app.js` 新增 Tab11 路由
+- 新建 `simulation/js/view-scf.js`，实现 10 个功能分区:
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  1. 企业入驻入口 (3 种角色入驻表单 + 认证流程)
+  2. 关系图谱可视化 (ECharts 力导向图 + 节点点击)
+  3. 企业画像面板 (13 维雷达图 + 三层信用分)
+  4. 黑白名单管理 (列表 + 申诉处理)
+  5. 贸易验证中心 (验证状态 + 详情)
+  6. 产品路由引擎 (匹配结果 + 匹配度排序)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  7. 机构撮合市场 (多方报价对比)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  8. 风险预警面板 (影响范围可视化)
+  9. 履约监控台 (在贷列表 + 还款进度)
+  10. SCF 案例库 (检索 + 详情)
+- 新建 `simulation/js/scf-graph.js`:
+  - ECharts 力导向图渲染 (节点大小/颜色区分角色)
+  - 节点点击事件 (查看企业详情)
+  - 边宽度按关系强度渲染
+  - 图算法分析 (中心度/环检测/路径分析)
+- 在 `simulation/css/style.css` 新增 SCF 工作台样式 (深色主题对齐)
+**验证标准**:
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- Tab11 可正常切换显示
+- 10 个功能分区全部渲染正常
+- 关系图谱 ECharts 可视化正常 (节点/边/颜色/大小)
+- 节点点击可查看企业详情
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+- 深色主题样式与现有 Tab 对齐
+
+### Task SCF-08: SCF 场景预设 + 闭环验证
+**Spec引用**: APP-09 (SCF 场景预设) + MOD-16 (闭环回流)
+**输入依赖**: Task SCF-07
+> **Code Status**: DONE (auto-synced by tools/checklist_sync.py)
+**总工作量**: 1 天
+**交付物**:
+- 在 `simulation/js/scene-loader.js` 新增 3 个 SCF 场景:
+  - `scf_anchor`: 核心企业认证 → 上游供应商保理融资全流程
+  - `scf_supplier`: 供应商入驻 → 信用传导 → 反保理融资
+  - `scf_distributor`: 经销商入驻 → 预付款融资 → 存货融资
+- 端到端测试:
+  - 核心企业认证 → 上下游准入 → 保理融资全流程 → 风险传导 → 案例入库
+  - 与 Tab0 改造引擎协同 (改造等级≥B+ 才能成为核心企业)
+  - 闭环回流验证 (SC9 → SC2/SC3 信用更新)
+- 边缘案例测试:
+  - 虚假贸易检测 (SC4 拒绝 + SC2 拉黑)
+  - 黑名单触发 (5 类触发条件)
+  - 风险扩散 (核心企业信用下降 → 上下游预警)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**验证标准**:
+- 3 个 SCF 场景可一键加载
+- 端到端流程: 核心企业认证 → 保理融资 → 风险传导 → 案例入库 完整跑通
+- 闭环回流: SC9 履约结果正确更新 SC2/SC3
+- 与 Tab0 边界清晰: Tab0 管企业自身改造，Tab11 管供应链关系运营
+- 边缘案例: 虚假贸易被拦截，黑名单正确触发
+
+### Task SCF 依赖关系图
+
+```
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+Task SCF-01 (数据基座)
+  ├→ Task SCF-02 (SC1 画像)
+  │    ├→ Task SCF-03 (SC2 黑白名单 + SC3 信用传导)
+  │    └→ Task SCF-04 (SC4 贸易验证 + SC5 产品路由)
+  │         └→ Task SCF-05 (SC6 定价 + SC7 风险 + SC8 撮合)
+  │              └→ Task SCF-06 (SC9 履约 + SC10 案例)
+  │                   └→ Task SCF-07 (Tab11 UI)
+  │                        └→ Task SCF-08 (场景 + 验证)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+  └→ (SCF-02~06 可部分并行: SC2/SC3 与 SC4/SC5 可并行)
+```
+
+### Task SCF 并行执行建议
+
+- **串行依赖**: SCF-01 → SCF-02 → SCF-07 → SCF-08
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- **可并行**: SCF-03 (SC2/SC3) 与 SCF-04 (SC4/SC5) 可并行
+- **可并行**: SCF-05 (SC6/SC7/SC8) 与 SCF-06 (SC9/SC10) 可并行 (但 SCF-06 依赖 SCF-05 的机构撮合结果)
+- **建议分配**: 单代理串行执行，预估 6-7 天; 双代理并行可缩短至 4-5 天
+
+---
+
+## Phase REF: 企业改造引擎子系统（独立前置层，v3.0 MOD-16 系列）
+
+> **前置关系说明**: 改造引擎是**融资执行层的前置门禁**——企业必须先完成改造或被识别为已合规，`financingUnlocked=true` 后才可进入原 MOD-01~MOD-15 融资撮合流程。因此本 Phase 建议**早于 Phase 3 启动**，与 Phase 1-2 并行开发。
+>
+> **子任务编号**: REF-XX 对应 spec.md MOD-16.X + BP-XX 业务流程缺陷修复。
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+---
+
+### Task REF-01: 改造引擎主模块 + 状态机（MOD-16，P0）
+**Spec引用**: spec.md MOD-16 主模块 + ReformState 数据契约
+**输入依赖**: Phase 1 Task 1 (基座) + Phase 2 Task 4/5 (数据接入)
+**总工作量**: 4 天
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+#### 子任务分解
+**S0.1 — 状态机 + ReformState 持久化** (1.5 天)
+- 交付物: `ReformStateManager` 类，完整实现 ReformState 数据结构 (`enterpriseId/status/progress/currentLevel/targetLevel/aggressionLevel/scorecard/phases/completedActions`)
+- 状态机: `idle → in_progress → paused ↔ in_progress → completed` + 失败分支 `in_progress → abandoned`
+- 持久化: 状态变更立即写入 `enterprise.reform` 字段 (`hasReformed/reformedAt/afterLevel/afterScorecard/completedActions`)，确保刷新不丢失
+- 单元测试: `_linkage5_1_reformRefreshEnterprise` 切换到已改造企业时恢复 `status=completed` + `financingUnlocked=true`
+
+**S0.2 — 融资入口 `financingUnlocked` 联动（修复 BP-01 / BP-02）** (1.5 天)
+- 交付物: `ReformGateway` 类，三重解锁判断 `unlockedByRuntime || unlockedByReformEngine || unlockedByEntReform`
+- MockData 初始化: 为 E001-E004 所有企业的 `runtime` 添加 `financingUnlocked: false`；`reform` 添加 `hasReformed: false + beforeScorecard + afterScorecard`
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- APP-02 Tab1 底部按钮动态文案: 解锁→"融资申请（改造完成）" 跳转 Tab2；未解锁→"前往企业改造" 跳转 Tab0
+- 单元测试: 改造完成后 `financingUnlocked=true`，按钮文案正确切换；企业切换后状态保留
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**S0.3 — 改造完成信号分发** (1 天)
+- 交付物: 改造完成时调用链: `status=completed → financingUnlocked=true → creditScore/creditGradeCap 升级 → MOD-16.9 R9 撮合触发 → Toast 通知`
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 信号总线: 支持 APP-02 / APP-03 / APP-08 三方订阅完成事件
+
+---
+
+### Task REF-02: 企业全景画像引擎（MOD-16.1 R1，P0.1）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**Spec引用**: spec.md MOD-16.1 + EnterpriseProfile 8 维数据结构
+**输入依赖**: Phase 2 Task 4 (银企直连) + Task 5 (第三方数据源) + Task 6b (IoT)
+**总工作量**: 4 天
+
+**S2.1 — EnterpriseProfile 数据模型 + 采集适配器** (2 天)
+- 交付物: `EnterpriseProfile` 类完整实现 8 维 × 多级嵌套字段（subject/finance/tax/business/assets/credit/policy/capital + emerging 预留）
+- 9 类数据源适配器: API-01/02/03/04/06/07/08/10/15，统一对接 INFRA-01b 适配层
+- 超时与兜底: 单 API 30s 超时 + 失败时 MOD-15 对应 C 兜底子模块自动激活
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 单元测试: 多源采集全部失败但不阻塞，仍可输出降级画像
+
+**S2.2 — 数据清洗 + 画像快照** (2 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交付物: `DataCleaner` 流水线（标准化→去重→异常值→交叉验证）
+- 异常值检测: Benford 定律 + 金额分布聚类
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交叉验证: 流水 vs 发票 vs 合同一致性
+- 快照版本: 存入 `enterprise.reform.profileSnapshots[]`，`snapshotTime + profileVersion` 双标识
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+---
+
+### Task REF-03: 差距诊断引擎（MOD-16.2 R2，P0.2）
+**Spec引用**: spec.md MOD-16.2 + GapReport 数据契约
+**输入依赖**: Task REF-02 (R1 画像)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**总工作量**: 3 天
+
+**S3.1 — 12 项准入评分** (2 天)
+- 交付物: `GapAnalyzer` 类，12 项指标逐项硬编码规则（主体3/财务4/真实性3/稳定性2）
+- 输出: `GapReport` 每项含 `currentValue/bankThreshold/gapLevel(hard_gap|repairable|pass)/reformPriority(P0-P3)`
+- 综合评级: `A/B/C/D`（D 暂不符合准入）
+- 单元测试: E001/E002/E003/E004 各自 hard_gap 数量差异 ≥1
+
+**S3.2 — 复检触发** (1 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交付物: `recheck(enterpriseId)` 方法，改造完成后基于新画像重新评分
+- 通过条件: hard_gap 已全部解决 AND repairable 修复率 ≥80%
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 失败则触发 MOD-16.6 R6 重规划 hook
+
+---
+
+### Task REF-04: 改造方案生成引擎（MOD-16.3 R3，P0.3）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**Spec引用**: spec.md MOD-16.3 + ReformPlan 数据契约
+**输入依赖**: Task REF-03 (R2 差距报告) + Task REF-07 (R7 合规引擎)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**总工作量**: 4 天
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**S4.1 — 约束求解模型** (2 天)
+- 交付物: `ReformPlanner` 类，60+ 决策变量，目标函数 `Max(通过率×额度×(1-成本率))`
+- 三级激进程度: conservative / balanced / innovative，约束边界不同
+- 约束: 法律红线硬约束 + 激进边界软约束 + 时间上限 + 成本上限
+- MVP 简化: 求解器可退化为启发式打分排序（后续换 Pyomo/OR-Tools）
+
+**S4.2 — 3 方案生成 + 合规预审** (2 天)
+- 交付物: `build3Plans()` → 方案 1(综合最优⭐) / 方案 2(最低成本) / 方案 3(最高通过率)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 合规预审: 每个方案过 R7 合规检测，red 级自动剔除重生成
+- 推荐方案评分: `通过率×0.5 + 成本效率×0.3 + 时长效率×0.2` 最高者标⭐
+- 单元测试: 推荐方案加权评分必须高于非推荐
+
+---
+
+### Task REF-05: 任务调度引擎（MOD-16.4 R4）+ 任务执行族（MOD-16.5 R5-A~H，P1）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**Spec引用**: spec.md MOD-16.4 TaskDAG + MOD-16.5 8 子引擎
+**输入依赖**: Task REF-04 (R3 方案)
+**总工作量**: 6 天 (S5.1 独立 2 天, S5.2-5.9 可并行各 4 天)
+
+**S5.1 — DAG 生成 + 关键路径** (2 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 交付物: `TaskScheduler` 类，8 维拆分任务 → 依赖识别 → 并行识别 → 关键路径计算
+- 任务状态机: `pending → ready → executing → completed/failed/blocked/paused/review_required/cancelled`
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 动态关键路径: 非关键路径任务失败可能变更为新关键路径
+
+**S5.2~S5.9 — R5-A~R5-H 8 类执行引擎** (各 0.5 天, MVP 简化版)
+- 交付物: 每子引擎实现 `executeAction(action, context) → ReformActionResult`
+- L2 能力: 生成完整文档（合同/分录/申报/申请）→ 推人工审核
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- L3 能力: 调用外部 API（需合规预审 + API 可用判定，不可用自动降级 L2）
+- L4 能力: 全节点替代人工 + 战略节点（股权>25%/金额>100万/反向收购/YELLOW）跳转 L3 审核
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- MVP 简化: 每引擎默认 L2，仅生成文档，不调用真实 API
+
+---
+
+### Task REF-06: 动态重规划引擎（MOD-16.6 R6，P1）
+**Spec引用**: spec.md MOD-16.6
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task REF-05 (R4+R5)
+**总工作量**: 2 天
+
+- 交付物: `Replanner` 类，2 类触发: (1) 任务失败 → 分析原因(法律/API/资料/拒绝) → 生成替代方案 → 重排 DAG（保留已完成，仅调后续）(2) 每月 1 日画像更新 → 复检指标 ±10% → 重评估后续路径
+- 输出: 影响评估（时间延长/成本增加/通过率变化）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+---
+
+### Task REF-07: 合规审核引擎（MOD-16.7 R7，P0.4）
+**Spec引用**: spec.md 法律合规边界章节（8 RED / 8 YELLOW / 10 GREEN）+ MOD-16.7
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: 独立模块，所有 R5 操作调用时前置
+**总工作量**: 5 天
+
+**S7.1 — 规则引擎 + 规则库** (3 天)
+- 交付物: `ComplianceRuleEngine` 类（**非 LLM**，纯规则匹配 + 法律条文知识库）
+- 规则库: 8 RED-001~RED-008（虚开/伪造流水/伪造物流/伪造合同/隐匿逃税10%+/骗贷/空壳虚构/非法买卖牌照）+ 8 YELLOW-001~008（反向收购/代持/合并报表/追溯优惠/法人变更/置换/混改/Pre-IPO）+ 10 GREEN-001~010
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 每条规则含: `ruleId / ruleText + legalReference`
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**S7.2 — 三级判定 + 集成** (2 天)
+- RED: 任务→blocked，MOD-16.3 强制回退，联动日志 `⛔ 检测到红线操作: xxx`，推送 APP-08，触发 R6
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- YELLOW: 任务→review_required，推送 Tab3 审批队列工单（操作描述/法律依据/风险点/建议条件），人工通过→ready，否决→cancelled
+- GREEN: 任务→ready，AI 可自主执行
+- 可审计: 每条合规意见记录 `ruleId/ruleText+依据/输入快照/判定链/引擎版本+时间戳`，调用 MOD-08 上链
+
+---
+
+### Task REF-08: 进度监控预警引擎（MOD-16.8 R8，P0）
+**Spec引用**: spec.md MOD-16.8
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: Task REF-05 (R4+R5 状态流)
+**总工作量**: 2 天
+
+- 交付物: `ProgressMonitor` 类
+- 4 里程碑高亮: 25%(主体/税务初步修复) / 50%(财务/业务规范化) / 75%(资产盘活/政策对接) / 100%(完成+复检)
+- 3 级预警: 黄→橙→红，触发条件: 任务超时150% / 失败率>20% / 关键路径延长>30天 / 指标逆向恶化
+- 指标提升曲线: 基于 R10 历史案例，输出信用分/负债率/纳税等级/五流匹配度的提升预测曲线
+- UI 集成: Tab0 顶部进度条 + 里程碑节点 + 动态日志
+
+---
+
+### Task REF-09: 银行撮合引擎（MOD-16.9 R9，P0）
+**Spec引用**: spec.md MOD-16.9
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**输入依赖**: 改造完成 + MOD-09（合作模式银行产品库）
+**总工作量**: 2 天
+
+- 交付物: `BankMatcher` 类
+- 匹配: 遍历银行产品规则库，计算匹配度评分（画像×准入条件）
+- 输出: Top3 推荐卡片，含匹配度/可贷额度/预估利率/预估通过率
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- 推送: APP-02 卡片 + APP-03 撮合工作台 + 全局 Toast "✅ 改造完成! 推荐招商银行信用贷 LPR+1.5%"
+- 流转: 用户选中产品后无缝切换到原 MOD-01~MOD-15 融资流程
+
+---
+
+### Task REF-10: 案例沉淀与学习引擎（MOD-16.10 R10，P1）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**Spec引用**: spec.md MOD-16.10
+**输入依赖**: 改造完成/放弃/失败信号
+**总工作量**: 3 天
+
+- 交付物: `CaseLibrary` 类
+- 入库: 企业脱敏 + 初始画像 + 差距报告 + 所选方案 + 任务执行记录 + 改造后画像 + 复检结果 + 撮合结果 + 实际成本时长 + 经验教训
+- 再训练触发器: 50/100/500 案例阈值自动触发重训 R3 推荐模型 / R5 执行参数 / R8 预测模型
+- 知识图谱: Neo4j 节点（改造操作/行业/指标/银行产品/政策/法律），关系（操作→改善指标/触发风险/匹配政策），供 R3 约束求解先验
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+---
+
+### Task REF-BP: 改造引擎业务流程缺陷修复（4 Fixed + 4 Open）
+**Spec引用**: spec.md 末尾 BP-01~BP-08 清单
+**输入依赖**: 所有 REF-01~REF-10 模块
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**总工作量**: 3 天 (S-Fixed 已完成, S-Open 2 天)
+
+**S-Fixed — BP-01~BP-04 已修复回归验证** (0.5 天, 已在模拟器中完成, 交付物为回归测试脚本)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- BP-01 回归: 切换 E001(已改造) → E002(未改造) → E001，验证 reform.status=completed 保留，financingUnlocked=true
+- BP-02 回归: 改造前后 Tab1 底部按钮文案正确切换，跳转目标正确 (Tab0 ↔ Tab2)
+- BP-03 回归: 刷新页面后 `ent.reform.hasReformed + afterScorecard` 持久化保留
+- BP-04 回归: E004 的 `reform` 对象字段完整，E001-E004 初始化一致
+
+**S-Open — BP-05~BP-08 修复（P1~P2）** (2.5 天)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- BP-05 (P2 Medium): 切换激进程度时，重置 `status='idle'` + 清空 `phases` → 重新画像→诊断→方案生成（保留已完成 actions 不回滚）
+- BP-06 (P2 Medium): R7 合规意见自动调用 MOD-08 `stamp()` 上链（规则ID/输入快照/判定链哈希）
+- BP-07 (P1 High): R7 red 信号 → MOD-16.3 自动撤销含该操作的方案 → 触发 R6 重规划或强制 R3 重生成
+- BP-08 (P2 Medium): 改造完成时自动生成 `reformEvidencePackage`（差异报告/调整底稿/补税凭证号/合规意见书）附加到 MOD-03 审批资料清单
+
+---
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+### Phase REF 依赖关系图
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+```
+Phase 1 (基座) ──→ REF-01 (主模块+状态机) ──→ 企业切换状态保留 (BP-01/03 修复)
+                   ↓
+Phase 2 (数据接入) ──→ REF-02 (R1 画像) ──→ REF-03 (R2 诊断) ──→ REF-04 (R3 方案生成)
+                                                              ↓
+                                                          ┌───┴────┐
+                                     (合规前置调用)  REF-07(R7 合规)  REF-08(R8 监控)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+                                                          └───┬────┘
+                                                              ↓
+                                                         REF-05 (R4 调度 + R5-A~H 执行族)
+                                                              ↓
+                                                    REF-06 (R6 重规划, 失败时触发)
+                                                              ↓
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+                                                    REF-09 (R9 银行撮合, 解锁融资)
+                                                              ↓
+                                              ┌───────────────┴──────────────┐
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+                                        REF-10 (R10 案例沉淀)         REF-BP (缺陷修复+回归)
+```
+
+### Phase REF 并行执行建议
+- **串行强依赖**: REF-01 → REF-02 → REF-03 → REF-04
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- **可并行**: REF-07 (R7 合规) 与 REF-08 (R8 监控) 可独立开发，仅在 REF-04/R5 调用时集成
+- **可并行**: REF-05 (R4 调度 + R5-A~H 8 子引擎) 内部可按子族并行（8 子引擎独立）
+- **末尾**: REF-06 / REF-09 / REF-10 / REF-BP 可在 REF-05 完成后启动（可两两并行）
+- **建议分配**: 单代理串行执行 30 天；3 代理（主模块/画像-诊断-方案/合规-监控-调度）并行可压缩至 14-16 天
+
+---
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+## Phase REF v3.1 增补任务（基于 spec v3.1 修正：5 改进 + 3 新增）
+
+> **设计依据**: 对应 spec v3.1 的 5 大改进（R5 边界/银行灰度/SCF 联动/R1 Lazy Loading/R10 V1 混合架构）与 3 项新增（MOD-16.0 预检/INFRA-04 沙箱/MOD-07 Purge）。优先级标注遵循"商业化验证期重定义"：P0=改造诊断变现，P1=半自动撮合，P2=全自动改造。
+
+### Task REF-00: 改造预检与分级准入网关（MOD-16.0 R0，P0 前置门禁）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: 在 R1 画像之前执行"硬骨头"识别，避免财务顾问在无解企业上浪费人力物力与高成本 API 预算。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: 无（独立模块，最早可启动）
+
+#### 子任务分解
+- [ ] **R0.1** 零成本公开数据源接入：国家企业信用信息公示系统 + 裁判文书网爬虫 + 信用中国（仅免费源）
+- [ ] **R0.2** 红灯规则库（JSON）：7 项硬骨头检测规则（成立<3月/法人涉刑/失信/经营异常/税收黑名单/吊销/非法集资），规则变更需法律顾问审核
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **R0.3** 黄灯分级评估：green/yellow/orange 三档，orange 需财务顾问二次确认
+- [ ] **R0.4** 改造价值预筛（reformValueScore 0-100）：结合 MOD-10 行业景气度
+- [ ] **R0.5** 预检审计留痕 + MOD-08 上链存证 + 拒绝案例入 MOD-16.10（outcome=rejected_at_gate）
+- [ ] **R0.6** 与 R1 联动门禁：eligibility ≠ rejected_hard_bone 方放行 MOD-16.1
+- [ ] **R0.7** 拒绝申诉人工复核流程（如失信已履行完毕可解除）
+
+### Task REF-04b: 改造沙箱仿真环境（INFRA-04，P0 沙箱预演）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: R3 方案生成后，在独立沙箱预演 12 项银行准入指标变化曲线，企业"先看可视化收益"再决定投入改造。
+
+**依赖**: REF-04（R3 方案生成）+ REF-02（R1 画像快照）
+
+#### 子任务分解
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **SB.1** 沙箱微服务搭建：独立 schema `reform_sandbox_<flowId>` + 只读 API 白名单（禁用所有写接口）
+- [ ] **SB.2** 画像快照只读副本机制：从 R1Output 复制 baselineProfile
+- [ ] **SB.3** 月度步进推演引擎：按方案 DAG 顺序模拟执行每个改造任务，产出"画像增量"
+- [ ] **SB.4** 12 项准入指标时间序列曲线生成 + 银行准入阈值线叠加（绿/黄/红）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **SB.5** 可视化未来收益看板：可贷额度提升/利率优惠/改造成本/投入产出比/达标时间
+- [ ] **SB.6** 多方案对比预演：保守/平衡/激进三方案并行模拟对比矩阵
+- [ ] **SB.7** 沙箱生产隔离强校验：任何推演任务尝试调用真实外部 API/写生产数据 → 抛 SandboxIsolationViolation
+- [ ] **SB.8** 沙箱副本生命周期：30 天自动 Purge（企业未确认投入则销毁）
+
+### Task REF-05b: R5 法律免责确权前置门禁 + 执行边界重定义（MOD-16.5.0，P0 法律闭环）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: 将 R5 从"AI 代操作"重定义为"AI 生成建议书+表单"，并强制法律免责确权节点，剥离法律风险。
+
+**依赖**: REF-04（R3 方案）+ REF-07（R7 合规）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+#### 子任务分解
+- [ ] **LD.1** 《法律免责与数据真实性承诺书》PDF 模板 + 5 条核心条款
+- [ ] **LD.2** 电子签名对接（e签宝/法大大，留存生物特征+时间戳）+ MOD-08 上链存证
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **LD.3** 门禁拦截逻辑：legalDisclaimerSigned=false 时拦截所有 R5 子引擎，抛 LegalDisclaimerRequired
+- [ ] **LD.4** 签署状态有效期 6 个月 + 超期重新签署
+- [ ] **LD.5** R5 子引擎输出格式重定义：所有产物标记 `draft_for_manual_submit`，PDF/XML 标准格式
+- [ ] **LD.6** 《提交指引清单》生成：列明提交入口 URL/所需附件/注意事项
+- [ ] **LD.7** L3 API 只读/写分类：read_only 类 AI 直调，submit_write 类 AI 仅生成报文+企业手动提交
+- [ ] **LD.8** 企业回填提交回执编号机制：据此推进后续任务并更新画像
+
+### Task REF-02b: R1 阶梯式采集 + budgetLimit 成本契约（MOD-16.1 v3.1 修正，P0）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: 将 R1 从"一轮调 8+ 付费 API"改为"先免费、后付费"阶梯式采集，控制 API 成本。
+
+**依赖**: REF-02（R1 画像基础）+ REF-00（R0 预检放行）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+#### 子任务分解
+- [ ] **R1L.1** Tier-1 零成本公开数据采集层（工商/司法/信用中国），生成 ProfileDraft（dataTier='tier1_public_free'）
+- [ ] **R1L.2** MOD-16.2 初筛联动：reformValueScore ≥ 40 方触发 Tier-2
+- [ ] **R1L.3** 《深度诊断授权书》电子签章流程（MOD-16.0 同源）
+- [ ] **R1L.4** Tier-2 高成本付费 API 采集层（银企/发票/水电煤/关联方/征信/物流 GPS）
+- [ ] **R1L.5** budgetLimit 成本控制契约：totalBudgetCny/perApiBudgetCny/overrunAction，超预算拦截+人工审批
+- [ ] **R1L.6** apiCallStats 增加 costCny 字段 + costAccumulated/budgetRemaining/budgetOverrun 输出
+
+### Task REF-10b: R10 V1 混合架构 + 案例阈值 500+（MOD-16.10 v3.1 修正，P2）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: V1 阶段（案例<500）放弃 ML 模型，采用规则引擎+向量检索混合架构；V2（≥500）方引入深度强化学习。
+
+**依赖**: REF-10（R10 案例沉淀基础）
+
+#### 子任务分解
+- [ ] **R10V.1** 行业改造模板库（JSON 规则集）：4 大行业 × 12 项 Gap 维护
+- [ ] **R10V.2** 向量数据库搭建（pgvector/Milvus，bge-large-zh 768 维）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **R10V.3** R3 混合架构四步：规则硬匹配→向量相似度 Top-K 检索→参数调优→3 备选方案
+- [ ] **R10V.4** 模板参数调优回归器（从相似案例回归参数修正系数）
+- [ ] **R10V.5** V2 阈值门禁：案例<500 时强制走 V1，禁用 ML 再训练
+- [ ] **R10V.6** V2 模型再训练（≥500 案例）+ 3 月影子模式并行对比，胜出后方替换 V1
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+### Task REF-07b: MOD-07 脏数据隔离 + 一键物理销毁（MOD-07 v3.1 增强，P0 法律闭环）
+
+**目标**: 改造前脏数据物理隔离 + 放弃改造时一键 Purge，隐私协议高亮条款。
+
+**依赖**: Task 9（MOD-07 数据安全基础）+ REF-01（改造流程放弃场景）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+#### 子任务分解
+- [ ] **DG.1** 独立加密 schema `reform_dirty_<enterpriseId>` + 列级加密 + 改造引擎专属访问白名单
+- [ ] **DG.2** dataClassification='dirty_pre_reform' 标记 + MOD-01~MOD-15/APP-01 零可见
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **DG.3** 改造完成自动脱敏抽取"改造案例摘要"入 MOD-16.10
+- [ ] **DG.4** 《数据销毁确认书》+ 数据清单展示
+- [ ] **DG.5** Purge 流程：DROP SCHEMA CASCADE + 撤销 INFRA-01b 付费 API 凭证 + 删除沙箱副本 + 保留脱敏摘要
+- [ ] **DG.6** 《数据已销毁证明书》（含链上存证哈希）
+- [ ] **DG.7** 90 天自动 Purge 定时任务 + 隐私协议高亮条款写入
+
+### Task SCF-09: SCF↔MOD-16 强联动 + R5-Lite 供应链轻改造（SCF v3.1 修正，P2）
+
+**目标**: 核心企业反保理强制上游供应商先走 R5-Lite 轻改造（三流补齐，≤7 工作日）。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: Task SCF-04（SC5 产品路由）+ REF-05（R5 子引擎基础）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+#### 子任务分解
+- [ ] **SL.1** R5-Lite 三类轻量任务定义：合同流补齐(R5-D 轻量)/发票流补齐(R5-C 轻量)/物流流补齐(R5-D+MOD-12 轻量)
+- [ ] **SL.2** R5-Lite 完成标准：三流补齐 + 五流验证通过率≥80% + 信用分≥600
+- [ ] **SL.3** 反保理融资入口门禁：enterprise.reform.r5LiteCompleted=false 时锁定
+- [ ] **SL.4** 《供应链急速轻改造通知》推送 + 核心企业确权
+- [ ] **SL.5** R5-Lite 不触发 R5-A/R5-B/R5-E/R5-H（不动主体/资本）
+- [ ] **SL.6** R5-Lite 案例入 MOD-16.10（caseType='r5_lite_supply_chain'）
+
+### Task CORE-01b: 银行信任培育期渐进解锁（CORE-01 v3.1 修正，P1 银行端）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**目标**: 银行端一期默认 L4 只读，6/12 月渐进解锁 L3/L2，L1 须单独书面授权。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: Task B1（AI 驾驶舱 L1-L4 自主度分级）+ Task 7（MOD-01 资金监管）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+#### 子任务分解
+- [ ] **BT.1** 银行端自主度默认配置：bankTrustPhase='cultivation_L4_readonly'（0~6 月）
+- [ ] **BT.2** AI 风险提示函生成（不拦截）+ 推送银行信贷员
+- [ ] **BT.3** 6 月零误报校验通过 → 银行手动开启 L3 建议拦截
+- [ ] **BT.4** 12 月零重大事故校验 → 解锁 L2 小额自动放行
+- [ ] **BT.5** L1 单独书面授权流程（永不在默认路线图内开启）
+- [ ] **BT.6** 银行合作协议"信任培育期"条款模板
+
+---
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+## Phase UX v3.1 傻瓜化 UI/UX 任务（基于 spec v3.1 第二轮修正）
+
+> **设计依据**: 对应 spec v3.1 第二轮"傻瓜式操作"改造——企业端（老板视角）、责任链端（工人视角）、运营端（顾问视角）三维度 + 通用组件规范。核心哲学：不让用户做选择题，只让用户做判断题（是/否）或填空题（扫一扫/点一点）。**前端体验的"极简"是后端 AI 能力的"极致"体现。**
+
+### Task UX-01: APP-02 企业端"健康体检仪"改造（P0，老板视角）
+
+**目标**: 从"数据看板"变为"健康体检仪"，单一核心指标 + 唯一行动按钮 + 收益金钱化 + 白话文翻译。
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**依赖**: Task 11（APP-02 企业端门户基础）+ REF-04（R3 方案）+ UX-04（PlainTextTranslator）
+
+#### 子任务分解
+- [ ] **E.1** 首页改造：摒弃传统 Dashboard，顶部只显示巨大"银行贷款通过率"仪表盘（0~100%，红/黄/绿三色）
+- [ ] **E.2** 唯一行动按钮（Next Best Action）线性工作流：状态A[开始体检]→状态B[处理待办N项]→状态C[查看银行匹配]
+- [ ] **E.3** 非必要功能菜单折叠（票据/保险/规划收入口折叠区），避免非专业人员迷失
+- [ ] **E.4** 收益金钱化展示：改造方案页禁止展示"维度分数提升"，只展示可贷额度/利率/可省利息三项金钱口径
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **E.5** 指标变化→金钱换算映射器（12 项准入指标 × 金钱口径）
+
+### Task UX-02: APP-02 PlainTextTranslator 白话文翻译引擎（P0）
+
+**目标**: 全站术语词典，前端渲染任何字段强制显示"通俗释义 + 场景类比"。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: Task UX-01
+
+#### 子任务分解
+- [ ] **PT.1** PlainTextTranslator 组件开发（Vue/React，接收后端 key 输出人话）
+- [ ] **PT.2** 术语词典数据结构：key + professionalLabel + plainText + scenarioAnalogy + thresholdHint
+- [ ] **PT.3** 词典内容编写：12 项银行准入指标 + 8 维信用画像 + 改造 Gap 全字段（产品经理 + 财务顾问共建）
+- [ ] **PT.4** 词典版本化管理 + 后端 API 下发 + 前端缓存
+- [ ] **PT.5** 渲染强校验：未命中词典的 key 构建警告（防漏译）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+### Task UX-03: MOD-14 移动端"扫拍点"极简确权（P1，工人视角）
+
+**目标**: 消灭输入，扫码即确权，3 秒完成一次责任确认 + MobileEvidence 无感采集 + 接力棒动效。
+
+**依赖**: Task 14（MOD-14 人流基础）+ Task 12（MOD-08 区块链存证）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+#### 子任务分解
+- [ ] **M.1** 移动端（H5/小程序）扫码页：强制开启摄像头，绝不提供文字输入框
+- [ ] **M.2** 一物一码二维码体系（物料/托盘级）+ 扫码后自动加载交接信息
+- [ ] **M.3** 两个巨大色块按钮：[确认收货]（绿色右下角）/ [异常上报]（橙色左下角）
+- [ ] **M.4** MobileEvidence 无感采集：GPS 坐标 + 时间戳 + 设备指纹 + 可选现场拍照
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **M.5** 仓库地理围栏校验（GPS 不在围栏内提示，但不阻断）
+- [ ] **M.6** 证据打包上链存证（MOD-08），构成不可抵赖责任交接记录
+- [ ] **M.7** 单次确权耗时 ≤ 3 秒验收
+- [ ] **M.8** "责任接力棒"横向时间轴卡片流动效（外卖配送进度风格）+ 当前节点高亮闪烁 + 头像+待确认标签
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+### Task UX-04: APP-03 运营台"红绿灯异常清单 + NLP 搜索"（P1，顾问视角）
+
+**目标**: 主页废除虚荣指标，改为 AI 主动推送的红绿灯异常清单 + 自然语言智能搜索框。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: Task 12（APP-03 运营台基础）+ Task B1（CORE-01 AI 自主引擎）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+#### 子任务分解
+- [ ] **O.1** 主页改造：废除虚荣指标看板（在管企业数/总融资金额收入口折叠区），主体改为红绿灯异常清单
+- [ ] **O.2** CORE-01 AI 主动推送异常到首页，按紧急度（红/黄/绿）排序
+- [ ] **O.3** 列表条目格式：[紧急] 企业名 - 风险描述 -> [一键 AI 生成处置方案]
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **O.4** 一键 AI 生成处置方案 + 操作员"同意/忽略"二选一
+- [ ] **O.5** 零异常绿灯态："当前所有在管企业健康" + 本周已处理事项数
+- [ ] **O.6** 巨大中央 NLP 搜索框（占屏 1/3）：自然语言 → intent+entities → 后端 API
+- [ ] **O.7** 解析置信度 < 0.8 回显"您是不是想查：[XXX]？"让操作员确认
+- [ ] **O.8** 搜索历史留存 + 高频指令保存为"快捷指令"卡片
+
+### Task UX-05: CORE-04 全局"一键求助"Coach Mark 浮层（P0，全角色）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: 所有页面右下角固定"教教我"按钮，启动高亮引导（Coach Mark）一步步带用户走完流程。
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**依赖**: 无（独立前端组件，可并行）
+
+#### 子任务分解
+- [ ] **C.1** "教教我"按钮全局固定组件（右下角，所有页面）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **C.2** Coach Mark 引擎：页面变灰遮罩 + spotlight 聚光高亮 + 提示气泡 + 线性推进
+- [ ] **C.3** 上下文感知：根据页面 + 用户角色（老板/顾问/工人）+ 流程状态动态生成引导步骤
+- [ ] **C.4** 引导脚本 JSON 配置体系（产品经理维护），覆盖 APP-02 首页/改造方案、APP-03 异常清单/搜索、MOD-14 移动端确权
+- [ ] **C.5** 跳过引导 + 7 天记忆不重复打扰
+- [ ] **C.6** A/B 测试不同引导路径完成率，持续优化
+
+### Task UX-06: CORE-05 傻瓜化 UI/UX 组件规范（P0，全站宪法）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**目标**: 三不原则 + 拇指热区硬约束 + 拟人化反馈 + 颜色语义统一 + 走查验收阻断上线。
+
+**依赖**: 无（前端规范，最早可启动）
+
+#### 子任务分解
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **S.1** 三不原则文档化（不识字也能懂/不查找也能做/不输入也能交）作为全站设计宪法
+- [ ] **S.2** 拇指热区 lint 规则：正向操作=右下角，破坏性操作=左下角/长按二次确认，违规构建失败
+- [ ] **S.3** 主操作按钮尺寸 ≥ 48×48dp，色块填充，禁止纯文字链接作主操作
+- [ ] **S.4** 破坏性资金操作（划款/担保解除/合同终止）长按 2 秒 + 二次确认弹窗
+- [ ] **S.5** 拟人化反馈组件：禁止 Error Code，统一拟人化文案 + MOD-15 兜底延迟 3 秒自动重试（3 次仍失败才展示重试/联系顾问）
+- [ ] **S.6** 颜色语义统一：绿=通过/黄=警告/红=紧急/灰=禁用，禁止蓝色表示"通过"
+- [ ] **S.7** "傻瓜化走查"验收清单：老板 3 秒看出该干嘛/工人不识字能操作/顾问≤2 层菜单见异常/无机械码/破坏性操作左下角
+- [ ] **S.8** 走查不通过阻断上线，产品经理 + UX 设计师签字方可发布
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+---
+
+## Phase ECO v3.1 市场化破局任务（基于 spec v3.1 第三轮修正：6 战略 + 3 脑洞）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **设计依据**: 对应 spec v3.1 第三轮"市场化破局"——破解"冷启动鸡生蛋""数据隐私恐惧""银行官僚惰性"三大死穴。核心定位：FinTrust Hub = 中小微企业的财务体检中心 + 银行优质资产的筛选器。用互联网免费/对赌思维打穿金融壁垒，用监管合规背书构建护城河。
+
+### Task ECO-01: MOD-16.1 阅后即烕零信任诊断（P0，破解"数据裸奔"恐惧）
+
+**目标**: 原始敏感数据仅内存计算，计算后物理销毁，只留脱敏评分，倒计时沙漏 UI。
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**依赖**: REF-02（R1 画像）+ Task 9（MOD-07 数据安全）+ Task 12（MOD-08 区块链）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+#### 子任务分解
+- [ ] **BURN.1** 可信执行环境搭建（Intel SGX / ARM TrustZone enclave）
+- [ ] **BURN.2** 原始数据内存区隔离：对非 R1/R2 进程零可见，宿主 OS 不可读
+- [ ] **BURN.3** R1+R2 在 enclave 内完成计算，全程不落盘
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **BURN.4** secure_delete 物理销毁（覆写 3 次 + 内存清零 + Redis raw_* 清空）
+- [ ] **BURN.5** 数据湖只永久保存脱敏产物（8 维评分 + 12 项 Gap，不含原始交易对手）
+- [ ] **BURN.6** 《数据销毁审计报告》上链存证（MOD-08）
+- [ ] **BURN.7** APP-02 倒计时沙漏 UI（120 秒）+ 归零后"已销毁"提示
+
+### Task ECO-02: 成果导向阶梯定价（P0，破解冷启动付费门槛）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**目标**: 一期 0 元接入 + 融资利率价差分成，改造失败不收费。
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**依赖**: ECO-05（INFRA-05 无接口放款）+ REF-09（R9 撮合）
+
+#### 子任务分解
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **PAY.1** 定价模型实现：0 元接入 + 利率价差 × 分成比例
+- [ ] **PAY.2** 阶梯分成比例配置（绿 20%/黄 30%/橙 40%/R5-Lite 15%）
+- [ ] **PAY.3** 改造难度自动评级（联动 MOD-16.0 黄灯分级）→ 匹配分成比例
+- [ ] **PAY.4** 融资成功后自动分账（与银行协议，从放款资金扣分成）
+- [ ] **PAY.5** Tier-2 付费 API 成本抵扣逻辑（成功抵扣，失败顾问承担）
+- [ ] **PAY.6** 冷启动期/成熟期双轨切换（1-2 年强制分成，3 年+ 可选年费）
+- [ ] **PAY.7** 企业净收益实时看板（0 投入换 N 万净收益展示）
+
+### Task ECO-03: INFRA-05 无接口适配器（P0，破解银行 IT 排期墙）
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**目标**: 银行冷启动期"无接口"模式，AI 生成标准信贷申报书 PDF，银行零开发接入。
+
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+**依赖**: REF-09（R9 撮合）+ Task 12（MOD-08 区块链）
+
+#### 子任务分解
+- [ ] **RPA.1** 模板引擎搭建（Apache POI + iText/PDFBox）
+- [ ] **RPA.2** 银行模板库（YAML 配置，按银行维度字段映射）
+- [ ] **RPA.3** 标准信贷申报书自动渲染（企业信息+8 维画像+五流摘要+建议授信）
+- [ ] **RPA.4** AI 预审章电子签章 + MOD-08 链上存证
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **RPA.5** 多银行模板适配 + 一键生成多银行版本
+- [ ] **RPA.6** APP-03 银行审批结果回填接口
+- [ ] **RPA.7** 银行放款业绩统计 + 坏账率对比 + API 升级价值报告触发
+
+### Task ECO-04: MOD-08b 信用凭证联盟链加密数据包（P1，跨行便携确权）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+
+**目标**: 改造完成企业签发 W3C VC 信用凭证，跨行展示免重复尽调（NFT 合规版）。
+
+**依赖**: ECO-01（阅后即焚，确保画像哈希可信）+ Task 12（MOD-08）
+
+#### 子任务分解
+- [ ] **CRED.1** W3C Verifiable Credentials 数据模型实现
+- [ ] **CRED.2** 联盟链签发（司法联盟链，非公链无代币）
+- [ ] **CRED.3** 凭证私钥企业持有 + 授权展示机制
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **CRED.4** 跨行验证：签名有效性 + 撤销列表 + 有效期 + 哈希一致性
+- [ ] **CRED.5** 出示记录上链（多头授信防控）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **CRED.6** 画像恶化自动撤销 + 复检重签
+
+### Task ECO-05: MOD-16.9 反向竞拍融资大厅（P2，R9 终极形态）
+
+**目标**: 企业发标 + 银行竞价，翻转"企业求银行"为"银行抢优质资产"。
+
+**依赖**: ECO-04（信用凭证）+ REF-09（R9 基础撮合）
+
+#### 子任务分解
+- [ ] **BID.1** 融资标书发布（金额/期限/利率下限/画像摘要/凭证引用）
+> **Code Status**: PENDING (auto-synced by tools/checklist_sync.py)
+- [ ] **BID.2** 匿名发布（隐企业名，仅画像指标）+ 合作行竞价邀请
+- [ ] **BID.3** 银行出价（利率/额度/期限/时效）+ T+24h 截止
+- [ ] **BID.4** 综合成本排序（利率 60% + 额度 20% + 时效 20%）
+- [ ] **BID.5** 竞价反作弊（合作行校验 + 串通报价检测 + 多头防控 5 倍净资产）
+- [ ] **BID.6** 竞价全程上链存证 + 未中标出价匿名归档
+
+### Task ECO-06: MOD-14 积分商城与行为挖矿（P1，破解工人不动）
+
+**目标**: 扫码确权发积分，兑换实物，物流配合度 10%→90%。
+
+**依赖**: UX-03（MOD-14 移动端扫码确权）
+
+#### 子任务分解
+- [ ] **PTS.1** 行为挖矿积分发放（信用分 +2 / 碳积分 +5 / 信易分 +3）
+- [ ] **PTS.2** 连续确权奖励（7 天 +20）+ 异常上报正向激励
+- [ ] **PTS.3** 企业福利商城（充电宝/外卖券/话费，财务顾问公司团购）
+- [ ] **PTS.4** 积分排行榜 + Top10 月度奖励
+- [ ] **PTS.5** 防刷分（重复扫码不重发 / GPS 围栏外减半 / 代签清零预警）
+- [ ] **PTS.6** 兑换核销 + 采购配送闭环
+- [ ] **PTS.7** 月度积分消耗统计 → 老板责任链健康度指标
+
+### Task ECO-07: MOD-16.10 FinTrust 企业合规指数（P2，生态飞轮）
+
+**目标**: 案例库抽象为公开行业基准指数 + 月度白皮书，驱动"不想落后"主动接入。
+
+**依赖**: REF-10（R10 案例库）
+
+#### 子任务分解
+- [ ] **IDX.1** 指数算法（改造成功率 + 五流通过率 + 撮合成功率 - 逾期率）
+- [ ] **IDX.2** 多维指数生成（制造/珠三角/长三角/行业改造成功率/准入差距 Top10）
+- [ ] **IDX.3** 月度白皮书 PDF 自动生成（指数趋势 + 行业洞察 + 案例精选）
+- [ ] **IDX.4** 财经媒体/行业协会发布渠道
+- [ ] **IDX.5** 行业对标报告推送（同行竞品排名靠前提示）
+- [ ] **IDX.6** 分级数据产品（免费白皮书 / 专业版 API / 定制研究报告）商业化
+
+### Task ECO-08: APP-04 监管/政府背书催化剂（P1，信用催化剂）
+
+**目标**: 定时推送脱敏报告给监管，换取《指导意见》背书，降低信任门槛。
+
+**依赖**: Task 13（APP-04 监管沙盒基础）+ ECO-07（FinTrust 指数）
+
+#### 子任务分解
+- [ ] **GOV.1** 监管数据通道建立（金融监管局/工信局）
+- [ ] **GOV.2** 《辖区中小微企业经营脉搏脱敏报告》周/月自动推送
+- [ ] **GOV.3** 脱敏聚合校验（单户不可识别，合规《个保法》《数安法》）
+- [ ] **GOV.4** 《指导意见》背书文件争取
+- [ ] **GOV.5** APP-02/APP-01 "XX 监管局推荐平台"标识展示
+
+### Task ECO-09: APP-02 微信/钉钉数字分身 AI Agent（P1，脑洞1）
+
+**目标**: 企业专属数字员工，老板在微信/钉钉聊天完成查询与申请。
+
+**依赖**: UX-02（PlainTextTranslator）+ UX-04（APP-03 NLP 引擎）
+
+#### 子任务分解
+- [ ] **BOT.1** 微信企业微信 + 钉钉机器人接入（企业身份绑定）
+- [ ] **BOT.2** NLP 对话路由（复用 APP-03 NLP 引擎，置信度<0.8 反问）
+- [ ] **BOT.3** 复用 APP-02 全能力（画像/融资/改造/票据），聊天形态交互
+- [ ] **BOT.4** 复用 PlainTextTranslator（回复强制白话文）
+- [ ] **BOT.5** 敏感操作卡片 + 二次确认按钮
+- [ ] **BOT.6** 语音输入（语音转文字 → NLP → 回复）
+

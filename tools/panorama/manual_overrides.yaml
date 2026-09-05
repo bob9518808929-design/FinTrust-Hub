@@ -1,0 +1,60 @@
+# 人工中文注释覆盖表（优先级最高，覆盖自动提取）
+# 用法：file_path 相对 production/ 路径，作为 key；中文名/职责作为 value
+#
+# 示例：
+# backend/app/main.py:
+#   name: "FastAPI 应用入口"
+#   responsibility: "注册路由、初始化中间件、启动 uvicorn"
+#   spec_section: "MOD-00"
+
+overrides:
+  # ===== backend =====
+  backend/app/main.py:
+    name: "FastAPI 应用入口"
+    responsibility: "注册路由、初始化中间件、启动 uvicorn"
+    spec_section: "MOD-00"
+
+  backend/app/api/v1/router.py:
+    name: "API v1 总路由聚合"
+    responsibility: "聚合所有 v1 路由模块，挂载到 FastAPI 实例"
+    spec_section: "MOD-01"
+
+  backend/app/config.py:
+    name: "后端配置中心"
+    responsibility: "加载 .env，定义 Settings 模型，导出 get_settings"
+    spec_section: "MOD-00"
+
+  backend/app/database.py:
+    name: "数据库会话工厂"
+    responsibility: "SQLAlchemy 引擎与 SessionLocal 工厂"
+    spec_section: "MOD-01"
+
+  backend/app/deps.py:
+    name: "FastAPI 依赖注入"
+    responsibility: "通用依赖函数（DB session、当前用户、权限校验）"
+    spec_section: "MOD-01"
+
+  # ===== frontend =====
+  frontend/src/main.ts:
+    name: "Vue 应用入口"
+    responsibility: "挂载根组件、注册插件、启动 Pinia"
+    spec_section: "APP-01"
+
+  frontend/src/App.vue:
+    name: "根组件"
+    responsibility: "全局布局、路由出口、全局 Toast 容器"
+    spec_section: "APP-01"
+
+  frontend/src/sw.ts:
+    name: "PWA Service Worker"
+    responsibility: "离线缓存策略、推送通知、后台同步"
+    spec_section: "APP-02-a"
+
+  # ===== ai-engine =====
+  ai-engine/services/llm_service.py:
+    name: "LLM 调用服务"
+    responsibility: "封装 LLM API 调用，统一超时/重试/降级"
+    spec_section: "MOD-09"
+
+# ===== 待补充清单（缺失注释的文件，方便批量补全）=====
+# 此处留空，运行 collect.py 后自动生成 .cache/missing_annotations.json

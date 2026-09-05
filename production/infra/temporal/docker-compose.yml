@@ -1,0 +1,101 @@
+# Temporal Server 本地/开发部署 (CORE-01, R4.8)
+#
+# 组件:
+#   1. temporal-postgresql  — Temporal 元数据存储 (PostgreSQL)
+#   2. temporal             — Temporal Server (gRPC: 7233, HTTP: 7239)
+#   3. temporal-web         — Temporal Web UI (端口 8080)
+#   4. temporal-admin-tools — CLI 工具 (tctl 等, 用于注册命名空间/查工作流)
+#
+# 启动:
+#   docker compose -f infra/temporal/docker-compose.yml up -d
+#
+# 验证:
+#   curl http://localhost:8080  # Web UI
+#   curl http://localhost:7239/health  # Server HTTP API
+#
+# 设计依据: ROADMAP_REMAINING_V2.md R4.8 + backend/app/workers/temporal_worker.py
+# Worker 连接地址: temporal://localhost:7233 (gRPC)
+# 测试覆盖: backend/tests/test_infra_config.py::test_temporal_worker_can_init
+
+services:
+  temporal-postgresql:
+    image: postgres:16-alpine
+    container_name: temporal-postgresql
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_DB: temporal
+    ports:
+      - "5432:5432"
+    volumes:
+      - temporal-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - temporal-net
+
+  temporal:
+    image: temporalio/auto-setup:1.24
+    container_name: temporal
+    environment:
+      DBPORT: "5432"
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: temporal-postgresql
+      DB: postgresql
+      LOG_LEVEL: "info"
+      # 启用所有服务 (Frontend/History/Matching/Worker)
+      SERVICES: "frontend,history,matching,worker"
+    ports:
+      - "7233:7233"   # gRPC: Worker 连接端口 (生产用)
+      - "7239:7239"   # HTTP: 健康检查 + 反射 API
+    depends_on:
+      temporal-postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7239/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - temporal-net
+
+  temporal-web:
+    image: temporalio/ui:2.30.0
+    container_name: temporal-web
+    environment:
+      TEMPORAL_ADDRESS: "temporal:7233"     # 连接到 Temporal Server gRPC
+      TEMPORAL_UI_PORT: "8080"
+    ports:
+      - "8080:8080"   # Web UI
+    depends_on:
+      temporal:
+        condition: service_healthy
+    networks:
+      - temporal-net
+
+  # Admin Tools CLI (注册命名空间 / 调试工作流)
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.24
+    container_name: temporal-admin-tools
+    environment:
+      TEMPORAL_ADDRESS: "temporal:7233"
+      TEMPORAL_CLI_NAMESPACE: "fintrust"
+    entrypoint: ["tail", "-f", "/dev/null"]  # 保持运行, 用 docker exec 调用 tctl
+    depends_on:
+      temporal:
+        condition: service_healthy
+    networks:
+      - temporal-net
+
+networks:
+  temporal-net:
+    driver: bridge
+
+volumes:
+  temporal-pg-data:
+    driver: local

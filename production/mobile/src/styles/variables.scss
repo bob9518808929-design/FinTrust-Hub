@@ -1,0 +1,63 @@
+/* src/styles/variables.scss — Taro 端样式变量 (与 PC 端 variables.scss 对齐)
+ * project_memory: 移动端与 PC 端共享设计语言, 暗色主题, 金融场景护眼
+ */
+
+/* === 颜色 === */
+$color-primary: #3b82f6;
+$color-success: #10b981;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-info: #6366f1;
+
+/* === 文本 === */
+$text-primary: #f3f4f6;
+$text-regular: #d1d5db;
+$text-secondary: #9ca3af;
+$text-placeholder: #6b7280;
+$text-muted: #4b5563;
+
+/* === 背景 === */
+$bg-base: #0f172a;
+$bg-page: #1e293b;
+$bg-card: #1f2937;
+$bg-tertiary: #374151;
+$bg-hover: #4b5563;
+$bg-active: #3b82f6;
+
+/* === 边框 === */
+$border-color: #374151;
+$border-light: #4b5563;
+$border-lighter: #6b7280;
+
+/* === 圆角 === */
+$radius-sm: 8rpx;
+$radius-base: 12rpx;
+$radius-lg: 16rpx;
+$radius-xl: 24rpx;
+
+/* === 间距 === */
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-base: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+$spacing-xxl: 64rpx;
+
+/* === 字号 === */
+$font-size-xs: 24rpx;
+$font-size-sm: 26rpx;
+$font-size-base: 28rpx;
+$font-size-lg: 32rpx;
+$font-size-xl: 36rpx;
+$font-size-xxl: 44rpx;
+$font-size-xxxl: 56rpx;
+
+/* === 阴影 === */
+$shadow-sm: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+$shadow-base: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+$shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
+
+/* === 过渡 === */
+$transition-fast: 0.15s ease;
+$transition-base: 0.25s ease;
+$transition-slow: 0.4s ease;

@@ -1,0 +1,119 @@
+{{/* 文件名：ai-engine-deployment.yaml 职责：AI 引擎 Helm 模板,部署 Qwen-7B vLLM 服务并配置 GPU 节点亲和与 /ai Ingress
+*/}}
+{{- if .Values.aiEngine.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-ai-engine
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "ai-engine") | nindent 4 }}
+spec:
+  replicas: {{ .Values.aiEngine.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "fintrust-hub.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ai-engine
+  template:
+    metadata:
+      labels:
+        {{- include "fintrust-hub.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ai-engine
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # GPU 节点亲和: 把 Pod 调度到带 NVIDIA GPU 的节点
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: {{ .Values.aiEngine.gpu.nodeSelectorKey | default "nvidia.com/gpu.product" }}
+                    operator: In
+                    values:
+                      - {{ .Values.aiEngine.gpu.nodeSelectorValue | default "A10" }}
+      tolerations:
+        # GPU 节点通常带 NoSchedule 污点
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: ai-engine
+          {{- include "fintrust-hub.image" (set . "image" .Values.aiEngine.image) | nindent 10 }}
+          args:
+            - "--model"
+            - {{ .Values.aiEngine.model | default "Qwen/Qwen2-7B-Instruct" | quote }}
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "{{ .Values.aiEngine.port | default 8000 }}"
+            - "--max-model-len"
+            - "8192"
+            - "--gpu-memory-utilization"
+            - "0.9"
+            - "--dtype"
+            - "float16"
+          ports:
+            - name: http
+              containerPort: {{ .Values.aiEngine.port | default 8000 }}
+              protocol: TCP
+          env:
+            - name: MODEL_NAME
+              value: {{ .Values.aiEngine.model | default "Qwen/Qwen2-7B-Instruct" | quote }}
+            - name: VLLM_PORT
+              value: "{{ .Values.aiEngine.port | default 8000 }}"
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dbCredentials.secretName | default "db-secrets" }}
+                  key: HF_TOKEN
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: http
+            initialDelaySeconds: 60   # 模型加载较慢
+            periodSeconds: 15
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: http
+            initialDelaySeconds: 180   # 加载完成后再探测
+            periodSeconds: 30
+            timeoutSeconds: 10
+          resources:
+            {{- toYaml .Values.aiEngine.resources | nindent 12 }}
+          # 模型权重卷 (避免每次启动重新下载)
+          volumeMounts:
+            - name: model-cache
+              mountPath: /root/.cache/huggingface
+      volumes:
+        - name: model-cache
+          {{- if .Values.aiEngine.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "fintrust-hub.fullname" . }}-ai-model
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fintrust-hub.fullname" . }}-ai-engine
+  namespace: {{ include "fintrust-hub.namespace" . }}
+  labels:
+    {{- include "fintrust-hub.labels" (set . "component" "ai-engine") | nindent 4 }}
+spec:
+  type: {{ .Values.aiEngine.service.type | default "ClusterIP" }}
+  selector:
+    {{- include "fintrust-hub.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ai-engine
+  ports:
+    - name: http
+      port: {{ .Values.aiEngine.service.port | default 8000 }}
+      targetPort: http
+      protocol: TCP
+{{- end }}

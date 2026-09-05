@@ -1,0 +1,291 @@
+# 文件名：bank_application_templates.yaml 职责：6 家银行 PDF 申报书模板配置,定义页面尺寸与章节字段映射以统一申报数据 schema
+#
+# 支持 6 家银行模板 (ICBC/CCB/ABC/BOC/BOCOM/CMB), 每家银行不同格式.
+# 字段映射用于把 application_data (统一 schema) 映射到各家银行 PDF 模板字段.
+#
+# 字段说明:
+#   bank_name        : 银行中文名 (与 bank_api_config.yaml 对齐)
+#   full_name        : 银行全称 (用于 PDF 标题)
+#   template_version : 模板版本 (用于追踪 PDF 格式更新)
+#   page_size        : 页面尺寸 (A4 / LETTER / LEGAL)
+#   sections         : 申报书章节列表, 每个章节含字段映射
+#     - section_id   : 章节 ID (基本信息/财务/融资金额/...)
+#     - section_title : 章节标题 (中文)
+#     - fields        : 字段映射 {bank_field_name: standard_field_name}
+#                       standard_field_name 是 application_data 统一 schema 字段
+#
+# 标准字段 (application_data 统一 schema):
+#   enterprise_name            企业名称
+#   uscc                       统一社会信用代码
+#   legal_representative       法定代表人
+#   registered_capital         注册资本 (元)
+#   established_at            成立日期
+#   industry_code             行业代码
+#   contact_phone             联系电话
+#   contact_address           联系地址
+#   loan_amount                申请融资金额 (元)
+#   loan_term_months           融资期限 (月)
+#   loan_purpose               融资用途
+#   repayment_source          还款来源
+#   annual_revenue             年营收 (元)
+#   net_profit                 净利润 (元)
+#   total_assets               总资产 (元)
+#   total_liabilities          总负债 (元)
+#   bank_account_no            主要结算账户
+#   credit_rating              信用评级
+#   existing_loans_balance     现有贷款余额 (元)
+#   guarantor_name             担保人名称
+#   guarantor_uscc             担保人统一社会信用代码
+
+banks:
+  - bank_code: ICBC
+    bank_name: 中国工商银行
+    full_name: 中国工商银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#C7000B"      # 工行红
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: basic
+        section_title: 一、申请人基本信息
+        fields:
+          applicantName: enterprise_name
+          unifiedSocialCreditCode: uscc
+          legalRepresentative: legal_representative
+          registeredCapital: registered_capital
+          establishedDate: established_at
+          industryCode: industry_code
+          contactPhone: contact_phone
+          contactAddress: contact_address
+      - section_id: finance
+        section_title: 二、财务状况
+        fields:
+          annualRevenue: annual_revenue
+          netProfit: net_profit
+          totalAssets: total_assets
+          totalLiabilities: total_liabilities
+          assetLiabilityRatio: asset_liability_ratio
+      - section_id: loan
+        section_title: 三、融资需求
+        fields:
+          applicationAmount: loan_amount
+          applicationTermMonths: loan_term_months
+          loanPurpose: loan_purpose
+          repaymentSource: repayment_source
+      - section_id: credit
+        section_title: 四、信用状况
+        fields:
+          creditRating: credit_rating
+          existingLoansBalance: existing_loans_balance
+          primarySettlementAccount: bank_account_no
+
+  - bank_code: CCB
+    bank_name: 中国建设银行
+    full_name: 中国建设银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#0066B3"      # 建行蓝
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: applicant
+        section_title: 第一部分 申请人信息
+        fields:
+          enterpriseName: enterprise_name
+          socialCreditCode: uscc
+          representative: legal_representative
+          regCapital: registered_capital
+          foundDate: established_at
+          industryClassification: industry_code
+          telephone: contact_phone
+          address: contact_address
+      - section_id: financials
+        section_title: 第二部分 财务指标
+        fields:
+          yearlyRevenue: annual_revenue
+          profitAfterTax: net_profit
+          totalAssetsAmount: total_assets
+          totalLiabilitiesAmount: total_liabilities
+          debtRatio: asset_liability_ratio
+      - section_id: financing
+        section_title: 第三部分 融资申请
+        fields:
+          applyAmount: loan_amount
+          applyTerm: loan_term_months
+          financingPurpose: loan_purpose
+          repaymentSourceDesc: repayment_source
+      - section_id: credit_history
+        section_title: 第四部分 信用历史
+        fields:
+          ratingLevel: credit_rating
+          existingLoanBalance: existing_loans_balance
+          settlementAccount: bank_account_no
+
+  - bank_code: ABC
+    bank_name: 中国农业银行
+    full_name: 中国农业银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#009877"      # 农行绿
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: base_info
+        section_title: 1. 基本信息
+        fields:
+          name: enterprise_name
+          creditCode: uscc
+          legalPerson: legal_representative
+          registerCapital: registered_capital
+          setupDate: established_at
+          industryType: industry_code
+          phone: contact_phone
+          addr: contact_address
+      - section_id: finance_info
+        section_title: 2. 财务信息
+        fields:
+          revenue: annual_revenue
+          netProfitAmount: net_profit
+          assetsTotal: total_assets
+          liabilitiesTotal: total_liabilities
+          liabilityRatio: asset_liability_ratio
+      - section_id: loan_info
+        section_title: 3. 贷款申请
+        fields:
+          applyAmount: loan_amount
+          applyMonths: loan_term_months
+          purpose: loan_purpose
+          repaySource: repayment_source
+      - section_id: credit_info
+        section_title: 4. 信用信息
+        fields:
+          creditGrade: credit_rating
+          loansBalance: existing_loans_balance
+          mainAccount: bank_account_no
+
+  - bank_code: BOC
+    bank_name: 中国银行
+    full_name: 中国银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#990000"      # 中行红
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: applicant_info
+        section_title: A. 申请人信息
+        fields:
+          applicantEnterpriseName: enterprise_name
+          usccCode: uscc
+          legalPersonName: legal_representative
+          capitalRegistered: registered_capital
+          incorporationDate: established_at
+          industrySector: industry_code
+          contactNumber: contact_phone
+          mailingAddress: contact_address
+      - section_id: financial_statements
+        section_title: B. 财务状况
+        fields:
+          annualIncome: annual_revenue
+          netIncome: net_profit
+          assetsAggregate: total_assets
+          liabilitiesAggregate: total_liabilities
+          debtToAssetRatio: asset_liability_ratio
+      - section_id: financing_application
+        section_title: C. 融资申请
+        fields:
+          requestedAmount: loan_amount
+          requestedMonths: loan_term_months
+          purposeOfFinancing: loan_purpose
+          sourceOfRepayment: repayment_source
+      - section_id: credit_status
+        section_title: D. 信用状态
+        fields:
+          ratingStatus: credit_rating
+          outstandingLoans: existing_loans_balance
+          primaryAccount: bank_account_no
+
+  - bank_code: BOCOM
+    bank_name: 交通银行
+    full_name: 交通银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#0F2D6B"      # 交行深蓝
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: company_profile
+        section_title: I. 公司概况
+        fields:
+          companyName: enterprise_name
+          socialCreditCode: uscc
+          legalRepresentativeName: legal_representative
+          registeredCapitalAmount: registered_capital
+          dateOfEstablishment: established_at
+          industryCategory: industry_code
+          contactPhoneNo: contact_phone
+          registeredAddress: contact_address
+      - section_id: financial_data
+        section_title: II. 财务数据
+        fields:
+          yearlyRevenueAmount: annual_revenue
+          netProfitAmount: net_profit
+          totalAssetsValue: total_assets
+          totalLiabilitiesValue: total_liabilities
+          assetLiabilityRatioPct: asset_liability_ratio
+      - section_id: loan_request
+        section_title: III. 贷款请求
+        fields:
+          requestedAmountValue: loan_amount
+          requestedTermMonths: loan_term_months
+          loanPurposeDesc: loan_purpose
+          repaymentSourceDesc: repayment_source
+      - section_id: credit_history
+        section_title: IV. 信用历史
+        fields:
+          creditRatingLevel: credit_rating
+          outstandingLoanBalance: existing_loans_balance
+          settlementBankAccount: bank_account_no
+
+  - bank_code: CMB
+    bank_name: 招商银行
+    full_name: 招商银行股份有限公司
+    template_version: "2026.08"
+    page_size: A4
+    header_color: "#8B0000"      # 招行深红
+    signature_required: true
+    signature_label: 法定代表人 (签字盖章)
+    sections:
+      - section_id: enterprise_basic
+        section_title: (一) 企业基本信息
+        fields:
+          enterpriseFullName: enterprise_name
+          creditCodeUSCC: uscc
+          legalRepresentativeID: legal_representative
+          registeredCapitalValue: registered_capital
+          establishedDate: established_at
+          industrySectorCode: industry_code
+          contactPhoneNumber: contact_phone
+          contactAddressDetails: contact_address
+      - section_id: financials
+        section_title: (二) 财务指标
+        fields:
+          annualRevenueValue: annual_revenue
+          netProfitValue: net_profit
+          totalAssetsAmount: total_assets
+          totalLiabilitiesAmount: total_liabilities
+          debtToAssetsRatio: asset_liability_ratio
+      - section_id: loan_application
+        section_title: (三) 贷款申请
+        fields:
+          applicationAmountValue: loan_amount
+          applicationTermMonths: loan_term_months
+          loanPurposeDescription: loan_purpose
+          repaymentSourceDescription: repayment_source
+      - section_id: credit_information
+        section_title: (四) 信用信息
+        fields:
+          creditRatingGrade: credit_rating
+          existingLoansBalanceAmount: existing_loans_balance
+          primarySettlementBankAccount: bank_account_no

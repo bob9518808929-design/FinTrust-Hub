@@ -1,0 +1,178 @@
+# 文件名：model_server.yaml 职责：vLLM 模型服务 K8s 部署清单,在 fintrust-ai 命名空间部署 Qwen-7B 主模型并申请 1 GPU
+#
+# 主模型: Qwen-7B (Qwen/Qwen2-7B-Instruct), OpenAI 兼容 HTTP API
+# 端口: 8000 (vLLM 默认 OpenAI API server)
+# GPU: 1 张 A10/A100, 资源请求/限制 1 GPU
+#
+# 部署:
+#   kubectl apply -f ai-engine/deploy/model_server.yaml -n fintrust
+#
+# 设计依据: ROADMAP_REMAINING_V2.md R4.2 + ai-engine/config/model_config.yaml
+# 测试覆盖: backend/tests/test_infra_config.py::test_model_config_has_3_tier_fallback
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fintrust-ai
+  labels:
+    app.kubernetes.io/part-of: fintrust-hub
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-qwen-7b
+  namespace: fintrust-ai
+  labels:
+    app: vllm
+    model: qwen-7b
+    component: ai-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+      model: qwen-7b
+  template:
+    metadata:
+      labels:
+        app: vllm
+        model: qwen-7b
+        component: ai-engine
+      annotations:
+        # Prometheus 指标采集 (与 infra/observability/loki-promtail 联动)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # GPU 节点亲和: 调度到带 NVIDIA GPU 的节点
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+                      - A10
+                      - A100
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:v0.6.0
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+          args:
+            - "--model=Qwen/Qwen2-7B-Instruct"
+            - "--served-model-name=qwen-7b"
+            - "--host=0.0.0.0"
+            - "--port=8000"
+            - "--max-model-len=8192"
+            - "--gpu-memory-utilization=0.9"
+            - "--dtype=float16"
+            - "--tensor-parallel-size=1"
+            - "--trust-remote-code"
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ai-engine-secrets
+                  key: hf-token
+                  optional: true
+            - name: MODEL_NAME
+              value: "Qwen/Qwen2-7B-Instruct"
+            - name: VLLM_LOGGING_LEVEL
+              value: "INFO"
+          # GPU 资源请求 (K8s Device Plugin 自动暴露 nvidia.com/gpu)
+          resources:
+            requests:
+              cpu: "2000m"
+              memory: "8Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "4000m"
+              memory: "16Gi"
+              nvidia.com/gpu: "1"
+          # 健康检查: vLLM 启动后 /health 返回 200
+          # 注意模型加载较慢, initialDelaySeconds 设为 60s 避免误判
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          # 模型权重缓存卷 (避免 Pod 重启重新下载 ~15GB)
+          volumeMounts:
+            - name: model-cache
+              mountPath: /root/.cache/huggingface
+              readOnly: false
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: vllm-model-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-svc
+  namespace: fintrust-ai
+  labels:
+    app: vllm
+    component: ai-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: vllm
+    model: qwen-7b
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-model-cache
+  namespace: fintrust-ai
+  labels:
+    component: ai-engine
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+---
+# ServiceMonitor (Prometheus Operator 自动发现采集)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vllm-monitor
+  namespace: fintrust-ai
+  labels:
+    component: ai-engine
+spec:
+  selector:
+    matchLabels:
+      app: vllm
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

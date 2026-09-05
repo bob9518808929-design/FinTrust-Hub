@@ -1,0 +1,119 @@
+# EMQX 5.0 + Dashboard + 告警 自部署配置 (DATA-04 R7.0 完善)
+#
+# 启动:  docker compose -f infra/emqx/docker-compose.yml up -d
+# 停止:  docker compose -f infra/emqx/docker-compose.yml down
+#
+# 端口:
+#   1883  TCP   MQTT 协议端口 (设备接入默认)
+#   8083  HTTP  WebSocket (浏览器客户端 MQTT over WS)
+#   8084  HTTPS WebSocket Secure (浏览器客户端 MQTT over WSS)
+#   8883  TCP   MQTT over TLS (加密接入)
+#   18083 HTTP  Dashboard (admin/public)
+#
+# 启动后浏览器访问:  http://localhost:18083  账号: admin / public
+#
+# 配套文件:
+#   - mqtt_config.yaml    MQTT broker 全局配置 (listener/authz/will_message)
+#   - device_auth.conf    设备认证配置 (用户名/密码/CACert)
+#   - alert_rules.json    告警规则 (离线设备/异常数据/阈值告警)
+#   - users.conf          种子用户清单 (EMQX bootstrap_file, 真实部署改为 Dashboard 录入)
+
+version: "3.8"
+
+services:
+  emqx:
+    image: emqx/emqx:5.0
+    container_name: fintrust-emqx
+    restart: unless-stopped
+    ports:
+      - "1883:1883"     # MQTT TCP
+      - "8083:8083"     # MQTT over WebSocket
+      - "8084:8084"     # MQTT over WSS
+      - "8883:8883"     # MQTT over TLS
+      - "18083:18083"   # Dashboard / HTTP API
+    environment:
+      - EMQX_NAME=fintrust-emqx
+      - EMQX_HOST=127.0.0.1
+      # 监听端口
+      - EMQX_LISTENER__TCP__EXTERNAL=1883
+      - EMQX_LISTENER__WS__EXTERNAL=8083
+      - EMQX_LISTENER__WSS__EXTERNAL=8084
+      - EMQX_LISTENER__SSL__EXTERNAL=8883
+      - EMQX_DASHBOARD__LISTENER__HTTP=18083
+      # Dashboard 默认账号 (首次启动后强制改密)
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+      # 认证配置 (与 mqtt_config.yaml 对齐)
+      - EMQX_AUTHORIZATION__NO_MATCH=deny
+      - EMQX_AUTHENTICATION__PASSWORD_HASH_BUILTIN_PLAINTEXT__ENABLE=false
+      # 告警规则路径 (容器内挂载)
+      - EMQX_ALERT__ENABLE=true
+      - EMQX_ALERT__DESTINATIONS__WEBHOOK__URL=http://host.docker.internal:8000/api/v1/modules/iot/alert
+      - EMQX_ALERT__DESTINATIONS__WEBHOOK__ENABLE=true
+      # 资源限制 (避免容器内存打爆)
+      - EMQX_FORCE_SHUTDOWN__MAX_HEAP_SIZE=256MB
+      - EMQX_FORCE_SHUTDOWN__MAX_MEMORY=1024MB
+      # 日志级别 (生产 INFO, 调试 DEBUG)
+      - EMQX_LOG__CONSOLE__LEVEL=info
+      - EMQX_LOG__FILE__LEVEL=info
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+      - ./mqtt_config.yaml:/opt/emqx/etc/mqtt_config.yaml:ro
+      - ./device_auth.conf:/opt/emqx/etc/device_auth.conf:ro
+      - ./users.conf:/opt/emqx/etc/users.conf:ro
+      - ./alert_rules.json:/opt/emqx/etc/alert_rules.json:ro
+      - ./certs:/opt/emqx/etc/certs:ro
+    healthcheck:
+      test: ["CMD", "emqx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - fintrust-iot
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # 可选: HiveMQ (备选 MQTT broker, 用作对比)
+  # hivemq:
+  #   image: hivemq/hivemq-ce:latest
+  #   container_name: fintrust-hivemq
+  #   ports:
+  #     - "1884:1883"
+  #   networks:
+  #     - fintrust-iot
+
+  # 可选: Prometheus + Grafana 监控栈 (与 EMQX dashboard 内置告警互补)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: fintrust-prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   networks:
+  #     - fintrust-iot
+  #
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: fintrust-grafana
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   networks:
+  #     - fintrust-iot
+
+volumes:
+  emqx_data:
+    driver: local
+  emqx_log:
+    driver: local
+
+networks:
+  fintrust-iot:
+    driver: bridge

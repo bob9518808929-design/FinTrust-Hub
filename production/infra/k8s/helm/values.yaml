@@ -1,0 +1,221 @@
+# 文件名：values.yaml 职责：FinTrust Hub Helm Chart 全局配置,定义镜像仓库、命名空间、副本数与各组件开关
+# 文档: https://helm.sh/docs/chart_template_guide/getting_started/
+#
+# 用法:
+#   helm install fintrust infra/k8s/helm -f values.yaml -n fintrust
+#   helm upgrade fintrust infra/k8s/helm -f values.yaml -n fintrust
+#
+# 敏感字段 (db password / api key / jwt secret) 通过 --set 或单独 Secret 注入,
+# 不在 values.yaml 中明文配置; 默认值仅用于本地/测试环境.
+
+# --- 全局镜像仓库 / 标签 ---
+global:
+  imageRegistry: "fintrust"
+  imagePullSecrets: []
+    # - name: regcred
+  storageClass: "standard-rwo"  # GKE/ACK 默认; 自建可用 local-path
+
+image:
+  repository: "fintrust"
+  tag: "3.1.0"
+  pullPolicy: "IfNotPresent"
+
+# --- 命名空间 / 副本默认值 ---
+namespace: "fintrust"
+
+# --- 后端 FastAPI ---
+backend:
+  enabled: true
+  name: "backend"
+  replicas: 3
+  image:
+    repository: "fintrust/backend"
+    tag: "3.1.0"
+    pullPolicy: "IfNotPresent"
+  port: 8000
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests: { cpu: "250m", memory: "512Mi" }
+    limits: { cpu: "1000m", memory: "1Gi" }
+  livenessProbe:
+    httpGet: { path: "/health", port: 8000 }
+    initialDelaySeconds: 30
+    periodSeconds: 20
+  readinessProbe:
+    httpGet: { path: "/health", port: 8000 }
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  env:
+    APP_NAME: "FinTrust Hub Backend"
+    APP_ENV: "production"
+    APP_DEBUG: "false"
+    LOG_LEVEL: "INFO"
+    LLM_METRICS_ENABLED: "true"
+
+# --- 前端 Vue ---
+frontend:
+  enabled: true
+  name: "frontend"
+  replicas: 2
+  image:
+    repository: "fintrust/frontend"
+    tag: "3.1.0"
+    pullPolicy: "IfNotPresent"
+  port: 80
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests: { cpu: "100m", memory: "128Mi" }
+    limits: { cpu: "250m", memory: "256Mi" }
+
+# --- AI 引擎 (vLLM / Qwen-7B) ---
+aiEngine:
+  enabled: true
+  name: "ai-engine"
+  replicas: 1
+  image:
+    repository: "vllm/vllm-openai"
+    tag: "v0.6.0"
+    pullPolicy: "IfNotPresent"
+  model: "Qwen/Qwen2-7B-Instruct"
+  port: 8000
+  gpu:
+    enabled: true
+    count: 1
+    nodeSelectorKey: "nvidia.com/gpu.product"
+    nodeSelectorValue: "A10"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: "2000m"
+      memory: "8Gi"
+      nvidia.com/gpu: 1
+    limits:
+      cpu: "4000m"
+      memory: "16Gi"
+      nvidia.com/gpu: 1
+  env:
+    MODEL_NAME: "Qwen/Qwen2-7B-Instruct"
+    VLLM_PORT: "8000"
+    MAX_MODEL_LEN: "8192"
+
+# --- PostgreSQL (依赖 chart 也可禁用, 改用外部 PG) ---
+postgresql:
+  enabled: true
+  name: "postgres"
+  replicas: 1
+  image:
+    repository: "postgres"
+    tag: "16-alpine"
+    pullPolicy: "IfNotPresent"
+  port: 5432
+  database: "fintrust"
+  username: "fintrust"
+  # password 通过 Secret 注入 (db-secrets)
+  service:
+    type: ClusterIP
+    port: 5432
+  persistence:
+    enabled: true
+    size: "50Gi"
+    storageClass: ""
+    mountPath: "/var/lib/postgresql/data"
+  resources:
+    requests: { cpu: "500m", memory: "1Gi" }
+    limits: { cpu: "2000m", memory: "4Gi" }
+
+# --- Redis ---
+redis:
+  enabled: true
+  name: "redis"
+  replicas: 1
+  image:
+    repository: "redis"
+    tag: "7-alpine"
+    pullPolicy: "IfNotPresent"
+  port: 6379
+  service:
+    type: ClusterIP
+    port: 6379
+  url: "redis://redis-svc:6379/0"
+  persistence:
+    enabled: true
+    size: "10Gi"
+    storageClass: ""
+    mountPath: "/data"
+  resources:
+    requests: { cpu: "100m", memory: "256Mi" }
+    limits: { cpu: "500m", memory: "1Gi" }
+
+# --- 数据库凭证 (走 Secret, 此处仅 ConfigMap 引用名) ---
+dbCredentials:
+  secretName: "db-secrets"
+  # Secret data keys:
+  #   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+  #   DEEPSEEK_API_KEY, JWT_SECRET
+  # 由 kubectl create secret generic db-secrets 注入
+
+# --- Ingress ---
+ingress:
+  enabled: true
+  name: "fintrust-ingress"
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: "fintrust.example.com"
+      paths:
+        - path: "/"
+          pathType: "Prefix"
+          service: "frontend"
+          port: 80
+        - path: "/api"
+          pathType: "Prefix"
+          service: "backend"
+          port: 8000
+        - path: "/ai"
+          pathType: "Prefix"
+          service: "ai-engine"
+          port: 8000
+  tls:
+    enabled: true
+    secretName: "fintrust-tls"
+    hosts:
+      - "fintrust.example.com"
+
+# --- ConfigMap ---
+configMap:
+  name: "backend-config"
+  data:
+    APP_NAME: "FinTrust Hub Backend"
+    APP_VERSION: "3.1.0"
+    APP_ENV: "production"
+    APP_DEBUG: "false"
+    APP_HOST: "0.0.0.0"
+    APP_PORT: "8000"
+    DATABASE_POOL_SIZE: "20"
+    DATABASE_MAX_OVERFLOW: "40"
+    DATABASE_ECHO: "false"
+    REDIS_URL: "redis://redis-svc:6379/0"
+    CLICKHOUSE_HOST: "clickhouse-svc"
+    CLICKHOUSE_PORT: "8123"
+    CLICKHOUSE_USER: "default"
+    CLICKHOUSE_DATABASE: "fintrust_metrics"
+    LLM_METRICS_ENABLED: "true"
+    DEEPSEEK_BASE_URL: "https://api.deepseek.com/v1"
+    DEEPSEEK_MODEL: "deepseek-chat"
+    JWT_ALGORITHM: "HS256"
+    JWT_EXPIRE_MINUTES: "1440"
+    LOG_LEVEL: "INFO"

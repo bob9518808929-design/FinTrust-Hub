@@ -1,0 +1,186 @@
+# 文件名：loki-alerting-rules.yml 职责：Loki Ruler 告警规则,定义 LLM 限流等 P0 关键日志触发条件与严重级
+# 设计依据: docs/DEEPSEEK_INTEGRATION_TECH_SPEC.md 可观测性章节
+#
+# 告警接收: 通过 Alertmanager 转发到钉钉/企微/邮件 (略, 由用户自行接入)
+
+groups:
+  - name: fintrust-llm-p0
+    interval: 30s
+    rules:
+      # === P0-1: LLM 限流触发 ===
+      # 业务影响: 单企业 60s 内提问 > 10 次, 触发限流兜底
+      # 行动: 检查企业侧是否异常批量调用; 是否需要调整 max_req
+      - alert: LLMRateLimitTriggered
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line == "161"
+              | regexp("LLM 限流触发")
+              [1m]
+            )
+          ) > 5
+        for: 1m
+        labels:
+          severity: warning
+          category: llm
+          fingerprint: LLM_LIMIT_TRIGGER
+        annotations:
+          summary: "DeepSeek 模块限流触发"
+          description: "过去 1 分钟内出现 {{ $value }} 次限流兜底, 可能有企业高频调用"
+
+      # === P0-2: Redis 不可用降级放行 (高危!) ===
+      # 业务影响: 限流失效, DeepSeek API 直接被打爆风险
+      # 行动: 立即排查 Redis 健康度; 检查 max_req 是否仍生效
+      - alert: LLMRateLimitDegrade
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.redis_client"}
+              | line == "87"
+              | regexp("Redis 不可用.*限流降级放行")
+              [5m]
+            )
+          ) > 0
+        for: 30s
+        labels:
+          severity: critical
+          category: llm
+          fingerprint: LLM_RATE_DEGRADE
+        annotations:
+          summary: "Redis 不可用, LLM 限流降级放行"
+          description: "限流失效, DeepSeek API 直接被打爆风险; 立即排查 Redis"
+
+      # === P0-3: LLM 熔断器开启 ===
+      # 业务影响: DeepSeek 连续失败达阈值, 进入熔断期
+      # 行动: 检查 DeepSeek API 健康; 检查网络/Key 配置
+      - alert: LLMCircuitBreakerOpen
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line == "105"
+              | regexp("LLM 熔断器开启/续期")
+              [5m]
+            )
+          ) > 0
+        for: 30s
+        labels:
+          severity: critical
+          category: llm
+          fingerprint: LLM_CB_OPEN
+        annotations:
+          summary: "DeepSeek 熔断器开启"
+          description: "连续失败达阈值, 已进入熔断期, 期间所有请求走 C 档兜底"
+
+      # === P0-4: LLM 熔断期间走兜底 (持续告警) ===
+      # 业务影响: 熔断期间每个请求都走 C 档, 用户体验降级
+      # 行动: 关注持续时间; 若 > cooldown 仍持续说明 DeepSeek 未恢复
+      - alert: LLMCircuitBreakerFallback
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line == "201"
+              | regexp("LLM 走熔断兜底")
+              [1m]
+            )
+          ) > 50
+        for: 2m
+        labels:
+          severity: warning
+          category: llm
+          fingerprint: LLM_CB_FALLBACK
+        annotations:
+          summary: "DeepSeek 熔断期间大量请求走兜底"
+          description: "过去 2 分钟内 {{ $value }} 次兜底, 熔断未恢复"
+
+      # === P0-5: LLM 熔断恢复 (信息性) ===
+      # 业务影响: cooldown 过后第一次成功, 熔断恢复
+      # 行动: 无需行动, 仅记录
+      - alert: LLMCircuitBreakerRecovered
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line == "95"
+              | regexp("LLM 熔断器已恢复")
+              [5m]
+            )
+          ) > 0
+        for: 0m
+        labels:
+          severity: info
+          category: llm
+          fingerprint: LLM_CB_RECOVERED
+        annotations:
+          summary: "DeepSeek 熔断器已恢复"
+          description: "cooldown 过后第一次调用成功, 熔断器恢复 CLOSED"
+
+      # === P0-6: LLM 调用失败 (DeepSeek API 异常) ===
+      # 业务影响: DeepSeek 真实调用失败 (网络/Key/限流/服务端 5xx)
+      # 行动: 看 message 详细错误; 4xx 检查 Key, 5xx 检查 DeepSeek 服务状态
+      - alert: LLMCallFailed
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line = "254"
+              | regexp("LLM 调用失败")
+              [1m]
+            )
+          ) > 10
+        for: 1m
+        labels:
+          severity: warning
+          category: llm
+          fingerprint: LLM_CALL_FAILED
+        annotations:
+          summary: "DeepSeek 调用失败率上升"
+          description: "过去 1 分钟内 {{ $value }} 次调用失败, 即将触发熔断"
+
+      # === P0-7: Redis 操作异常降级放行 (高危!) ===
+      # 业务影响: Redis 连接在但操作抛错 (网络抖动/连接重置/超时),
+      #          限流逻辑兜底为放行, 同 P0-2 有 DeepSeek 被打爆风险
+      # 行动: 排查 Redis 网络稳定性; 检查连接池配置; 关注是否需要扩容
+      - alert: LLMRedisOpDegrade
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.redis_client"}
+              | line == "108"
+              | regexp("Redis 操作异常.*限流降级放行")
+              [5m]
+            )
+          ) > 0
+        for: 30s
+        labels:
+          severity: critical
+          category: llm
+          fingerprint: LLM_REDIS_OP_DEGRADE
+        annotations:
+          summary: "Redis 操作异常, 限流降级放行"
+          description: "Redis 网络抖动或连接重置, 限流失效, DeepSeek 被打爆风险"
+
+      # === P0-8: LLM PII 脱敏失败降级 (数据安全风险) ===
+      # 业务影响: PII 脱敏流程抛错, 降级用原消息直接调 DeepSeek,
+      #          可能有银行卡/身份证等敏感信息泄露给 DeepSeek API
+      # 行动: 检查 messages 中 content 字段类型; 排查 _sanitize_user_input/_mask_pii
+      - alert: LLMPIISanitizeFailed
+        expr: |
+          sum by (logger, line) (
+            count_over_time(
+              {service="backend", logger="app.services.llm_service"}
+              | line == "185"
+              | regexp("LLM PII 脱敏失败.*降级用原消息")
+              [5m]
+            )
+          ) > 0
+        for: 30s
+        labels:
+          severity: critical
+          category: llm
+          fingerprint: LLM_PII_SANITIZE_FAILED
+        annotations:
+          summary: "LLM PII 脱敏失败, 降级用原消息"
+          description: "PII 脱敏流程异常, 用户原始消息未脱敏直接调 DeepSeek, 数据安全风险"

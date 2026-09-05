@@ -1,0 +1,76 @@
+# FinTrust Hub MOD-15 兜底引擎独立 Dockerfile
+# 多阶段构建: builder (精简依赖) + runtime (极简运行时, 适合离线/降级场景)
+#
+# 用途:
+#   - 在主后端不可达 (断网 / 主集群宕机) 时, 独立运行兜底引擎
+#   - 提供离线队列管理 + 队列重放 + 冲突检测 + 健康检查
+#   - 镜像应尽量精简 (无数据库依赖, 无外部 SDK)
+#
+# 构建: docker build -f Dockerfile.fallback -t fintrust/fallback-engine:latest .
+# 运行: docker run -p 8001:8001 -e FALLBACK_MODE=OFFLINE fintrust/fallback-engine:latest
+#
+# 健康检查: GET /api/v1/modules/fallback/health/offline
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# 构建依赖 (仅最小集合: FastAPI + uvicorn + pydantic, 不装 DB/SDK)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装最小 Python 依赖 (从 requirements.txt 子集)
+# 兜底引擎不需要 DB / OCR / RPA / Kafka 等重型依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user \
+    "fastapi[all]>=0.110.0" \
+    "uvicorn[standard]>=0.29.0" \
+    "pydantic>=2.6.4" \
+    "pydantic-settings>=2.2.1" \
+    "python-dotenv>=1.0.1" \
+    "pyjwt[crypto]>=2.8.0" \
+    "httpx>=0.27.0" \
+    "pyyaml>=6.0.1"
+
+# === 运行时 ===
+FROM python:3.12-slim AS runtime
+
+LABEL org.opencontainers.image.title="FinTrust Hub Fallback Engine"
+LABEL org.opencontainers.image.description="MOD-15 独立兜底引擎 (离线模式 + 队列重放 + 冲突检测)"
+LABEL org.opencontainers.image.source="https://github.com/fintrust-hub/backend"
+LABEL org.opencontainers.image.licenses="Proprietary"
+
+WORKDIR /app
+
+# 运行时依赖 (仅 curl 用于 healthcheck)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 从 builder 拷贝已安装的包
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+# 兜底引擎专属环境变量 (默认 OFFLINE 模式启动)
+ENV FALLBACK_MODE=OFFLINE
+ENV FALLBACK_ENABLED_MODULES=FUND,CONTRACT,INVOICE
+ENV FALLBACK_SYNC_INTERVAL_MINUTES=5
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV PORT=8001
+ENV WORKERS=2
+
+# 拷贝应用代码 (仅兜底引擎相关: services + api/v1/modules/fallback_engine)
+COPY app/ /app/app/
+
+# 健康检查 (使用兜底引擎自带的离线健康端点)
+HEALTHCHECK --interval=15s --timeout=5s --retries=5 --start-period=30s \
+    CMD curl -f http://localhost:${PORT}/api/v1/modules/fallback/health/offline || exit 1
+
+EXPOSE ${PORT}
+
+# 启动命令 (仅加载 fallback_engine 路由的精简 ASGI app)
+# 注意: 生产环境应使用 gunicorn 或 uvicorn --workers 多进程
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers ${WORKERS}"]

@@ -1,0 +1,68 @@
+# 文件名：llm_score_prompt_template.yaml 职责：LLM 履约评分 prompt 模板,设定专家角色与输出 JSON 格式(PD/IOY/因子/推理说明)
+#
+# 用于 _build_llm_prompt / _call_llm_score:
+#   1. system_prompt 设定专家角色与输出格式约定
+#   2. user_prompt_template 通过 .format(enterprise_id=..., financial_data=...) 填充
+#   3. 输出期望 JSON: {"pd": float, "ioy": float, "factors": [str], "reasoning": str}
+#
+# 设计原则:
+#   - financial_data 中所有金额单位为元 (人类可读, LLM 更易推理)
+#   - PII 已由 llm_service._mask_pii 自动脱敏
+#   - 输出严格 JSON, _call_llm_score 用 json.loads 解析失败则降级规则评分
+
+system_prompt: |
+  你是一名资深金融风控专家, 专精企业履约能力评估.
+  你的任务: 基于企业概况 + 财务指标 + 行业 + 历史违约, 给出违约概率 PD (0-100) 与履约能力 IOY (0-100).
+  必须严格输出 JSON, 不要包含 markdown 代码块标记:
+  {
+    "pd": <float 0-100>,
+    "ioy": <float 0-100>,
+    "factors": ["<影响因子1>", "<影响因子2>", ...],
+    "reasoning": "<50-200 字评估说明>"
+  }
+
+user_prompt_template: |
+  请评估企业 {enterprise_id} 的履约能力.
+
+  ## 企业概况
+  {enterprise_profile}
+
+  ## 财务指标 (近 12 个月)
+  {financial_data}
+
+  ## 行业景气
+  {industry_info}
+
+  ## 历史违约记录
+  {history_default}
+
+  请基于以上信息, 输出 PD (违约概率 0-100, 数值越小越好) 与 IOY (履约能力 0-100, 数值越大越好),
+  并在 factors 数组中列出 3-5 个关键影响因子, 在 reasoning 字段给出 50-200 字综合说明.
+
+output_schema:
+  type: object
+  required: [pd, ioy, factors, reasoning]
+  properties:
+    pd:
+      type: number
+      minimum: 0
+      maximum: 100
+      description: 违约概率 0-100 (越小越好)
+    ioy:
+      type: number
+      minimum: 0
+      maximum: 100
+      description: 履约能力 0-100 (越大越好)
+    factors:
+      type: array
+      items:
+        type: string
+      description: 关键影响因子列表 (3-5 项)
+    reasoning:
+      type: string
+      description: 综合评估说明 (50-200 字)
+
+# 降级策略: LLM 不可用 / 输出非法 JSON 时, 走规则评分 (现有 compute())
+fallback:
+  strategy: rule_based
+  description: LLM 不可用时复用 _PerfStore 内的种子评分 (随机基线 + 微扰动)

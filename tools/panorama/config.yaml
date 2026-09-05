@@ -1,0 +1,135 @@
+# 全景导航工具配置（v1.0）
+# 修改本文件后无需重启任何服务，下次 collect.py 运行即生效
+
+# ===== 项目路径 =====
+project:
+  # 项目根目录（自动检测，可手动覆盖）
+  root: "../../production"
+  # 一级模块目录（用于模块树根节点）
+  top_level_modules:
+    - ai-engine
+    - backend
+    - contracts
+    - db
+    - frontend
+    - infra
+    - mobile
+    - reference
+  # 扫描时跳过的目录（缩写/缓存/构建产物）
+  exclude_dirs:
+    - __pycache__
+    - .venv
+    - node_modules
+    - .pytest_cache
+    - .benchmarks
+    - .git
+    - dist
+    - build
+    - .cache
+  # 扫描的文件扩展名
+  include_extensions:
+    - .py
+    - .ts
+    - .js
+    - .vue
+    - .sql
+    - .yaml
+    - .yml
+
+# ===== 运行模式 =====
+modes:
+  quick:
+    # Agent 启动前刷新，仅扫最近变更 + Git 日志
+    time_window_minutes: 5
+    skip_ast: true
+    skip_state: true
+  incremental:
+    # 日常开发，基于文件指纹增量
+    skip_ast: false
+    skip_state: false
+  full:
+    # 首次运行/CI 定期
+    force_rescan: true
+  text:
+    # 仅生成 AGENT_CONTEXT.md，不跑 AST
+    skip_html: true
+    skip_ast: true
+
+# ===== 文件指纹缓存 =====
+fingerprint:
+  cache_file: ".cache/file_fingerprints.json"
+  # 指纹算法：mtime + size + hash(head_50_lines)
+  hash_lines: 50
+
+# ===== Git 增量 =====
+git:
+  log_since: "5 minutes ago"
+  log_max_count: 5
+  branch_name_cmd: "git rev-parse --abbrev-ref HEAD"
+  uncommitted_cmd: "git status --porcelain"
+  ahead_cmd: "git rev-list --count @{u}..
+
+HEAD@{u}"
+
+# ===== 状态监控（仅本地开发环境）=====
+state:
+  enabled_in_env: "dev,local"  # 仅在这些环境变量 PANORAMA_ENV 下启用
+  ports:
+    postgres: 5432
+    redis: 6379
+    clickhouse: 8123
+    neo4j: 7687
+    backend: 8000
+    frontend: 5173
+  log_dir: "production/backend/logs"
+  log_tail_lines: 10
+  error_window_minutes: 5
+  critical_window_minutes: 1
+  offset_cache: ".cache/log_offsets.json"
+
+# ===== AGENT_CONTEXT.md 大小约束 =====
+agent_context:
+  target_size_kb: 50
+  hard_limit_kb: 100
+  # 超过 target 后启用截断策略
+  truncate_strategy: "recent_3months_active_modules"
+  recent_months: 3
+
+# ===== 视角预设（定死，不给自定义）=====
+perspectives:
+  god:
+    show_top_level: true
+    show_files: true
+    show_contract_edges: true
+    show_health: true
+    hide: []
+  architect:
+    show_top_level: true
+    show_files: false  # 不展开到文件
+    show_modules_level: 2  # 二级模块
+    show_cycle_detection: true
+    hide: ["files", "code_stats"]
+  developer:
+    # 仅显示当前 git user 最近 N 个月提交过的文件
+    git_user_months: 3
+    show_direct_deps: true
+    hide: ["unrelated_dirs", "archived_files"]
+
+# ===== 修复建议规则匹配（v1.0 仅规则匹配，LLM 兜底推迟 v1.1）=====
+remediation:
+  rules_file: "remediation_rules.yaml"
+  # 置信度阈值：低于此值不展示 command，只展示 reference
+  confidence_threshold: 0.7
+  # Agent 行为约束：禁止自动执行修复命令
+  agent_auto_execute: false
+  # 输出位置
+  output_to:
+    - agent_context_md
+    - dashboard_html
+    - summary_json
+
+# ===== trace_report.json 复用 =====
+trace_report:
+  input_file: "../trace_report.json"
+  # 缺失时静默跳过
+  silent_skip_on_missing: true

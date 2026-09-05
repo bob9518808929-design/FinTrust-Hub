@@ -1,0 +1,132 @@
+# AI 引擎本地开发环境 (INFRA-02, R4.2)
+#
+# 服务:
+#   1. vllm-qwen-7b   — Qwen-7B 主模型 (OpenAI 兼容 HTTP API, 端口 8000)
+#   2. vllm-chatglm3  — ChatGLM3 降级模型 (端口 8001)
+#   3. embedding      — BGE 语义向量服务 (端口 8002)
+#
+# GPU 透传: deploy.resources.reservations.devices 把宿主机 GPU 透传到容器.
+#
+# 启动:
+#   docker compose -f ai-engine/deploy/docker-compose.yml up -d
+#
+# 测试 (启动后):
+#   curl http://localhost:8000/v1/chat/completions \
+#        -H "Content-Type: application/json" \
+#        -d '{"model":"qwen-7b","messages":[{"role":"user","content":"hi"}]}'
+
+services:
+  vllm-qwen-7b:
+    image: vllm/vllm-openai:v0.6.0
+    container_name: vllm-qwen-7b
+    command:
+      - python3
+      - -m
+      - vllm.entrypoints.openai.api_server
+      - --model=Qwen/Qwen2-7B-Instruct
+      - --served-model-name=qwen-7b
+      - --host=0.0.0.0
+      - --port=8000
+      - --max-model-len=8192
+      - --gpu-memory-utilization=0.9
+      - --dtype=float16
+      - --trust-remote-code
+    ports:
+      - "8000:8000"
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+      - VLLM_LOGGING_LEVEL=INFO
+    volumes:
+      # 模型权重缓存 (复用宿主机 ~/.cache/huggingface, 避免每次启动重新下载)
+      - vllm-cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1            # 透传 1 张 GPU; 多卡可用 'all'
+              capabilities: [gpu]
+          limits:
+            memory: 16G
+      placement:
+        constraints:
+          - node.labels.gpu == true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12                 # 总等待 ~3 分钟 (模型加载)
+      start_period: 60s
+    networks:
+      - ai-net
+
+  # 降级模型: ChatGLM3 (主模型不可用 / 超时时降级到)
+  vllm-chatglm3:
+    image: vllm/vllm-openai:v0.6.0
+    container_name: vllm-chatglm3
+    command:
+      - python3
+      - -m
+      - vllm.entrypoints.openai.api_server
+      - --model=THUDM/chatglm3-6b
+      - --served-model-name=chatglm3
+      - --host=0.0.0.0
+      - --port=8001
+      - --max-model-len=4096
+      - --gpu-memory-utilization=0.5      # 与主模型共享 GPU 时降低占用
+      - --dtype=float16
+      - --trust-remote-code
+    ports:
+      - "8001:8001"
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - vllm-cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+          limits:
+            memory: 8G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - ai-net
+
+  # Embedding 服务: BGE-large-zh (用于语义向量检索)
+  embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: fintrust-embedding
+    command:
+      - --model-id=BAAI/bge-large-zh-v1.5
+      - --port=8002
+    ports:
+      - "8002:8002"
+    volumes:
+      - vllm-cache:/data
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ai-net
+
+networks:
+  ai-net:
+    driver: bridge
+
+volumes:
+  vllm-cache:
+    driver: local

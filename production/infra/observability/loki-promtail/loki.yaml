@@ -1,0 +1,49 @@
+# 文件名：loki.yaml 职责：Loki 单节点配置,定义存储路径、TSDB schema 与 Ruler 告警,供开发与小规模生产使用
+# 设计目标: 收 Promtail 推送 + 运行 Ruler 触发 P0 告警
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: 30d
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /tmp/loki/rules
+  rule_path: /tmp/loki/rules
+  alertmanager_url: ""
+  enable_api: true
+  enable_alertmanager_v2: false
+
+analytics:
+  reporting_enabled: false

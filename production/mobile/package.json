@@ -1,0 +1,44 @@
+{
+  "name": "fintrust-hub-mobile",
+  "version": "3.1.0",
+  "description": "FinTrust Hub v3.1 企业端移动端 APP (Taro 跨端小程序) — 资金水位 + 扫码确权",
+  "private": true,
+  "scripts": {
+    "build:weapp": "taro build --type weapp",
+    "build:alipay": "taro build --type alipay",
+    "build:tt": "taro build --type tt",
+    "build:h5": "taro build --type h5",
+    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:h5": "npm run build:h5 -- --watch"
+  },
+  "browserslist": [
+    "last 3 versions",
+    "Android >= 4.1",
+    "iOS >= 8"
+  ],
+  "dependencies": {
+    "@babel/runtime": "^7.21.0",
+    "@tarojs/components": "3.6.20",
+    "@tarojs/helper": "3.6.20",
+    "@tarojs/plugin-framework-react": "3.6.20",
+    "@tarojs/plugin-platform-alipay": "3.6.20",
+    "@tarojs/plugin-platform-h5": "3.6.20",
+    "@tarojs/plugin-platform-tt": "3.6.20",
+    "@tarojs/plugin-platform-weapp": "3.6.20",
+    "@tarojs/react": "3.6.20",
+    "@tarojs/router": "3.6.20",
+    "@tarojs/runtime": "3.6.20",
+    "@tarojs/shared": "3.6.20",
+    "@tarojs/taro": "3.6.20",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@tarojs/cli": "3.6.20",
+    "@tarojs/webpack5-runner": "3.6.20",
+    "@types/react": "^18.0.0",
+    "babel-preset-taro": "3.6.20",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,76 @@
+# 文件名：bank_api_config.yaml 职责：6 家银行开放平台 API 配置,定义网关地址、认证协议与凭证环境变量名
+#
+# 6 家银行开放平台 API 配置. 所有凭证从环境变量读取, 不在此硬编码.
+# sandbox_url 用于沙箱联调; base_url 为生产环境网关.
+# 当某银行的环境变量未配置 (app_id/private_key 为空) 时, 对应 RealAdapter
+# 会自动降级到 Mock 适配器 (bank_aggregator_service._MockBankAdapter), 保持服务可用.
+#
+# 字段说明:
+#   bank_name        : 银行中文名 (与 bank_aggregator_service._BANK_CONFIGS 对齐)
+#   adapter_id       : 适配器 ID (ADAPTER-ICBC 等)
+#   base_url         : 生产环境 API 网关
+#   sandbox_url      : 沙箱环境 API 网关
+#   app_id_env       : 应用 ID 对应的环境变量名
+#   private_key_env  : 应用私钥 (PEM) 对应的环境变量名 (RSA-SHA256 签名)
+#   public_key_env   : 银行公钥 (PEM) 对应的环境变量名 (RSA-SHA256 验签)
+#   auth_protocol    : 认证协议 oauth2 / api_key / direct_login
+
+banks:
+  - adapter_id: ADAPTER-ICBC
+    bank_name: 中国工商银行
+    auth_protocol: oauth2
+    base_url: https://open.icbc.com.cn/api
+    sandbox_url: https://sandbox.open.icbc.com.cn/api
+    app_id_env: ICBC_APP_ID
+    private_key_env: ICBC_PRIVATE_KEY
+    public_key_env: ICBC_PUBLIC_KEY
+
+  - adapter_id: ADAPTER-CMB
+    bank_name: 招商银行
+    auth_protocol: oauth2
+    base_url: https://openapi.cmbchina.com/api
+    sandbox_url: https://sandbox.openapi.cmbchina.com/api
+    app_id_env: CMB_APP_ID
+    private_key_env: CMB_PRIVATE_KEY
+    public_key_env: CMB_PUBLIC_KEY
+
+  - adapter_id: ADAPTER-CCB
+    bank_name: 中国建设银行
+    auth_protocol: oauth2
+    base_url: https://open.ccb.com/api
+    sandbox_url: https://sandbox.open.ccb.com/api
+    app_id_env: CCB_APP_ID
+    private_key_env: CCB_PRIVATE_KEY
+    public_key_env: CCB_PUBLIC_KEY
+
+  - adapter_id: ADAPTER-ABC
+    bank_name: 中国农业银行
+    auth_protocol: oauth2
+    base_url: https://open.abchina.com/api
+    sandbox_url: https://sandbox.open.abchina.com/api
+    app_id_env: ABC_APP_ID
+    private_key_env: ABC_PRIVATE_KEY
+    public_key_env: ABC_PUBLIC_KEY
+
+  - adapter_id: ADAPTER-BOC
+    bank_name: 中国银行
+    auth_protocol: api_key
+    base_url: https://open.bankofchina.com/api
+    sandbox_url: https://sandbox.open.bankofchina.com/api
+    app_id_env: BOC_APP_ID
+    private_key_env: BOC_PRIVATE_KEY
+    public_key_env: BOC_PUBLIC_KEY
+
+  - adapter_id: ADAPTER-BOCOM
+    bank_name: 交通银行
+    auth_protocol: oauth2
+    base_url: https://open.bankcomm.com/api
+    sandbox_url: https://sandbox.open.bankcomm.com/api
+    app_id_env: BOCOM_APP_ID
+    private_key_env: BOCOM_PRIVATE_KEY
+    public_key_env: BOCOM_PUBLIC_KEY
+
+# 默认请求超时 (秒)
+default_timeout_seconds: 10
+# 是否优先使用沙箱地址 (调试用, 生产置 false)
+use_sandbox: false

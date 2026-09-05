@@ -1,0 +1,195 @@
+/* src/pages/index/index.scss — 移动端首页样式 */
+
+.index-page {
+  min-height: 100vh;
+  background: $bg-page;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+/* === 资金水位卡片 === */
+.fund-card {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  border: 4rpx solid $color-success;
+  padding: $spacing-lg;
+  box-shadow: $shadow-base;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-base;
+
+  .enterprise-name {
+    font-size: $font-size-xl;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .light-badge {
+    padding: $spacing-xs $spacing-base;
+    border-radius: $radius-base;
+    Text {
+      color: white;
+      font-size: $font-size-sm;
+      font-weight: 600;
+    }
+  }
+}
+
+.balance-block {
+  margin-bottom: $spacing-base;
+
+  .balance-label {
+    display: block;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    margin-bottom: $spacing-xs;
+  }
+  .balance-value {
+    font-size: $font-size-xxxl;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+.balance-row {
+  display: flex;
+  gap: $spacing-base;
+
+  .balance-item {
+    flex: 1;
+    padding: $spacing-base;
+    background: $bg-tertiary;
+    border-radius: $radius-lg;
+
+    .balance-label {
+      display: block;
+      font-size: $font-size-xs;
+      color: $text-secondary;
+      margin-bottom: $spacing-xs;
+    }
+    .balance-value {
+      font-size: $font-size-lg;
+      font-weight: 600;
+    }
+  }
+}
+
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-base;
+  padding-top: $spacing-base;
+  border-top: 1rpx solid $border-color;
+
+  .update-time {
+    font-size: $font-size-xs;
+    color: $text-secondary;
+  }
+
+  .refresh-btn {
+    font-size: $font-size-sm;
+    color: $color-primary;
+    padding: $spacing-xs $spacing-base;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: $radius-base;
+  }
+}
+
+/* === 错误提示横幅 === */
+.error-banner {
+  padding: $spacing-base $spacing-lg;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: $radius-lg;
+  Text {
+    color: $color-danger;
+    font-size: $font-size-sm;
+  }
+}
+
+/* === 快捷操作区 === */
+.quick-section {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+
+  .section-title {
+    display: block;
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: $spacing-base;
+  }
+}
+
+.action-grid {
+  display: flex;
+  justify-content: space-around;
+  gap: $spacing-base;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  flex: 1;
+
+  .action-icon {
+    width: 96rpx;
+    height: 96rpx;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .icon-text {
+      font-size: 48rpx;
+    }
+  }
+
+  .action-label {
+    font-size: $font-size-sm;
+    color: $text-regular;
+  }
+}
+
+/* === AI 提醒卡片 === */
+.ai-tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-base;
+  padding: $spacing-lg;
+  background: $bg-card;
+  border-radius: $radius-xl;
+  border-left: 8rpx solid $color-info;
+
+  .tip-icon {
+    font-size: 56rpx;
+  }
+
+  .tip-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  .tip-title {
+    font-size: $font-size-base;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .tip-text {
+    font-size: $font-size-sm;
+    color: $text-regular;
+    line-height: 1.5;
+  }
+}

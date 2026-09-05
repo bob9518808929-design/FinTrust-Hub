@@ -1,0 +1,58 @@
+/* src/app.scss — Taro 应用全局样式 (与 PC 端变量对齐) */
+
+/* === 颜色 (与 PC 端 variables.scss 完全对齐) === */
+$color-primary: #3b82f6;
+$color-success: #10b981;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-info: #6366f1;
+
+$text-primary: #f3f4f6;
+$text-regular: #d1d5db;
+$text-secondary: #9ca3af;
+$text-placeholder: #6b7280;
+$text-muted: #4b5563;
+
+$bg-base: #0f172a;
+$bg-page: #1e293b;
+$bg-card: #1f2937;
+$bg-tertiary: #374151;
+$bg-hover: #4b5563;
+
+$border-color: #374151;
+$border-light: #4b5563;
+
+/* 全局页面背景 (暗色主题, 金融场景护眼) */
+page {
+  background: $bg-page;
+  color: $text-primary;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+    'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 全局工具类 */
+.text-success { color: $color-success; }
+.text-warning { color: $color-warning; }
+.text-danger { color: $color-danger; }
+.text-info { color: $color-info; }
+.text-muted { color: $text-muted; }
+
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 16rpx; }
+.gap-4 { gap: 24rpx; }
+
+.p-4 { padding: 24rpx; }
+.p-8 { padding: 32rpx; }
+.m-4 { margin: 24rpx; }
+.mb-4 { margin-bottom: 24rpx; }
+.mb-8 { margin-bottom: 32rpx; }
+
+.rounded { border-radius: 12rpx; }
+.rounded-lg { border-radius: 16rpx; }
+.rounded-xl { border-radius: 24rpx; }

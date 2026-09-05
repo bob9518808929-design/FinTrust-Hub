@@ -1,0 +1,157 @@
+// responsive.scss — 响应式样式与移动布局
+//
+// 设计依据: APP02_MOBILE_PLAN.md §4.2 Task 8.1 / Task 2.3
+//   - 定义 mobile / desktop 媒体查询 mixin
+//   - .mobile-only / .desktop-only 工具类
+//   - MobileLayout 组件样式 (.m-header / .m-main / .m-tabbar / .m-tab)
+//
+// project_memory 硬约束:
+//   - 浏览器视口宽度 < 1024px 时 .tab-nav 需 flex-wrap: wrap
+//   - Tab Bar 高度 ≥ 48px, Tab 点击区域 ≥ 48×48px (拇指热区)
+//   - AI 通知 toast z-index=9500, 阻塞模态窗 z-index=10000 (在 main.scss 中已定义, 此处不重复)
+//   - 移动端 Tab Bar 高 56px
+
+// 注意: additionalData 注入的 @use 不会应用到 @use 加载的子文件, 需显式声明
+@use './variables.scss' as *;
+
+// === 媒体查询 mixin ===
+@mixin mobile {
+  @media (max-width: 767px) { @content; }
+}
+
+@mixin desktop {
+  @media (min-width: 768px) { @content; }
+}
+
+// === 工具类: 仅移动端/仅桌面端显示 ===
+.mobile-only { display: none; }
+.desktop-only { display: block; }
+
+@include mobile {
+  .mobile-only { display: block; }
+  .desktop-only { display: none; }
+}
+
+// === PC 端顶部 Tab 导航响应式 (project_memory: < 1024px flex-wrap) ===
+.tab-nav {
+  @media (max-width: 1023px) {
+    flex-wrap: wrap;
+  }
+}
+
+// === MobileLayout 样式 (仅在移动端断点生效) ===
+@include mobile {
+  .mobile-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh; // 动态视口高度 (移动端浏览器工具栏适配)
+    background: $bg-page;
+    color: $text-primary;
+  }
+
+  // 顶部标题栏 (高 44px, 遵循 iOS HIG)
+  .m-header {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 0 $spacing-base;
+    background: var(--el-color-primary, #{$color-primary});
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: $z-header;
+    box-shadow: $shadow-sm;
+
+    .m-back-btn {
+      flex: 0 0 auto;
+      width: 44px;
+      height: 44px;
+      min-width: 48px; // 拇指热区 ≥ 48px
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: $font-size-xl;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+
+      &:active {
+        opacity: 0.6;
+      }
+    }
+
+    .m-title {
+      flex: 1;
+      margin: 0;
+      font-size: $font-size-lg;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // 主内容区 (底部 Tab Bar 预留 56px)
+  .m-main {
+    flex: 1;
+    padding-bottom: 56px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // 底部 Tab Bar (固定定位, 高 56px ≥ 48px)
+  .m-tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    display: flex;
+    background: $bg-card;
+    border-top: 1px solid $border-color;
+    z-index: $z-header;
+    // iOS 安全区域适配 (底部 home indicator)
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  // 单个 Tab (点击区域 ≥ 48×48px)
+  .m-tab {
+    flex: 1;
+    min-width: 33.3%;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-decoration: none;
+    color: $text-secondary;
+    font-size: $font-size-xs;
+    -webkit-tap-highlight-color: transparent;
+    transition: color $transition-fast;
+
+    &:active {
+      background: $bg-hover;
+    }
+
+    // 当前激活 Tab 高亮
+    &.router-link-active {
+      color: var(--el-color-primary, #{$color-primary});
+      font-weight: 600;
+    }
+  }
+}
+
+// === 桌面端隐藏 MobileLayout (避免 PC 误渲染移动布局) ===
+@include desktop {
+  .mobile-layout {
+    display: none;
+  }
+}

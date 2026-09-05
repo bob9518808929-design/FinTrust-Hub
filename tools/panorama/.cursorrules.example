@@ -1,0 +1,55 @@
+# .cursorrules 示例模板 - FinTrust Hub Agent 强制开机自检
+# 复制本文件到项目根目录 .cursorrules 或 AGENTS.md 即可启用
+
+## 强制开机自检（MANDATORY BOOTSTRAP）
+
+在开始任何代码编写、修改、重构之前，**必须先读取** `tools/panorama/AGENT_CONTEXT.md` 文件。
+
+若该文件不存在或超过 1 小时未更新，立即执行以下命令生成后再读取：
+
+```bash
+cd tools/panorama && python collect.py --quick
+```
+
+严禁在未读取全景状态的情况下直接编写代码。
+
+## 项目硬约束（来自 project_memory）
+
+- 所有 middleware 必须使用 async/await，禁止 callback 风格
+- Route 文件在 middleware 重构期间不得修改
+- AI 建议动作的 onclick 事件中 action 字符串需使用管道分隔格式
+- 监管沙盒穿透报告的 log() 必须含 id/enterprise/source 字段
+- 人工审批工作台必须展示决策详情并提供退回补充材料功能
+- AI 决策弹窗队列上限为 3，超限自动降级为非阻塞 toast
+- Tab7 AI 研判建议以非阻塞 toast 展示（右下角滑入，6.5s 消失）
+- Tab8 穿透报告生成通知改为非阻塞 toast
+- Tab3 审批台和 Tab4 银行风控的不可逆决策保持阻塞模态窗
+- 所有 AI 通知 toast 需含 × 关闭按钮和操作按钮，z-index=9500
+- 合作模式选择必须支持多选，使用 pill 按钮组而非单选 select
+- 边缘案例触发后必须在所有 Tab 顶部显示全局告警横幅
+- 浏览器缓存控制：资源 URL 需添加版本参数（如 ?v=22）
+
+## Agent 行为硬约束
+
+1. 禁止自动执行修复命令（AGENT_CONTEXT.md 第 7 区块的建议命令必须由人类拍板）
+2. 置信度 < 0.7 的建议仅展示 reference，不展示 command
+3. 生产环境部署的 panorama/ 不含 DB 探测脚本，状态栏统一显示"🟡 降级"
+4. AGENT_CONTEXT.md 大小硬上限 100KB
+5. 不重复造轮子：已实现模块列表中存在的功能，禁止重复实现
+
+## 开发流程
+
+1. 读取 `tools/panorama/AGENT_CONTEXT.md`
+2. 理解当前项目状态（4 大指标 + 已实现模块 + 待开发清单）
+3. 定位自己负责的文件（开发者视角：git config user.name 最近 3 个月提交）
+4. 完成开发后，运行 `python tools/panorama/collect.py --quick` 刷新全景快照
+5. 提交 commit 时附上 panorama 快照变更
+
+## 设计哲学
+
+- 先稳固基础，再攀登高峰
+- 傻瓜式操作（不做选择题，只做判断题或填空题）
+- API 接入优先 + 自研护城河 + 独立兜底备选
+- 配置优于训练
+- 白盒可解释
+- 渐进调节

@@ -1,0 +1,47 @@
+# 文件名：ocr_engine_config.yaml 职责：OCR 引擎优先级链配置,定义 Paddle/百度/阿里/Mock 四档降级策略与各引擎凭证
+#
+# OCR 引擎优先级链: PADDLE -> BAIDU -> ALI -> MOCK (第一个成功即返回).
+# 所有 API Key / Secret 从环境变量读取, 不在此硬编码.
+# 引擎不可用 (包未安装 / 无 API_KEY / 推理失败) 时自动降级到下一引擎,
+# 最终回退到 Mock 引擎 (确定性文本生成, 无外部依赖).
+
+engines:
+  paddle:
+    # PaddleOCR 本地推理 (开源免费, 需 pip install paddleocr)
+    enabled: true
+    gpu: false                 # 是否启用 GPU 加速 (无 GPU 时降级 CPU)
+    model_path: ""             # 自定义模型目录 (空则使用默认中英文模型)
+    use_angle_cls: true        # 是否启用方向分类
+    lang: ch                   # 识别语言
+    available_env: PADDLE_OCR_ENABLED   # 环境变量开关 (置 "false" 可强制禁用)
+
+  baidu:
+    # 百度智能云 OCR API (通用文字识别)
+    api_key_env: BAIDU_OCR_API_KEY
+    secret_key_env: BAIDU_OCR_SECRET_KEY
+    base_url: https://aip.baidubce.com/rest/2.0/ocr/v1
+    token_url: https://aip.baidubce.com/oauth/2.0/token
+    timeout_seconds: 8
+
+  ali:
+    # 阿里云 OCR API (RecognizeGeneral 通用识别)
+    api_key_env: ALI_OCR_API_KEY
+    base_url: https://ocr-api.cn-hangzhou.aliyuncs.com
+    endpoint: ocr-api.cn-hangzhou.aliyuncs.com
+    timeout_seconds: 8
+
+  mock:
+    # Mock 兜底引擎 (始终可用)
+    enabled: true
+    confidence_min: 0.85
+    confidence_max: 0.92
+
+# 引擎尝试顺序 (engine_preference 首选, 失败按此链降级)
+engine_preference_chain:
+  - PADDLE
+  - BAIDU
+  - ALI
+  - MOCK
+
+# 健康检查 HTTP ping 超时 (秒)
+health_check_timeout_seconds: 3

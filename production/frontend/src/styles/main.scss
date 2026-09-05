@@ -1,0 +1,1540 @@
+// 全局入口样式: FinTrust Hub · Deepspace AI 深空科技主题
+// 规范: 所有组件颜色都通过 Element Plus --el-* 变量 + FinTrust --ft-* 扩展变量,
+//       业务组件不要写死 #hex, 避免后续换肤漏改.
+@use './variables.scss' as *;
+@use './reset.scss';
+@use './responsive' as *;
+
+// ============================================================
+// 1. Element Plus 核心组件玻璃拟态 + 霓虹边 (AI 科技感灵魂)
+// ============================================================
+
+// === 卡片: 半透明玻璃 + 1px 半透霓虹边 + 悬浮外发光 ===
+.el-card {
+  background: $bg-card;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid $border-color;
+  color: $text-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-base;
+  transition:
+    transform $transition-base,
+    box-shadow $transition-base,
+    border-color $transition-base;
+
+  &:hover {
+    border-color: $border-light;
+    box-shadow: $shadow-lg;
+    transform: translateY(-1px);
+  }
+
+  .el-card__header {
+    border-bottom: 1px solid $border-color;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+    background: linear-gradient(90deg, rgba(56,189,248,0.08), transparent 70%);
+  }
+  .el-card__body {
+    color: inherit;
+  }
+}
+
+// === 按钮: 渐变主按钮 + 文字发光 + 按下 glow 扩散 ===
+.el-button {
+  border-radius: $radius-base;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-base,
+    filter $transition-fast,
+    background $transition-base,
+    color $transition-fast,
+    border-color $transition-fast;
+
+  &.is-text {
+    color: $text-regular;
+
+    &:hover {
+      color: $color-primary;
+      background: $bg-hover;
+      box-shadow: 0 0 0 1px $border-color inset;
+    }
+  }
+
+  // Primary: 渐变 (青 → 紫) + 外发光 (AI 感最强的按钮)
+  &--primary {
+    --el-button-bg-color:   transparent;
+    --el-button-border-color: transparent;
+    --el-button-hover-bg-color:   transparent;
+    --el-button-hover-border-color: transparent;
+    --el-button-active-bg-color:  transparent;
+    --el-button-active-border-color: transparent;
+    --el-button-text-color:      #020617;   // 深色字配亮色渐变按钮, 对比度够
+    --el-button-hover-text-color: #020617;
+    --el-button-active-text-color:#020617;
+    position: relative;
+    background-image: $ai-gradient;
+    background-size: 140% 140%;
+    color: #020617 !important;
+    box-shadow:
+      0 0 0 1px rgba(56,189,248,0.35),
+      0 6px 22px rgba(34,211,238,0.28),
+      0 0 18px rgba(192,132,252,0.22);
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 50%);
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    &:hover {
+      background-position: 100% 0;
+      filter: brightness(1.08);
+      box-shadow:
+        0 0 0 1px rgba(192,132,252,0.55),
+        0 10px 32px rgba(34,211,238,0.36),
+        0 0 24px rgba(192,132,252,0.34);
+    }
+
+    &:active {
+      transform: translateY(1px) scale(0.985);
+    }
+  }
+
+  // Success / Warning / Danger / Info: 强对比白字 (WCAG AA, 避免 Experience 1295380 深色模式文字不显示)
+  &--success {
+    --el-button-text-color: #ecfdf5;
+    --el-button-hover-text-color: #ecfdf5;
+    --el-button-active-text-color: #ecfdf5;
+    --el-button-disabled-text-color: rgba(236, 253, 245, 0.55);
+    --el-button-disabled-bg-color: rgba(16,185,129,0.35);
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 6px 20px rgba(16,185,129,0.22);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  &--warning {
+    --el-button-text-color: #fffbeb;
+    --el-button-hover-text-color: #fffbeb;
+    --el-button-active-text-color: #fffbeb;
+    --el-button-disabled-text-color: rgba(255,251,235,0.55);
+    --el-button-disabled-bg-color: rgba(251,191,36,0.35);
+    box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 6px 20px rgba(251,191,36,0.20);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  &--danger {
+    --el-button-text-color: #fef2f2;
+    --el-button-hover-text-color: #fef2f2;
+    --el-button-active-text-color: #fef2f2;
+    --el-button-disabled-text-color: rgba(254,242,242,0.55);
+    --el-button-disabled-bg-color: rgba(248,113,113,0.35);
+    box-shadow: 0 0 0 1px rgba(248,113,113,0.40), 0 6px 20px rgba(248,113,113,0.22);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  &--info {
+    --el-button-text-color: #eef2ff;
+    --el-button-hover-text-color: #eef2ff;
+    --el-button-active-text-color: #eef2ff;
+    --el-button-disabled-text-color: rgba(238,242,255,0.55);
+    --el-button-disabled-bg-color: rgba(129,140,248,0.35);
+    box-shadow: 0 0 0 1px rgba(129,140,248,0.40), 0 6px 20px rgba(129,140,248,0.22);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  // Primary (默认) 也补 disabled: 高对比度灰字 + 柔和背景
+  &--primary.is-disabled {
+    background-image: none !important;
+    &::before { opacity: 0.25; }
+    box-shadow: 0 0 0 1px rgba(148,163,184,0.25);
+  }
+
+  // Default (玻璃边框) disabled: 对比灰字 + 轻边框线
+  &--default.is-disabled {
+    color: #cbd5e1 !important;
+    border-color: rgba(148,163,184,0.45) !important;
+    background: rgba(30,41,59,0.45);
+    box-shadow: none !important;
+  }
+
+  // Default 按钮: 玻璃边 + 悬浮霓虹渐变
+  &--default {
+    background: $bg-card;
+    color: $text-regular;
+    border-color: $border-color;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      color: $color-primary;
+      border-color: $border-light;
+      box-shadow: $shadow-glow-cyan;
+    }
+  }
+}
+
+// ============================================================
+// 2. ECO 模块所有按钮统一 "高对比护眼版" (覆盖 9 个 .eco-*-view)
+//    Experience 366208 + 408223 教训: 不允许"每个页面写一份自己的按钮 style"
+//    → 用根容器通配选择器一次性全命中 eco-index / -burn / -pts / -bid / -gov
+//       / -credential / -rpa / -bot / -pricing 9 个 view, 避免修一个漏一个
+// ============================================================
+@mixin eco-button-strong-contrast {
+  // 基础: 所有按钮统一字重 + 文案不换行 + 最小触摸区
+  .el-button {
+    min-width: 128px;
+    justify-content: center;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 0 rgba(2,6,23,0.55);
+    transition:
+      transform $transition-fast,
+      box-shadow $transition-base,
+      filter $transition-fast;
+
+    &:active {
+      transform: translateY(1px) scale(0.985);
+    }
+  }
+
+  // —— Primary: 青→紫渐变底 + 深墨字 + 白描边发光 (对比度 ≥14:1)
+  .el-button--primary {
+    color: #020617 !important;
+    filter: saturate(1.08);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.22),
+      0 10px 24px rgba(34,211,238,0.28),
+      0 0 20px rgba(192,132,252,0.24) !important;
+
+    .el-icon, span {
+      color: #020617 !important;
+      font-weight: 800 !important;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.45),
+        0 1px 0 rgba(255,255,255,0.20) !important;
+    }
+    // Primary disabled: 淡银实心底 + 深墨字 (对比度 ≈7:1), 不再 opacity 隐形
+    &.is-disabled {
+      background-image: none !important;
+      background: rgba(203,213,225,0.82) !important;
+      border-color: rgba(148,163,184,0.92) !important;
+      color: #0f172a !important;
+      filter: saturate(1);
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.55) !important;
+      &::before { opacity: 0.15 !important; }
+      .el-icon, span {
+        color: #0f172a !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.35) !important;
+      }
+    }
+  }
+
+  // —— Success: 深墨绿字 + 白描边 on 高饱和绿 (对比度 ≥13:1)
+  .el-button--success {
+    filter: saturate(1.06);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.22),
+      0 6px 20px rgba(16,185,129,0.28) !important;
+    .el-icon, span {
+      color: #022c22 !important;
+      font-weight: 800 !important;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.45),
+        0 1px 0 rgba(255,255,255,0.18) !important;
+    }
+    &.is-disabled {
+      background-image: none !important;
+      background: rgba(167,243,208,0.80) !important;
+      border-color: rgba(16,185,129,0.88) !important;
+      filter: saturate(1);
+      box-shadow: 0 0 0 1px rgba(16,185,129,0.55) !important;
+      .el-icon, span {
+        color: #064e3b !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.32) !important;
+      }
+    }
+  }
+
+  // —— Warning (黄暂停 / 黄警告): 深琥珀字 + 描边发光
+  .el-button--warning {
+    filter: saturate(1.08);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.22),
+      0 6px 20px rgba(251,191,36,0.28) !important;
+    .el-icon, span {
+      color: #422006 !important;
+      font-weight: 800 !important;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.45),
+        0 1px 0 rgba(255,255,255,0.20) !important;
+    }
+    &.is-disabled {
+      background-image: none !important;
+      background: rgba(253,230,138,0.80) !important;
+      border-color: rgba(251,191,36,0.88) !important;
+      filter: saturate(1);
+      box-shadow: 0 0 0 1px rgba(251,191,36,0.55) !important;
+      .el-icon, span {
+        color: #78350f !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.32) !important;
+      }
+    }
+  }
+
+  // —— Danger (红放弃 / 物理销毁): 纯白字 + 红光晕 (最醒目)
+  .el-button--danger {
+    filter: saturate(1.08);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.24),
+      0 10px 24px rgba(248,113,113,0.30),
+      0 0 22px rgba(239,68,68,0.28) !important;
+    .el-icon, span {
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      text-shadow:
+        0 0 6px rgba(127,29,29,0.85),
+        0 1px 0 rgba(0,0,0,0.45) !important;
+    }
+    &.is-disabled {
+      background-image: none !important;
+      background: rgba(254,202,202,0.82) !important;
+      border-color: rgba(239,68,68,0.88) !important;
+      filter: saturate(1);
+      box-shadow: 0 0 0 1px rgba(239,68,68,0.55) !important;
+      .el-icon, span {
+        color: #7f1d1d !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.32) !important;
+      }
+    }
+  }
+
+  // —— Info (紫): 深紫字 + 描边发光
+  .el-button--info {
+    filter: saturate(1.06);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.22),
+      0 6px 20px rgba(129,140,248,0.28) !important;
+    .el-icon, span {
+      color: #1e1b4b !important;
+      font-weight: 800 !important;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.45),
+        0 1px 0 rgba(255,255,255,0.20) !important;
+    }
+    &.is-disabled {
+      background-image: none !important;
+      background: rgba(196,181,253,0.82) !important;
+      border-color: rgba(129,140,248,0.88) !important;
+      filter: saturate(1);
+      box-shadow: 0 0 0 1px rgba(129,140,248,0.55) !important;
+      .el-icon, span {
+        color: #312e81 !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.32) !important;
+      }
+    }
+  }
+
+  // —— Default (玻璃按钮 / 查看审计报告类): 淡银实心底 + 深蓝字
+  .el-button--default {
+    background: rgba(226,232,240,0.92) !important;
+    border-color: rgba(148,163,184,0.92) !important;
+    box-shadow: 0 0 0 1px rgba(148,163,184,0.55), 0 6px 18px rgba(15,23,42,0.40) !important;
+    color: #0b1120 !important;
+    .el-icon, span {
+      color: #0b1120 !important;
+      font-weight: 800 !important;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.55) !important;
+    }
+    &.is-disabled {
+      background: rgba(241,245,249,0.72) !important;
+      border-color: rgba(148,163,184,0.65) !important;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.35) !important;
+      color: #0f172a !important;
+      .el-icon, span {
+        color: #0f172a !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.45) !important;
+      }
+    }
+  }
+}
+
+// 根类: .eco-index-view / -burn / -pts / -bid / -gov / -credential / -rpa / -bot / -pricing
+[class^="eco-"][class$="-view"],
+[class*=" eco-"][class$="-view"] {
+  @include eco-button-strong-contrast;
+}
+// 移动端扫码确权 (usePendingSync / award 弹窗里的按钮不在 .eco-*-view 里 → 额外兜底)
+.mobile-award-pane,
+.use-pending-sync-root,
+.mobile-scan-wrap {
+  @include eco-button-strong-contrast;
+}
+
+// ============================================================
+// 3. 全局 Deepspace 组件皮肤 · 最终治理 (Experience 781914 + 265600 核心教训)
+//    用户抱怨: "除了你改过的, 大多数页面都是淡色背景"
+//    根因: 之前 9 类组件皮肤 + 8 态按钮都包在模块 wrapper mixin (`.eco-burn-view` 等) 下,
+//          只要页面根 class 不命中通配 (例如 Tab3 = approval-workbench, 或以后新增
+//          reporting-view / sandbox-view / contract-manage 等), 就直接回退 Element Plus
+//          light 默认 → 白卡/浅白格/淡色 alert, 用户看就是"大片浅色".
+//
+//    解决: 把 9 类 Element Plus 组件规则 + 8 态按钮规则 直接提升到全局作用域
+//          (不再依赖任何 wrapper 类). 本项目 index.html 已经 `data-theme=deepspace-ai`
+//          单主题不切 light, 全局提升零误伤, 从此任何新页面只要用 Element Plus 组件
+//          就自动深空一致, 不用再逐页打补丁.
+//
+//    同时新增 el-tabs 全局皮肤 (Tab3 审批工作台这类用 tabs 切待办/已办/详情).
+// ============================================================
+
+// --- A. 页面根容器兜底透明: 所有 <router-view> 里的第一级 div 只要没有显式背景, 就透霓虹
+body > #app > * > :is(div, section, main),
+body > #app > div > div > :is(div, section, main) {
+  background: transparent;
+  color: $text-primary;
+}
+
+// 给所有带 -workbench / -view / -page / -pane / -dashboard / -home 后缀的根容器统一 padding + 透明
+[class$="-workbench"],[class$="-view"],[class$="-page"],
+[class$="-pane"],[class$="-dashboard"],[class$="-home"] {
+  background: transparent;
+  isolation: isolate;
+  padding: 16px;
+  color: $text-primary;
+}
+
+// --- B. 全局: 8 种 Element Plus 组件 (卡片/4 种 alert/分隔线/描述表/表单输入/表格/空态)
+//        全部深空玻璃, 不再看模块 class
+// 1. Card
+.el-card {
+  background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(3,7,18,0.82)) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid $border-color !important;
+  border-radius: $radius-xl !important;
+  box-shadow: $shadow-lg !important;
+  overflow: hidden;
+  color: $text-primary;
+  &:hover {
+    border-color: $border-light;
+    box-shadow: $shadow-lg;
+  }
+  .el-card__header {
+    background: rgba(15,23,42,0.55) !important;
+    border-bottom: 1px solid $border-color !important;
+    padding: 14px 20px;
+    color: $text-primary !important;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    background-image: $ai-gradient;
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent !important;
+  }
+  .el-card__body {
+    color: $text-primary;
+    padding: 18px 20px;
+  }
+}
+
+// 2. Alert 4 种 type
+.el-alert {
+  border-radius: 14px !important;
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  &__title {
+    font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+    font-size: 15px !important;
+    line-height: 1.4;
+  }
+  &__description {
+    line-height: 1.8;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  &__content { color: $text-primary !important; }
+  &__icon { filter: drop-shadow(0 0 6px currentColor); }
+}
+.el-alert--info {
+  background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(129,140,248,0.18)) !important;
+  border: 1px solid rgba(34,211,238,0.35) !important;
+  box-shadow: $shadow-glow-cyan;
+  .el-alert__title {
+    background: $ai-gradient;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent !important;
+  }
+  .el-alert__icon { color: $color-primary; }
+  .el-alert__description { color: $text-regular !important; }
+}
+.el-alert--success {
+  background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(6,78,59,0.08) 45%, rgba(251,191,36,0.14)) !important;
+  border: 1px solid rgba(16,185,129,0.42) !important;
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.18), 0 8px 24px rgba(16,185,129,0.18);
+  .el-alert__title {
+    background: linear-gradient(90deg, #6ee7b7, #fde68a, #fcd34d);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent !important;
+  }
+  .el-alert__icon { color: #34d399; }
+  .el-alert__description { color: $text-regular !important; }
+}
+.el-alert--warning {
+  background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(124,45,18,0.06)) !important;
+  border: 1px solid rgba(251,191,36,0.45) !important;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.20), 0 8px 24px rgba(251,191,36,0.16);
+  .el-alert__title {
+    background: linear-gradient(90deg, #fde68a, #f59e0b);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent !important;
+  }
+  .el-alert__icon { color: #fbbf24; }
+  .el-alert__description { color: $text-regular !important; }
+}
+.el-alert--error {
+  background: linear-gradient(135deg, rgba(248,113,113,0.18), rgba(127,29,29,0.06)) !important;
+  border: 1px solid rgba(248,113,113,0.45) !important;
+  box-shadow: 0 0 0 1px rgba(248,113,113,0.20), 0 8px 24px rgba(248,113,113,0.18);
+  .el-alert__title {
+    background: linear-gradient(90deg, #fecaca, #f87171);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent !important;
+  }
+  .el-alert__icon { color: #f87171; }
+  .el-alert__description { color: $text-regular !important; }
+}
+
+// 3. Divider
+.el-divider {
+  --el-border-color: #{ $border-color };
+  border-top: 1px solid $border-color !important;
+  background: transparent;
+  &::before, &::after { background: transparent !important; }
+}
+
+// 4. Descriptions
+.el-descriptions {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: $shadow-base;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: $text-primary;
+  &__header,
+  &__title {
+    color: $text-primary !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+    background: $ai-gradient;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent !important;
+  }
+  &__label {
+    background: rgba(15,23,42,0.68) !important;
+    border-color: $border-color !important;
+    color: $text-secondary !important;
+    font-weight: 700;
+  }
+  &__content {
+    background: rgba(30,41,59,0.45) !important;
+    border-color: $border-color !important;
+    color: $text-primary !important;
+    font-weight: 700;
+  }
+  &__table { border-color: $border-color !important; }
+}
+
+// 5. Form + Input/Select/Textarea (玻璃胶囊)
+.el-form { color: $text-primary; }
+.el-form-item__label {
+  color: $text-secondary !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+.el-input-number .el-input__wrapper,
+.el-select .el-input__wrapper,
+.el-input .el-input__wrapper,
+.el-textarea__inner {
+  background: rgba(15,23,42,0.55) !important;
+  border: 1px solid $border-color !important;
+  box-shadow: none !important;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: $text-primary;
+  .el-input__inner {
+    color: $text-primary !important;
+    font-weight: 700;
+  }
+  &.is-focus {
+    border-color: rgba(192,132,252,0.80) !important;
+    box-shadow:
+      0 0 0 3px rgba(34,211,238,0.18),
+      0 0 18px rgba(192,132,252,0.22) !important;
+  }
+}
+// 下拉类浮层
+.el-select-dropdown,
+.el-cascader__dropdown,
+.el-popper,
+.el-picker-panel,
+.el-date-picker {
+  background: rgba(15,23,42,0.92) !important;
+  border: 1px solid $border-color !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: $text-primary;
+}
+.el-select-dropdown__item,
+.el-cascader-menu__item,
+.el-date-table td,
+.el-picker-panel__content,
+.el-time-spinner__item {
+  color: $text-primary;
+  background: transparent !important;
+  &.is-hover, &.hover, &:hover { background: rgba(129,140,248,0.20) !important; }
+  &.selected,
+  &.current {
+    background: linear-gradient(90deg, rgba(34,211,238,0.22), rgba(192,132,252,0.18)) !important;
+    color: $text-primary !important;
+    font-weight: 800;
+  }
+}
+.el-picker-panel__sidebar,
+.el-date-range-picker__content {
+  color: $text-primary;
+  background: transparent !important;
+}
+
+// 6. El-table stripe 深蓝交替 (Element Plus 默认 light 是 #fafafa 浅白条)
+.el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: rgba(15,23,42,0.65);
+  --el-table-row-hover-bg-color: rgba(34,211,238,0.08);
+  --el-table-border-color: #{ $border-color };
+  --el-table-text-color: #{ $text-primary };
+  --el-table-header-text-color: #{ $text-primary };
+
+  th.el-table__cell {
+    background: linear-gradient(180deg, rgba(30,41,59,0.85), rgba(15,23,42,0.75)) !important;
+    color: $text-primary !important;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid $border-color !important;
+  }
+  .el-table__inner-wrapper::before { background-color: transparent !important; }
+  .el-table__row {
+    background: transparent;
+    transition: background-color $transition-fast, box-shadow $transition-fast;
+    &:nth-child(2n)   { background: rgba(30,41,59,0.35) !important; }
+    &:nth-child(2n+1) { background: rgba(15,23,42,0.25) !important; }
+    &:hover > td {
+      background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(192,132,252,0.10)) !important;
+      box-shadow: inset 3px 0 0 $color-primary;
+    }
+    td.el-table__cell {
+      color: $text-primary !important;
+      border-color: $border-color !important;
+    }
+  }
+}
+
+// 7. El-Tabs (Tab3 审批工作台 / 银行 / reform 都可能切待办/已办): 全深空 + active-bar 霓虹渐变
+.el-tabs {
+  --el-tabs-header-background: transparent;
+  --el-tabs-active-bar-height: 3px;
+  --el-tabs-border-color: #{ $border-color };
+  background: transparent;
+  color: $text-primary;
+  border-radius: $radius-lg;
+  .el-tabs__header {
+    background: transparent;
+    border-bottom: 1px solid $border-color !important;
+    margin-bottom: 16px;
+  }
+  .el-tabs__nav-wrap { background: transparent; }
+  .el-tabs__item {
+    color: $text-secondary !important;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    padding: 0 18px !important;
+    transition: color $transition-fast, transform $transition-fast, text-shadow $transition-fast;
+    &:hover {
+      color: $text-primary !important;
+    }
+    &.is-active {
+      color: $text-primary !important;
+      font-weight: 800;
+      // 激活 tab 文字用 AI 渐变字
+      background: $ai-gradient;
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent !important;
+      transform: translateY(-0.5px);
+    }
+  }
+  // active-bar: 青→紫渐变 (比 Element Plus 单调一条蓝线更有 AI 科技感)
+  .el-tabs__active-bar {
+    background: $ai-gradient !important;
+    box-shadow: 0 0 10px rgba(192,132,252,0.55), 0 0 6px rgba(34,211,238,0.45);
+  }
+  .el-tabs__nav-next,
+  .el-tabs__nav-prev {
+    color: $text-secondary;
+    &:hover { color: $color-primary; }
+  }
+  .el-tabs__pane,
+  .el-tab-pane {
+    color: $text-primary;
+    background: transparent;
+  }
+}
+
+// 8. Empty 空态: 深空玻璃虚线胶囊 + 紫光插画
+.el-empty {
+  background: rgba(15,23,42,0.50);
+  border: 1px dashed $border-color;
+  border-radius: 16px;
+  padding: 24px 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  &__description p {
+    color: $text-secondary !important;
+    font-weight: 600;
+  }
+  &__image svg path[fill="#eef0f3"],
+  &__image svg path[fill="#f6f7f8"] {
+    fill: rgba(129,140,248,0.55) !important;
+    filter: drop-shadow(0 0 6px rgba(129,140,248,0.45));
+  }
+}
+
+// ============================================================
+// 8B. 根因修复: 覆盖 Element Plus 全局浅色 CSS 变量
+//     用户抱怨"除了改过的都是淡色背景" — 因为业务组件 scoped 样式常写
+//     `background: var(--el-fill-color-light)` 等, 这些变量默认是 light
+//     主题的 #f5f7fa / #f2f3f5 等浅灰白. 在这里一次性全部替换为深空色,
+//     比逐页 grep 改 scoped 高效得多, 且以后新增页面自动生效.
+// ============================================================
+:root {
+  // 填充色系列 (原来都是浅灰白, 现在改为深蓝玻璃)
+  --el-fill-color-blank:   rgba(3,7,18,0.65);    // 最浅"空白"底
+  --el-fill-color-light:   rgba(30,41,59,0.45);  // ★ Tab3 ai-suggestion 原来用这个
+  --el-fill-color-lighter: rgba(15,23,42,0.55);  // 更浅一级
+  --el-fill-color:         rgba(30,41,59,0.60);  // 默认填充
+  --el-fill-color-dark:    rgba(51,65,85,0.70);  // 深一级填充
+  --el-fill-color-darker:  rgba(71,85,105,0.75); // 最深填充
+
+  // 背景 / 遮罩
+  --el-bg-color:           rgba(3,7,18,0.85);
+  --el-bg-color-page:      rgba(2,6,23,0.90);
+  --el-bg-color-overlay:   rgba(15,23,42,0.92);  // Dialog/Drawer/Popover 默认底
+  --el-mask-color:         rgba(2,6,23,0.72);
+  --el-overlay-color:      rgba(2,6,23,0.72);
+  --el-overlay-color-light:rgba(2,6,23,0.55);
+
+  // 文字色 (次级文字改为淡紫, 避免灰扑扑看不清)
+  --el-text-color-primary:   #{ $text-primary };
+  --el-text-color-regular:   #{ $text-regular };
+  --el-text-color-secondary: #{ $text-secondary };
+  --el-text-color-placeholder: #{ $text-secondary };
+  --el-text-color-disabled:  rgba(148,163,184,0.70);
+
+  // 边框
+  --el-border-color:        #{ $border-color };
+  --el-border-color-light:  #{ $border-light };
+  --el-border-color-lighter:rgba(51,65,85,0.55);
+  --el-border-color-extra-light: rgba(30,41,59,0.45);
+  --el-border-color-dark:   rgba(71,85,105,0.75);
+  --el-border-color-darker: rgba(100,116,139,0.85);
+  --el-border-radius-base:  10px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 999px;
+
+  // Disabled
+  --el-disabled-bg-color:   rgba(30,41,59,0.50);
+  --el-disabled-text-color: rgba(148,163,184,0.72);
+  --el-disabled-border-color: rgba(51,65,85,0.65);
+}
+
+// 9. El-Collapse 折叠面板 (Tab3 审批工作台用 el-collapse 展开工单详情)
+.el-collapse {
+  border: 1px solid $border-color !important;
+  border-radius: 14px;
+  overflow: hidden;
+  background: transparent;
+  color: $text-primary;
+  .el-collapse-item {
+    border-bottom: 1px solid $border-color !important;
+    &:last-child { border-bottom: none !important; }
+    &__header {
+      background: rgba(15,23,42,0.45) !important;
+      color: $text-primary !important;
+      font-weight: 700;
+      padding: 14px 18px !important;
+      &:hover {
+        background: rgba(30,41,59,0.55) !important;
+      }
+      .el-collapse-item__arrow { color: $text-secondary; }
+      .el-collapse-item__header-text { color: inherit; }
+    }
+    &__wrap {
+      background: rgba(3,7,18,0.55) !important;
+    }
+    &__content {
+      color: $text-primary !important;
+      background: transparent !important;
+      padding: 16px 20px !important;
+    }
+  }
+}
+
+// 10. El-Tag 标签 (审批工作台 / 列表里大量用 tag 显示状态 / 金额)
+.el-tag {
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 10px;
+  // 4 种 type 深空玻璃
+  &--info {
+    background: linear-gradient(135deg, rgba(34,211,238,0.16), rgba(129,140,248,0.22)) !important;
+    border: 1px solid rgba(34,211,238,0.38) !important;
+    color: #a5f3fc !important;
+  }
+  &--success {
+    background: linear-gradient(135deg, rgba(16,185,129,0.20), rgba(34,197,94,0.12)) !important;
+    border: 1px solid rgba(16,185,129,0.42) !important;
+    color: #6ee7b7 !important;
+  }
+  &--warning {
+    background: linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10)) !important;
+    border: 1px solid rgba(251,191,36,0.48) !important;
+    color: #fcd34d !important;
+  }
+  &--danger {
+    background: linear-gradient(135deg, rgba(248,113,113,0.22), rgba(239,68,68,0.12)) !important;
+    border: 1px solid rgba(248,113,113,0.48) !important;
+    color: #fca5a5 !important;
+  }
+  &.el-tag--dark {
+    // 暗类型 tag 也走深空
+    color: $text-primary !important;
+    &[class*="info"]    { background: rgba(129,140,248,0.42) !important; border-color: rgba(129,140,248,0.62) !important; }
+    &[class*="success"] { background: rgba(16,185,129,0.42) !important; border-color: rgba(16,185,129,0.62) !important; }
+    &[class*="warning"] { background: rgba(251,191,36,0.48) !important; border-color: rgba(251,191,36,0.68) !important; }
+    &[class*="danger"]  { background: rgba(239,68,68,0.48) !important; border-color: rgba(239,68,68,0.68) !important; }
+  }
+  &.el-tag--plain {
+    // plain 类型就是胶囊描边, 用上面的玻璃效果即可
+  }
+}
+
+// 11. El-Dialog / El-MessageBox 弹窗 (审批二次确认 / 退回补充材料用 el-dialog)
+.el-dialog,
+.el-message-box {
+  background: linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.95)) !important;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid $border-color !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 0 0 1px rgba(192,132,252,0.18),
+    0 25px 60px rgba(0,0,0,0.65),
+    0 0 40px rgba(34,211,238,0.12) !important;
+  color: $text-primary !important;
+
+  .el-dialog__header,
+  .el-message-box__header {
+    background: linear-gradient(90deg, rgba(34,211,238,0.10), transparent 60%);
+    border-bottom: 1px solid $border-color;
+    padding: 18px 22px !important;
+    margin-right: 0 !important;
+    .el-dialog__title,
+    .el-message-box__title {
+      color: $text-primary !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.02em !important;
+      background: $ai-gradient;
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent !important;
+    }
+    .el-dialog__headerbtn,
+    .el-message-box__headerbtn {
+      .el-dialog__close,
+      .el-message-box__close { color: $text-secondary; &:hover { color: $color-primary; } }
+    }
+  }
+  .el-dialog__body,
+  .el-message-box__content {
+    color: $text-primary !important;
+    padding: 20px 22px !important;
+    .el-message-box__message { color: $text-primary !important; }
+  }
+  .el-dialog__footer,
+  .el-message-box__btns {
+    border-top: 1px solid $border-color;
+    padding: 14px 22px !important;
+  }
+}
+// 遮罩层加深
+.v-modal,
+.el-overlay {
+  background: rgba(2,6,23,0.72) !important;
+  backdrop-filter: blur(4px);
+}
+
+// 12. El-Steps 步骤条 (改革阶段 / 融资流程页面大量用)
+.el-steps {
+  --el-steps-border-color: #{ $border-color };
+  color: $text-primary;
+  .el-step {
+    &__title   { color: $text-secondary !important; font-weight: 700; }
+    &__description { color: $text-secondary !important; }
+    &__head {
+      .el-step__icon {
+        background: rgba(15,23,42,0.75) !important;
+        border: 1px solid $border-color !important;
+        color: $text-secondary !important;
+        font-weight: 800;
+      }
+      .el-step__line {
+        background: $border-color !important;
+      }
+    }
+    &.is-process {
+      .el-step__title { color: $text-primary !important; }
+      .el-step__head .el-step__icon {
+        background: $ai-gradient !important;
+        border-color: rgba(192,132,252,0.65) !important;
+        color: #020617 !important;
+        box-shadow: 0 0 12px rgba(34,211,238,0.35);
+      }
+    }
+    &.is-finish {
+      .el-step__title { color: #6ee7b7 !important; }
+      .el-step__head .el-step__icon {
+        background: linear-gradient(135deg, rgba(16,185,129,0.70), rgba(34,197,94,0.60)) !important;
+        border-color: rgba(16,185,129,0.55) !important;
+        color: #022c22 !important;
+      }
+    }
+    &.is-error {
+      .el-step__title { color: #fca5a5 !important; }
+      .el-step__head .el-step__icon {
+        background: linear-gradient(135deg, rgba(239,68,68,0.70), rgba(248,113,113,0.60)) !important;
+        border-color: rgba(239,68,68,0.55) !important;
+        color: #fff !important;
+      }
+    }
+  }
+}
+
+// 13. El-Timeline 时间线 (监管沙盒日志 / 融资审批流 / 改革里程碑)
+.el-timeline {
+  color: $text-primary;
+  &__item {
+    &-tail { background: $border-color !important; }
+    &-node {
+      border-color: $border-color !important;
+      background: rgba(15,23,42,0.85) !important;
+      &.el-timeline-item__node--primary {
+        background: $ai-gradient !important;
+        border-color: rgba(192,132,252,0.65) !important;
+        box-shadow: 0 0 10px rgba(34,211,238,0.35);
+      }
+      &.el-timeline-item__node--success { background: rgba(16,185,129,0.72) !important; border-color: rgba(16,185,129,0.55) !important; }
+      &.el-timeline-item__node--warning { background: rgba(251,191,36,0.72) !important; border-color: rgba(251,191,36,0.55) !important; }
+      &.el-timeline-item__node--danger  { background: rgba(239,68,68,0.72) !important; border-color: rgba(239,68,68,0.55) !important; }
+      &.el-timeline-item__node--info    { background: rgba(129,140,248,0.72) !important; border-color: rgba(129,140,248,0.55) !important; }
+    }
+    &-wrapper {
+      .el-timeline-item__timestamp {
+        color: $text-secondary !important;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// 9. 语义化红绿数字发光
+.text-success { color: #6ee7b7 !important; font-weight: 800 !important; text-shadow: 0 0 8px rgba(16,185,129,0.50); }
+.text-warning { color: #fcd34d !important; font-weight: 800 !important; text-shadow: 0 0 8px rgba(251,191,36,0.50); }
+.text-danger  { color: #fca5a5 !important; font-weight: 800 !important; text-shadow: 0 0 8px rgba(239,68,68,0.50); }
+.text-info    { color: #93c5fd !important; font-weight: 800 !important; text-shadow: 0 0 8px rgba(59,130,246,0.50); }
+.text-muted, .muted { color: $text-secondary; font-size: 12px; }
+
+// 10. 公共小间距类 (approval-workbench 等页面里直接用 class="mt-12 mt-16")
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+
+// --- C. 全局: 按钮 8 态 · 家族色柔光版 (对齐 Experience 1188143: 白不突兀 → 归入青紫/对应色相家族, 保留亮度层级)
+//     改动: 1) 1px 白描边 → 主题色描边(青紫叠);  2) 纯白 text-shadow → 青紫家族发光;
+//          3) primary/success/warning/info 文字从死黑 → 融入对应家族的深靛/深绿/深琥珀;
+//          4) danger 文字从 #ffffff → 淡粉白 #fef2f2 + 青紫柔光;
+//          5) default 按钮从浅灰白块 → 深空玻璃胶囊(仍亮但不脱离蓝紫家族)
+.el-button {
+  min-width: 128px;
+  justify-content: center;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+  // 根 text-shadow: 去纯白 → 青紫家族柔光 + 轻微深投影 (不刺眼, 但立体)
+  text-shadow:
+    0 0 4px rgba(192,132,252,0.20),
+    0 1px 0 rgba(2,6,23,0.45);
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-base,
+    filter $transition-fast;
+  &:active {
+    transform: translateY(1px) scale(0.985);
+  }
+}
+.el-button--primary {
+  color: #0b1a3a !important;  // 死黑 #020617 → 深靛蓝 (融入青紫家族, 仍与渐变按钮 ≥ 7:1)
+  filter: saturate(1.08);
+  box-shadow:
+    // ★ 去 1px rgba(255,255,255,0.22) → 青紫 1px 叠边 + 内外发光 (不再白边突兀)
+    0 0 0 1px rgba(192,132,252,0.35),
+    0 0 0 1px rgba(34,211,238,0.22) inset,
+    0 10px 24px rgba(34,211,238,0.26),
+    0 0 20px rgba(192,132,252,0.22) !important;
+  .el-icon, span {
+    color: #0b1a3a !important;
+    font-weight: 800 !important;
+    // 去纯白发光 → 青紫家族柔光 (仍保持立体, 但不跳色)
+    text-shadow:
+      0 0 4px rgba(192,132,252,0.32),
+      0 1px 0 rgba(255,255,255,0.10) !important;
+  }
+  &.is-disabled {
+    background-image: none !important;
+    background: rgba(203,213,225,0.72) !important;  // 压暗 10%
+    border-color: rgba(148,163,184,0.85) !important;
+    color: #172554 !important;
+    filter: saturate(1);
+    box-shadow: 0 0 0 1px rgba(129,140,248,0.32) !important;
+    &::before { opacity: 0.12 !important; }
+    .el-icon, span {
+      color: #172554 !important;
+      text-shadow: 0 1px 0 rgba(192,132,252,0.18) !important;
+    }
+  }
+}
+.el-button--success {
+  filter: saturate(1.06);
+  // 去白边 → 翠绿 + 青紫 叠边 (绿按钮也融入 AI 青紫家族)
+  box-shadow:
+    0 0 0 1px rgba(16,185,129,0.38),
+    0 0 0 1px rgba(129,140,248,0.18) inset,
+    0 6px 20px rgba(16,185,129,0.25) !important;
+  .el-icon, span {
+    color: #052e2b !important;  // #022c22 → 稍偏青的深绿 (融入家族)
+    font-weight: 800 !important;
+    text-shadow:
+      0 0 4px rgba(34,211,238,0.22),
+      0 1px 0 rgba(255,255,255,0.08) !important;
+  }
+  &.is-disabled {
+    background-image: none !important;
+    background: rgba(167,243,208,0.72) !important;
+    border-color: rgba(16,185,129,0.78) !important;
+    filter: saturate(1);
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.45) !important;
+    .el-icon, span {
+      color: #064e3b !important;
+      text-shadow: 0 1px 0 rgba(34,211,238,0.18) !important;
+    }
+  }
+}
+.el-button--warning {
+  filter: saturate(1.08);
+  // 去白边 → 琥珀 + 青紫 叠边
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.40),
+    0 0 0 1px rgba(192,132,252,0.18) inset,
+    0 6px 20px rgba(251,191,36,0.24) !important;
+  .el-icon, span {
+    color: #431908 !important;  // #422006 → 略偏洋红的深琥珀 (融入家族)
+    font-weight: 800 !important;
+    text-shadow:
+      0 0 4px rgba(251,191,36,0.22),
+      0 1px 0 rgba(255,255,255,0.08) !important;
+  }
+  &.is-disabled {
+    background-image: none !important;
+    background: rgba(253,230,138,0.72) !important;
+    border-color: rgba(251,191,36,0.78) !important;
+    filter: saturate(1);
+    box-shadow: 0 0 0 1px rgba(251,191,36,0.45) !important;
+    .el-icon, span {
+      color: #78350f !important;
+      text-shadow: 0 1px 0 rgba(251,191,36,0.20) !important;
+    }
+  }
+}
+.el-button--danger {
+  filter: saturate(1.08);
+  box-shadow:
+    // 去 1px 白边 → 玫红 + 青紫 叠边 (危险信号保留, 但融入 AI 家族)
+    0 0 0 1px rgba(248,113,113,0.42),
+    0 0 0 1px rgba(192,132,252,0.18) inset,
+    0 10px 24px rgba(248,113,113,0.28),
+    0 0 22px rgba(239,68,68,0.22) !important;
+  .el-icon, span {
+    color: #fef2f2 !important;  // ★ #ffffff → 淡粉白 (保留 98% 亮度, 但去"纯白刺目")
+    font-weight: 800 !important;
+    // 纯深红投影 → 深红 + 青紫柔光 (融入家族)
+    text-shadow:
+      0 0 6px rgba(127,29,29,0.72),
+      0 0 4px rgba(192,132,252,0.20),
+      0 1px 0 rgba(0,0,0,0.35) !important;
+  }
+  &.is-disabled {
+    background-image: none !important;
+    background: rgba(254,202,202,0.72) !important;
+    border-color: rgba(239,68,68,0.80) !important;
+    filter: saturate(1);
+    box-shadow: 0 0 0 1px rgba(239,68,68,0.45) !important;
+    .el-icon, span {
+      color: #7f1d1d !important;
+      text-shadow: 0 1px 0 rgba(248,113,113,0.20) !important;
+    }
+  }
+}
+.el-button--info {
+  filter: saturate(1.06);
+  // 去白边 → 青紫双叠边 (info 本来就是蓝紫家族, 统一口径)
+  box-shadow:
+    0 0 0 1px rgba(129,140,248,0.40),
+    0 0 0 1px rgba(34,211,238,0.22) inset,
+    0 6px 20px rgba(129,140,248,0.25) !important;
+  .el-icon, span {
+    color: #1e1b4b !important;  // 保留深靛 (对比度足够)
+    font-weight: 800 !important;
+    text-shadow:
+      0 0 4px rgba(129,140,248,0.28),
+      0 1px 0 rgba(255,255,255,0.08) !important;
+  }
+  &.is-disabled {
+    background-image: none !important;
+    background: rgba(196,181,253,0.72) !important;
+    border-color: rgba(129,140,248,0.80) !important;
+    filter: saturate(1);
+    box-shadow: 0 0 0 1px rgba(129,140,248,0.45) !important;
+    .el-icon, span {
+      color: #312e81 !important;
+      text-shadow: 0 1px 0 rgba(129,140,248,0.22) !important;
+    }
+  }
+}
+.el-button--default {
+  // ★★ 最关键改动: 浅灰白块 rgba(226,232,240,0.92) → 深空玻璃胶囊
+  //    仍保持"中性亮按钮"层级(比背景亮 2 档), 但底色归入蓝紫家族, 不再是脱离主题的灰白
+  background: linear-gradient(135deg, rgba(30,41,59,0.78), rgba(15,23,42,0.72)) !important;
+  border-color: rgba(129,140,248,0.40) !important;
+  box-shadow:
+    0 0 0 1px rgba(34,211,238,0.18) inset,
+    0 0 0 1px rgba(192,132,252,0.28),
+    0 6px 18px rgba(15,23,42,0.45) !important;
+  // 文字: 深 #0b1120 → 青紫淡色 #c7d2fe (保持家族色, 与玻璃底 ≥ 8:1)
+  color: #c7d2fe !important;
+  .el-icon, span {
+    color: #c7d2fe !important;
+    font-weight: 800 !important;
+    // 去纯白发亮 → 青紫发光 (字亮但不跳)
+    text-shadow:
+      0 0 5px rgba(129,140,248,0.35),
+      0 1px 0 rgba(2,6,23,0.45) !important;
+  }
+  &:hover {
+    filter: brightness(1.08);
+    box-shadow:
+      0 0 0 1px rgba(34,211,238,0.28) inset,
+      0 0 0 1px rgba(192,132,252,0.45),
+      0 8px 24px rgba(34,211,238,0.18) !important;
+  }
+  &.is-disabled {
+    background: linear-gradient(135deg, rgba(30,41,59,0.58), rgba(15,23,42,0.52)) !important;
+    border-color: rgba(51,65,85,0.65) !important;
+    filter: saturate(0.9);
+    box-shadow:
+      0 0 0 1px rgba(51,65,85,0.45),
+      0 4px 12px rgba(2,6,23,0.35) !important;
+    color: #94a3b8 !important;
+    .el-icon, span {
+      color: #94a3b8 !important;
+      text-shadow: 0 1px 0 rgba(2,6,23,0.35) !important;
+    }
+  }
+}
+
+// 模块 wrapper 命中的 mixin 保留 (兼容旧页面局部覆盖优先级), 但内部样式现在全站都有
+// 所以如果某个页面 scoped 样式没写, 上面全局规则就直接兜底生效
+@mixin module-deepspace-skin { /* 全局已提升，空壳保留供历史 wrapper 调用不报错 */ }
+@mixin eco-button-strong-contrast { /* 全局已提升，空壳保留 */ }
+
+// 6 大模块 wrapper 继续保留调用关系 (空 mixin → 不报错, 也不会压全局规则)
+[class^="eco-"][class$="-view"],
+[class*=" eco-"][class$="-view"] { @include eco-button-strong-contrast; }
+.mobile-award-pane, .use-pending-sync-root, .mobile-scan-wrap { @include eco-button-strong-contrast; }
+
+[class^="advisor-"][class$="-view"], [class^="advisor-"][class$="-workbench"],
+[class*=" advisor-"][class$="-view"], [class*=" advisor-"][class$="-workbench"] {
+  @include module-deepspace-skin; @include eco-button-strong-contrast;
+}
+[class^="reform-"][class$="-view"],       [class*=" reform-"][class$="-view"]       { @include module-deepspace-skin; @include eco-button-strong-contrast; }
+[class^="bank-"][class$="-view"],         [class*=" bank-"][class$="-view"]         { @include module-deepspace-skin; @include eco-button-strong-contrast; }
+[class^="institution-"][class$="-view"],  [class*=" institution-"][class$="-view"]  { @include module-deepspace-skin; @include eco-button-strong-contrast; }
+[class^="mobile-"][class$="-view"],       [class*=" mobile-"][class$="-view"]       { @include module-deepspace-skin; @include eco-button-strong-contrast; }
+.home-view, .workbench-view, .dashboard-view { @include module-deepspace-skin; @include eco-button-strong-contrast; }
+
+// === 表格: 玻璃 + 悬浮横条高亮 ===
+.el-table {
+  background: transparent;
+  color: $text-primary;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-base;
+  // 覆盖 Element Plus 默认 .el-table 背景强制色, 让卡片底透
+  &::before { display: none; }
+
+  th.el-table__cell {
+    background: linear-gradient(180deg, rgba(30,41,59,0.85), rgba(15,23,42,0.75));
+    color: $text-primary;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid $border-color !important;
+  }
+
+  .el-table__inner-wrapper::before { background-color: transparent !important; }
+
+  tr {
+    background: transparent;
+    transition: background-color $transition-fast, box-shadow $transition-fast;
+
+    &:hover > td {
+      background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(192,132,252,0.10)) !important;
+      box-shadow: inset 3px 0 0 $color-primary;
+    }
+  }
+  // 斑马纹 (没开的话也不影响)
+  .el-table__row.striped,
+  &--striped .el-table__row:nth-child(2n) > td {
+    background-color: rgba(15, 23, 42, 0.35) !important;
+  }
+
+  td.el-table__cell,
+  th.el-table__cell {
+    border-bottom: 1px solid rgba(56,189,248,0.14);
+  }
+
+  .el-table__body tr.current-row > td.el-table__cell {
+    background: linear-gradient(90deg, rgba(56,189,248,0.22), rgba(192,132,252,0.14)) !important;
+  }
+}
+
+// === 输入框 / 选择器 / 文本域: 内发光聚焦 ===
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: $bg-tertiary;
+  color: $text-primary;
+  border-radius: $radius-base;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px $border-color inset, 0 0 0 0 rgba(56,189,248,0);
+  transition:
+    box-shadow $transition-base,
+    background-color $transition-fast,
+    transform $transition-fast;
+
+  &:hover {
+    box-shadow:
+      0 0 0 1px rgba(56,189,248,0.55) inset,
+      0 0 10px rgba(56,189,248,0.20);
+  }
+
+  &.is-focus,
+  &.is-focused {
+    box-shadow:
+      0 0 0 1px rgba(192,132,252,0.70) inset,
+      0 0 0 4px rgba(56,189,248,0.14),
+      0 0 16px rgba(192,132,252,0.25);
+  }
+}
+.el-textarea__inner {
+  background: $bg-tertiary !important;
+}
+
+.el-input__inner,
+.el-textarea__inner {
+  color: $text-primary;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+}
+
+.el-form-item__label {
+  color: $text-regular;
+  letter-spacing: 0.02em;
+}
+
+// === 对话框: 深空玻璃弹窗 + 外发光 + 圆角 XL ===
+.el-dialog {
+  background: linear-gradient(180deg, rgba(15,23,42,0.82), rgba(3,7,18,0.86));
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  color: $text-primary;
+  border: 1px solid $border-light;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+
+  .el-dialog__header {
+    color: $text-primary;
+    border-bottom: 1px solid $border-color;
+    padding-top: $spacing-lg;
+    padding-bottom: $spacing-base;
+    margin-right: 0;
+    .el-dialog__title {
+      font-size: $font-size-xl;
+      font-weight: 700;
+      background: $ai-gradient;
+      -webkit-background-clip: text;
+              background-clip: text;
+      color: transparent;
+      letter-spacing: 0.02em;
+    }
+  }
+  .el-dialog__body {
+    padding-top: $spacing-lg;
+    color: inherit;
+  }
+  .el-dialog__footer {
+    padding-bottom: $spacing-lg;
+    border-top: 1px solid $border-color;
+  }
+  .el-dialog__headerbtn {
+    top: $spacing-base;
+    right: $spacing-base;
+    .el-dialog__close { color: $text-secondary; transition: color $transition-fast, transform $transition-fast; }
+    &:hover .el-dialog__close { color: $color-danger; transform: rotate(90deg); }
+  }
+}
+
+// === 侧边栏菜单: 玻璃 + 激活项霓虹渐变底 ===
+.el-menu {
+  background: linear-gradient(180deg, rgba(5,11,28,0.85), rgba(3,7,18,0.95));
+  backdrop-filter: blur(12px);
+  color: $text-regular;
+  border-right: 1px solid $border-color;
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: $text-regular;
+    border-radius: $radius-base;
+    margin: 2px 8px;
+    transition: background $transition-fast, color $transition-fast, box-shadow $transition-fast, transform $transition-fast;
+
+    &:hover {
+      background: $bg-hover;
+      color: $color-primary;
+      box-shadow: inset 3px 0 0 $color-primary;
+    }
+
+    &.is-active {
+      background: linear-gradient(90deg, rgba(56,189,248,0.22), rgba(192,132,252,0.16) 70%, transparent);
+      color: $text-primary;
+      box-shadow:
+        inset 3px 0 0 $color-primary,
+        0 0 12px rgba(56,189,248,0.16);
+      font-weight: 600;
+    }
+  }
+}
+
+// === 标签: 玻璃胶囊 + 渐变主 tag ===
+.el-tag {
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  backdrop-filter: blur(6px);
+  padding-inline: 10px;
+
+  &--primary {
+    background: linear-gradient(135deg, rgba(34,211,238,0.20), rgba(192,132,252,0.22));
+    border-color: rgba(192,132,252,0.40);
+    color: #e0f2fe;
+  }
+  &--success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.35); color: #a7f3d0; }
+  &--warning { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.35); color: #fde68a; }
+  &--danger  { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.35); color: #fecaca; }
+  &--info    { background: rgba(129,140,248,0.15); border-color: rgba(129,140,248,0.35); color: #c7d2fe; }
+}
+
+// === 分页: 玻璃按钮 + 当前页霓虹 glow ===
+.el-pagination {
+  --el-pagination-button-color: #{$text-regular};
+  --el-pagination-button-bg-color: transparent;
+  --el-pagination-hover-color: #{$color-primary};
+  --el-pagination-active-color: #020617;
+  --el-pagination-active-bg-color: transparent;
+
+  .btn-prev, .btn-next,
+  .el-pager li {
+    background: rgba(30,41,59,0.55);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+
+    &:hover {
+      color: $color-primary;
+      border-color: rgba(56,189,248,0.55);
+      box-shadow: 0 0 10px rgba(56,189,248,0.18);
+    }
+  }
+  .el-pager li.is-active {
+    background-image: $ai-gradient;
+    color: #020617 !important;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow:
+      0 0 0 1px rgba(56,189,248,0.45),
+      0 0 14px rgba(192,132,252,0.35);
+  }
+}
+
+// === Toast / 消息: 玻璃 + 霓虹左边条 ===
+.el-message {
+  background: linear-gradient(180deg, rgba(15,23,42,0.88), rgba(3,7,18,0.92));
+  border: 1px solid $border-color;
+  backdrop-filter: blur(18px) saturate(160%);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  color: $text-primary;
+
+  // 各类型左边条: 2px 霓虹 + 12px glow
+  &--success { box-shadow: inset 3px 0 0 $color-success, $shadow-lg; }
+  &--warning { box-shadow: inset 3px 0 0 $color-warning, $shadow-lg; }
+  &--error   { box-shadow: inset 3px 0 0 $color-danger,  $shadow-lg; }
+  &--info    { box-shadow: inset 3px 0 0 $color-info,    $shadow-lg; }
+
+  .el-message__content { color: $text-primary; }
+  .el-message__closeBtn { color: $text-secondary; }
+}
+
+// ============================================================
+// 2. 通用工具类 (AI 科技扩展)
+// ============================================================
+
+.text-primary-2 { color: $color-primary-2; }
+.text-gradient {
+  background: $ai-gradient;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-soft {
+  background: $ai-gradient-soft;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+}
+.bg-glass {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.text-success { color: $color-success; }
+.text-warning { color: $color-warning; }
+.text-danger { color: $color-danger; }
+.text-info { color: $color-info; }
+.text-muted { color: $text-muted; }
+
+.bg-card { background: $bg-card; }
+.bg-tertiary { background: $bg-tertiary; }
+
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: $spacing-sm; }
+.gap-4 { gap: $spacing-base; }
+.gap-8 { gap: $spacing-lg; }
+
+.p-4 { padding: $spacing-base; }
+.p-8 { padding: $spacing-lg; }
+.m-4 { margin: $spacing-base; }
+.mb-4 { margin-bottom: $spacing-base; }
+.mb-8 { margin-bottom: $spacing-lg; }
+
+.rounded { border-radius: $radius-base; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-xl { border-radius: $radius-xl; }
+
+.shadow { box-shadow: $shadow-base; }
+.shadow-lg { box-shadow: $shadow-lg; }
+.shadow-glow { box-shadow: $shadow-glow-cyan; }
+.shadow-glow-orchid { box-shadow: $shadow-glow-orchid; }
+
+// ============================================================
+// 3. APP-02 全局 z-index 覆盖 (project_memory 硬约束不动)
+// ============================================================
+:root {
+  --el-message-z-index: 9500;
+  --el-overlay-z-index: 10000;
+  --el-overlay-page-z-index: 10000;
+}
+
+// 移动端 toast (非阻塞)
+.el-message.mobile-toast {
+  z-index: 9500 !important;
+  top: 16px;
+  .el-message__closeBtn {
+    color: $text-regular;
+    font-size: $font-size-base;
+  }
+}
+
+// AI 通知 toast (含 × 关闭 + 操作按钮)
+.el-message.ai-toast {
+  z-index: 9500 !important;
+  // AI 款: 左右双渐变 + orchid glow
+  border-color: rgba(192,132,252,0.45);
+  box-shadow:
+    inset 3px 0 0 $color-primary-2,
+    0 10px 30px rgba(0,0,0,0.55),
+    0 0 20px rgba(192,132,252,0.28);
+
+  .el-message__closeBtn {
+    color: $text-regular;
+    font-size: $font-size-base;
+  }
+  .el-message__actionBtn {
+    margin-left: $spacing-sm;
+  }
+}
+
+// 阻塞模态窗 (z-index=10000)
+.el-overlay.mobile-modal,
+.el-overlay.is-message-box,
+.el-dialog__wrapper.mobile-modal,
+.el-overlay.mobile-modal .el-dialog,
+.el-overlay.is-message-box .el-message-box {
+  z-index: 10000 !important;
+}

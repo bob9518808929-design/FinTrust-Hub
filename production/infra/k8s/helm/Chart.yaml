@@ -1,0 +1,28 @@
+apiVersion: v2
+name: fintrust-hub
+description: FinTrust Hub 云原生基座 Helm Chart (INFRA-01, R4.1)
+  部署 backend / frontend / ai-engine / postgres / redis 全套服务, 含 Ingress + HPA + PVC.
+type: application
+version: 0.2.0
+appVersion: "3.1.0"
+keywords:
+  - fintrust
+  - supply-chain-finance
+  - ai-orchestration
+home: https://github.com/fintrust/hub
+maintainers:
+  - name: FinTrust DevOps Team
+    email: devops@fintrust.example.com
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+    tags:
+      - db
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+    tags:
+      - cache
