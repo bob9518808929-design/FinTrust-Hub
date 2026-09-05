@@ -24,20 +24,27 @@ import logging
 import os
 import random
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from app.schemas.iot_gateway import (
-    CommandRequest, CommandResult, CommandStatus, Device, DeviceStatus,
-    GatewayInfo, GatewayProtocol, GatewayStatus, TelemetrySample,
+    CommandRequest,
+    CommandResult,
+    CommandStatus,
+    Device,
+    DeviceStatus,
+    GatewayInfo,
+    GatewayProtocol,
+    GatewayStatus,
+    TelemetrySample,
 )
-
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "id") -> str:
@@ -137,7 +144,7 @@ class _IOTStore:
             ("生产线监控", "PLC-Monitor-M5"),
             ("烟雾报警器", "SMOKE-ALARM-A1"),
         ]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         device_count = 0
         for ent_idx, ent_id in enumerate(enterprises):
@@ -271,7 +278,7 @@ class IOTGatewayService:
         if not devices:
             devices = await self.list_devices(enterprise_id)
         all_samples: list[TelemetrySample] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for dev in devices:
             samples: list[dict] = []
             for ci in range(count):
@@ -316,7 +323,7 @@ class IOTGatewayService:
         if metric_name:
             samples = [s for s in samples if s.metric_name == metric_name]
         if hours:
-            cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+            cutoff = (datetime.now(UTC) - timedelta(hours=hours)).isoformat()
             samples = [s for s in samples if s.time_iso >= cutoff]
         return samples
 
@@ -585,7 +592,7 @@ class IOTGatewayService:
             try:
                 if not os.path.exists(path):
                     continue
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         if not line or line.startswith("#"):
@@ -606,7 +613,7 @@ class IOTGatewayService:
         # alert_rules.json
         try:
             if os.path.exists(alert_path):
-                with open(alert_path, "r", encoding="utf-8") as f:
+                with open(alert_path, encoding="utf-8") as f:
                     alert_cfg = json.load(f)
                 result["alert_rules_count"] = len(alert_cfg.get("rules", []))
         except Exception as exc:
@@ -619,7 +626,7 @@ class IOTGatewayService:
             if os.path.exists(mqtt_cfg_path):
                 # 仅验证可读 (YAML 解析), 不上传到 broker (broker 启动时已挂载)
                 import yaml
-                with open(mqtt_cfg_path, "r", encoding="utf-8") as f:
+                with open(mqtt_cfg_path, encoding="utf-8") as f:
                     yaml.safe_load(f)
                 result["mqtt_config_loaded"] = True
         except Exception as exc:
@@ -668,7 +675,7 @@ class IOTGatewayService:
                         # 上传告警规则 (rules) - EMQX 5.0 rule engine API
                         try:
                             if os.path.exists(alert_path):
-                                with open(alert_path, "r", encoding="utf-8") as f:
+                                with open(alert_path, encoding="utf-8") as f:
                                     alert_cfg = json.load(f)
                                 for rule in alert_cfg.get("rules", []):
                                     if not rule.get("enabled", True):
@@ -720,7 +727,7 @@ class IOTGatewayService:
             str EMQX SQL
         """
         trigger = rule.get("trigger", {}) or {}
-        ttype = trigger.get("type", "")
+        trigger.get("type", "")
         topic = trigger.get("telemetry_topic") or trigger.get("topic_pattern") or "#"
         conditions: list[str] = []
         for cond in trigger.get("conditions", []) or []:

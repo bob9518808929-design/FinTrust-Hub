@@ -19,8 +19,6 @@ tags:   MOD-01 五流合一
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -29,12 +27,17 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.five_flow import (
-    ConsistencyCheckResult, FlowRecord, FlowType, FundAccountLock,
-    FundAccountLockCreate, MonitorAlert, MonitorRule, MonitorRuleCreate,
+    ConsistencyCheckResult,
+    FlowRecord,
+    FlowType,
+    FundAccountLock,
+    FundAccountLockCreate,
+    MonitorAlert,
+    MonitorRule,
+    MonitorRuleCreate,
 )
 from app.services.five_flow_consistency_service import FiveFlowConsistencyService
 from app.services.monitor_rules_service import MonitorRulesService
-
 
 router = APIRouter(prefix="/modules/five-flow", tags=["MOD-01 五流合一"])
 
@@ -112,8 +115,8 @@ async def list_flow_records(
 )
 async def fund_flow_graph(
     enterprise_id: str = Query(..., alias="enterpriseId"),
-    start_date: Optional[str] = Query(default=None, alias="startDate"),
-    end_date: Optional[str] = Query(default=None, alias="endDate"),
+    start_date: str | None = Query(default=None, alias="startDate"),
+    end_date: str | None = Query(default=None, alias="endDate"),
     _user: CurrentUser = None,
 ):
     graph = await _consistency_svc().generate_fund_flow_graph(
@@ -132,7 +135,7 @@ async def fund_flow_graph(
     summary="列出监控规则 (可按 flow_type 过滤)",
 )
 async def list_monitor_rules(
-    flow_type: Optional[str] = Query(default=None, alias="flowType"),
+    flow_type: str | None = Query(default=None, alias="flowType"),
     _user: CurrentUser = None,
 ):
     ft = None
@@ -165,8 +168,8 @@ async def create_monitor_rule(
     summary="列出监控告警 (可按 enterprise_id / status 过滤)",
 )
 async def list_monitor_alerts(
-    enterprise_id: Optional[str] = Query(default=None, alias="enterpriseId"),
-    status: Optional[str] = Query(default=None),
+    enterprise_id: str | None = Query(default=None, alias="enterpriseId"),
+    status: str | None = Query(default=None),
     _user: CurrentUser = None,
 ):
     alerts = await _monitor_svc().list_alerts(
@@ -231,8 +234,8 @@ async def release_fund_account(lock_id: str, _user: CurrentUser = None):
     summary="列出资金账户锁定 (可按 enterprise_id / status 过滤)",
 )
 async def list_fund_locks(
-    enterprise_id: Optional[str] = Query(default=None, alias="enterpriseId"),
-    status: Optional[str] = Query(default=None),
+    enterprise_id: str | None = Query(default=None, alias="enterpriseId"),
+    status: str | None = Query(default=None),
     _user: CurrentUser = None,
 ):
     locks = await _monitor_svc().list_locks(

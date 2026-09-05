@@ -12,10 +12,11 @@ from pydantic.alias_generators import to_camel
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.fallback_engine import (
-    FallbackConfig, FallbackMode, SyncResult,
+    FallbackConfig,
+    FallbackMode,
+    SyncResult,
 )
 from app.services.fallback_engine_service import fallback_engine_service
-
 
 router = APIRouter(prefix="/modules/fallback", tags=["MOD-15 兜底引擎"])
 

@@ -16,20 +16,22 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.credit_report import (
-    CreditDecision, CreditEvaluation, CreditRating, CreditReport,
+    CreditDecision,
+    CreditEvaluation,
+    CreditRating,
+    CreditReport,
 )
-from app.schemas.common import AmountInCents
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "cr") -> str:
@@ -245,7 +247,7 @@ class CreditService:
                     logger.warning(
                         f"PBC API 非 200: {resp.status_code}, 降级 mock"
                     )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("PBC API 超时 15s, 降级 mock")
             except Exception as exc:
                 logger.warning(f"PBC API 调用失败: {exc}, 降级 mock")
@@ -528,10 +530,12 @@ class CreditService:
 
         # 尝试加载 api_adapter_registry (ImportError 兜底)
         try:
-            from app.services.api_adapter_registry import get_adapter_registry
             from app.schemas.api_adapters import (
-                AdapterId, InvokeRequest, InvokeStatus,
+                AdapterId,
+                InvokeRequest,
+                InvokeStatus,
             )
+            from app.services.api_adapter_registry import get_adapter_registry
         except ImportError as exc:
             return {
                 "enterprise_id": enterprise_id,

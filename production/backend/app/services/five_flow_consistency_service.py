@@ -19,19 +19,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.five_flow import (
-    ConsistencyCheckResult, FlowRecord, FlowType,
+    ConsistencyCheckResult,
+    FlowRecord,
+    FlowType,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "fl") -> str:
@@ -110,9 +112,9 @@ class _FiveFlowStore:
             FlowType.HUMAN: "fr-hum",
         }
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for idx, (eid, tx_id) in enumerate(
-            zip(enterprises, [f"TX-2026-{i:04d}" for i in range(1, 6)])
+            zip(enterprises, [f"TX-2026-{i:04d}" for i in range(1, 6)], strict=False)
         ):
             cp_name, cp_id = counterparties[idx]
             flows: list[dict] = []
@@ -255,7 +257,7 @@ class FiveFlowConsistencyService:
             if (t_max - t_min).total_seconds() > _TIME_TOLERANCE_SECONDS:
                 # 找出时间偏离的流
                 baseline_t = times[0]
-                for r, t in zip(records, times):
+                for r, t in zip(records, times, strict=False):
                     if abs((t - baseline_t).total_seconds()) > _TIME_TOLERANCE_SECONDS:
                         if r.flow_type not in mismatched_flows:
                             mismatched_flows.append(r.flow_type)

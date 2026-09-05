@@ -14,9 +14,6 @@ from __future__ import annotations
 
 import pytest
 
-from app.main import app
-
-
 pytestmark = pytest.mark.asyncio
 
 

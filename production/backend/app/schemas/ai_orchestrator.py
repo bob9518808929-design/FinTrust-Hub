@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,10 +19,9 @@ from pydantic.alias_generators import to_camel
 
 from app.schemas.common import Id, IsoTimestamp, Ratio
 
-
 # === 枚举 ===
 
-class AutonomyLevel(str, Enum):
+class AutonomyLevel(StrEnum):
     """自主等级 (L1-L4, 数字越小越自动化)."""
     L1_FULL_AUTO = "L1_FULL_AUTO"
     L2_SMALL_AUTO = "L2_SMALL_AUTO"
@@ -30,7 +29,7 @@ class AutonomyLevel(str, Enum):
     L4_SUGGEST_ONLY = "L4_SUGGEST_ONLY"
 
 
-class DAGStatus(str, Enum):
+class DAGStatus(StrEnum):
     """DAG 执行状态."""
     PENDING = "PENDING"
     RUNNING = "RUNNING"
@@ -40,7 +39,7 @@ class DAGStatus(str, Enum):
     WAITING_HUMAN = "WAITING_HUMAN"
 
 
-class TaskResultStatus(str, Enum):
+class TaskResultStatus(StrEnum):
     """单个节点任务结果状态."""
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
@@ -48,7 +47,7 @@ class TaskResultStatus(str, Enum):
     HUMAN_REVIEWED = "HUMAN_REVIEWED"
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     """DAG 节点任务类型."""
     FETCH_DATA = "FETCH_DATA"
     OCR = "OCR"
@@ -59,7 +58,7 @@ class TaskType(str, Enum):
     WAIT = "WAIT"
 
 
-class EdgeCondition(str, Enum):
+class EdgeCondition(StrEnum):
     """DAG 边条件."""
     ALWAYS = "always"
     ON_SUCCESS = "on_success"
@@ -172,18 +171,18 @@ class ApproveNodeRequest(_OrchBase):
 
 
 __all__ = [
+    "AIDAG",
+    "ApproveNodeRequest",
     "AutonomyLevel",
+    "DAGEdge",
+    "DAGExecution",
+    "DAGNode",
     "DAGStatus",
+    "DecisionLogEntry",
+    "EdgeCondition",
+    "ExecuteDAGRequest",
+    "HumanDecision",
+    "TaskResult",
     "TaskResultStatus",
     "TaskType",
-    "EdgeCondition",
-    "HumanDecision",
-    "DAGNode",
-    "DAGEdge",
-    "AIDAG",
-    "TaskResult",
-    "DAGExecution",
-    "DecisionLogEntry",
-    "ExecuteDAGRequest",
-    "ApproveNodeRequest",
 ]

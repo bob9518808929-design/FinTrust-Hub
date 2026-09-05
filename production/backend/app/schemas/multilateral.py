@@ -7,14 +7,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import Id, IsoTimestamp
-
 
 # === 枚举 ===
 
@@ -85,10 +83,10 @@ class SLAMetric(_MultiBase):
 
 
 __all__ = [
-    "SealType",
-    "SealStatus",
-    "TaskStatus",
-    "ElectronicSeal",
     "CollaborationTask",
+    "ElectronicSeal",
     "SLAMetric",
+    "SealStatus",
+    "SealType",
+    "TaskStatus",
 ]

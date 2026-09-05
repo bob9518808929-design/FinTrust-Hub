@@ -16,18 +16,20 @@ import base64
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.schemas.multilateral import (
-    CollaborationTask, ElectronicSeal, SLAMetric,
+    CollaborationTask,
+    ElectronicSeal,
+    SLAMetric,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "mlt") -> str:
@@ -48,7 +50,7 @@ class _MultilateralStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # 4 个电子签章 (覆盖 4 类型)
         seal_specs = [
             ("E001", "enterprise", "张伟", "CERT-ES-0001"),
@@ -238,19 +240,19 @@ class MultilateralService:
                 "sign_url": sdk_result.get("sign_url", ""),
                 "valid_until_iso": sdk_result.get(
                     "valid_until_iso",
-                    (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+                    (datetime.now(UTC) + timedelta(days=7)).isoformat(),
                 ),
                 "signers_count": len(signers),
                 "signed_count": len(signers),
                 "degraded": False,
             }
         # 降级 mock: 返回模拟签署 URL (用户在浏览器中可访问的 mock 页面)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         valid_until = now + timedelta(days=7)
         # 生成 mock sign_url (基于 contract_id + signers hash)
         import hashlib
         url_hash = hashlib.sha256(
-            f"{contract_id}:{signers}".encode("utf-8"),
+            f"{contract_id}:{signers}".encode(),
         ).hexdigest()[:16]
         return {
             "provider": "mock",
@@ -303,7 +305,7 @@ class MultilateralService:
                             "sign_url": result.get("sign_url", ""),
                             "valid_until_iso": result.get(
                                 "valid_until_iso",
-                                (datetime.now(timezone.utc)
+                                (datetime.now(UTC)
                                  + timedelta(days=7)).isoformat(),
                             ),
                             "signers_count": len(signers),
@@ -322,7 +324,7 @@ class MultilateralService:
                             "sign_url": result.get("sign_url", ""),
                             "valid_until_iso": result.get(
                                 "valid_until_iso",
-                                (datetime.now(timezone.utc)
+                                (datetime.now(UTC)
                                  + timedelta(days=7)).isoformat(),
                             ),
                             "signers_count": len(signers),
@@ -334,11 +336,11 @@ class MultilateralService:
                     f"法大大 SDK 调用失败 ({exc}), 降级 mock 签章",
                 )
         # 降级 mock
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         valid_until = now + timedelta(days=7)
         import hashlib
         url_hash = hashlib.sha256(
-            f"fadada:{contract_id}:{signers}".encode("utf-8"),
+            f"fadada:{contract_id}:{signers}".encode(),
         ).hexdigest()[:16]
         return {
             "provider": "mock",
@@ -361,7 +363,7 @@ class MultilateralService:
         seal_type: str = "enterprise",
     ) -> ElectronicSeal:
         """创建电子签章 (落地到内存 store)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         seal_id = _id("SEAL")
         seal = {
             "seal_id": seal_id,
@@ -425,7 +427,7 @@ class MultilateralService:
                 "status": "signed",
             }
         # 降级 mock 签章 (基于 seal_id + document_hash 的 SHA256)
-        raw = f"{seal_id}:{document_hash}:{signatory_info}".encode("utf-8")
+        raw = f"{seal_id}:{document_hash}:{signatory_info}".encode()
         mock_sig = base64.b64encode(hashlib.sha256(raw).digest()).decode("ascii")
         return {
             "sign_id": _id("SIGN"),
@@ -450,7 +452,7 @@ class MultilateralService:
         assignee_roles: list[str], sla_hours: int = 48,
     ) -> CollaborationTask:
         """创建协作任务 (SLA 截止 = now + sla_hours)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         task_id = _id("TASK")
         sla_deadline = now + timedelta(hours=sla_hours)
         task = {
@@ -500,7 +502,7 @@ class MultilateralService:
             - 未完成: is_breached = (now > sla_deadline)
             - breach_duration_hours = max(0, (actual - deadline) in hours)
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         tasks = await _multilateral_store.list_tasks()
         metrics: list[SLAMetric] = []
         for t in tasks:

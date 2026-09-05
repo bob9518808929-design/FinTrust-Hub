@@ -7,7 +7,10 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.refinance import (
-    AIRecommendation, CashflowForecast, RefinanceEntrance, RefinanceSubmission,
+    AIRecommendation,
+    CashflowForecast,
+    RefinanceEntrance,
+    RefinanceSubmission,
 )
 from app.services.refinance_service import RefinanceService
 

@@ -1,15 +1,13 @@
 """文件名：cooperation.py 职责：合作模式 Pydantic 模型,定义 4 种合作模式枚举、模式配置与切换结果 schema."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import Id, Ratio
 
-
-class CooperationMode(str, Enum):
+class CooperationMode(StrEnum):
     FULL_TRUST = "FULL_TRUST"
     CO_LENDING = "CO_LENDING"
     GUARANTEED = "GUARANTEED"

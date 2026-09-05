@@ -25,13 +25,23 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.scf import (
-    CaseOutcome, CaseQuery, CaseRecord, MatchInput, MatchOutput,
-    MonitorAlert, MonitorStatusSummary, PricingInput, PricingOutput,
-    ReformSyncEvent, ReformSyncResult, RiskPropagationInput,
-    RiskPropagationOutput, SCFScenario, ScenarioId, ScfIndustry, ScfProduct,
+    CaseOutcome,
+    CaseQuery,
+    CaseRecord,
+    MatchInput,
+    MatchOutput,
+    PricingInput,
+    PricingOutput,
+    ReformSyncEvent,
+    ReformSyncResult,
+    RiskPropagationInput,
+    RiskPropagationOutput,
+    ScenarioId,
+    ScfIndustry,
+    ScfProduct,
+    SCFScenario,
 )
 from app.services.scf_service import scf_service
-
 
 router = APIRouter(prefix="/scf", tags=["Tab11 供应链金融"])
 

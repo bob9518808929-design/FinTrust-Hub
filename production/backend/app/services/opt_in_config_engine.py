@@ -9,9 +9,12 @@ import asyncio
 from typing import Any
 
 from app.schemas.opt_in_config import (
-    ConfigDiff, CooperationMethod, DataFlow, EnterpriseOptConfig, OptionalModule,
+    ConfigDiff,
+    CooperationMethod,
+    DataFlow,
+    EnterpriseOptConfig,
+    OptionalModule,
 )
-
 
 _ALL_FLOWS = [
     DataFlow.FUND, DataFlow.CONTRACT, DataFlow.INVOICE,

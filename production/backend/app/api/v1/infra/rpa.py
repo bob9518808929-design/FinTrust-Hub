@@ -15,7 +15,6 @@ from app.schemas.common import ApiResult
 from app.schemas.rpa import RPATask
 from app.services.rpa_service import get_bank_templates, rpa_service
 
-
 router = APIRouter(prefix="/infra/rpa", tags=["INFRA-05 RPA 适配层"])
 
 

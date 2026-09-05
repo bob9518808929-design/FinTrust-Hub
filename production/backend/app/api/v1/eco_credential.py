@@ -13,7 +13,9 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.eco import (
-    CredentialIssueInput, CredentialVerifyResult, VerifiableCredential,
+    CredentialIssueInput,
+    CredentialVerifyResult,
+    VerifiableCredential,
 )
 from app.services.eco_service import eco_credential_service
 

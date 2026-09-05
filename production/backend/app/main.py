@@ -9,9 +9,9 @@
     5. 启动事件 (init_db / Kafka consumer / Temporal worker)
 """
 
-import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC
 
 import orjson
 from fastapi import FastAPI, Request
@@ -21,10 +21,9 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy import text
 
+from app.api.v1.router import api_router
 from app.config import settings
 from app.database import get_engine, init_db
-from app.api.v1.router import api_router
-
 
 # === 日志初始化 ===
 
@@ -139,17 +138,19 @@ def _init_stamp_scheduler():
 
             # 2) DB 队列 (生产路径, 仅当 DB 可达时)
             try:
+                from datetime import datetime
+
+                from sqlalchemy import select
+
                 from app.database import get_engine
                 from app.models.eco import StampRetryQueueORM
-                from sqlalchemy import select
-                from datetime import datetime, timezone
 
                 engine = get_engine()
                 if engine is not None:
                     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
                     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
                     async with factory() as db:
-                        now = datetime.now(timezone.utc)
+                        datetime.now(UTC)
                         stmt = (
                             select(StampRetryQueueORM)
                             .where(
@@ -170,7 +171,7 @@ def _init_stamp_scheduler():
                             else:
                                 row.retry_count = (row.retry_count or 0) + 1
                                 from datetime import timedelta
-                                row.next_retry_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+                                row.next_retry_at = datetime.now(UTC) + timedelta(minutes=10)
                                 if row.retry_count >= 3:
                                     row.status = "abandoned"
                         await db.commit()
@@ -214,7 +215,7 @@ async def lifespan(app: FastAPI):
         await _run_dev_migrations()
 
     # Redis 连接池 (缓存/限流/会话, 不可达时降级到无缓存)
-    from app.services.redis_client import init_redis, get_redis_error
+    from app.services.redis_client import get_redis_error, init_redis
     await init_redis()
     if get_redis_error() is None:
         logger.info("Redis 连接池已建立")
@@ -316,13 +317,13 @@ class ORJSONResponse(JSONResponse):
 
 def make_response(data, code: int = 0, message: str = "OK", request_id: str = ""):
     """构造统一响应体."""
-    from datetime import datetime, timezone
+    from datetime import datetime
     return {
         "code": code,
         "message": message,
         "data": data,
-        "requestId": request_id or f"req-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "requestId": request_id or f"req-{datetime.now(UTC).strftime('%Y%m%d%H%M%S%f')}",
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

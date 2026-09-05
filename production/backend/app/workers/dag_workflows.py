@@ -27,9 +27,13 @@ from __future__ import annotations
 from typing import Any
 
 from app.schemas.ai_orchestrator import (
-    AIDAG, AutonomyLevel, DAGEdge, DAGNode, EdgeCondition, TaskType,
+    AIDAG,
+    AutonomyLevel,
+    DAGEdge,
+    DAGNode,
+    EdgeCondition,
+    TaskType,
 )
-
 
 # ============================================================================
 # 1. 贷款审批 DAG (L3 咨询式: 每步人工审批)

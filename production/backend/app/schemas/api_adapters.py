@@ -5,13 +5,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class AdapterId(str, Enum):
+class AdapterId(StrEnum):
     A1_BANK_ICBC = "A1_BANK_ICBC"
     A2_BANK_CMB = "A2_BANK_CMB"
     A3_TAX_INVOICE = "A3_TAX_INVOICE"
@@ -29,7 +29,7 @@ class AdapterId(str, Enum):
     A15_ZHIXIN_CHAIN = "A15_ZHIXIN_CHAIN"
 
 
-class RuntimeStatus(str, Enum):
+class RuntimeStatus(StrEnum):
     OK = "ok"
     DEGRADED = "degraded"
     FALLBACK_ONLY = "fallback_only"
@@ -58,7 +58,7 @@ class InvokeRequest(BaseModel):
     retry_times: int = Field(alias="retryTimes", default=3)
 
 
-class InvokeStatus(str, Enum):
+class InvokeStatus(StrEnum):
     OK = "ok"
     FAILED = "failed"
     RATE_LIMITED = "rate_limited"

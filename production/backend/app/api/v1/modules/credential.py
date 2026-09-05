@@ -5,16 +5,17 @@ prefix="/modules/credential", tags=["MOD-08b W3C VC"]
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body
 
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.credential import (
-    CredentialType, CrossChainVerifyRequest, CrossChainVerifyResult,
+    CredentialType,
+    CrossChainVerifyRequest,
+    CrossChainVerifyResult,
     W3cVerifiableCredential,
 )
 from app.services.credential_service import credential_service
-
 
 credential_router = APIRouter(prefix="/modules/credential", tags=["MOD-08b W3C VC"])
 

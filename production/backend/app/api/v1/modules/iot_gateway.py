@@ -10,11 +10,14 @@ from fastapi import APIRouter, Body, Query
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.iot_gateway import (
-    CommandRequest, CommandResult, Device, DeviceStatus, GatewayInfo,
+    CommandRequest,
+    CommandResult,
+    Device,
+    DeviceStatus,
+    GatewayInfo,
     TelemetrySample,
 )
 from app.services.iot_gateway import iot_gateway_service
-
 
 iot_router = APIRouter(prefix="/modules/iot", tags=["DATA-04 IoT"])
 

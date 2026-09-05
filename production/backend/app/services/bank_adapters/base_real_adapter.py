@@ -17,19 +17,23 @@ from __future__ import annotations
 
 import base64
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
 
 import httpx
 
 from app.schemas.bank_aggregator import (
-    BankAccount, BankTransaction, OAuthTokenResult, TxDirection,
+    BankAccount,
+    BankTransaction,
+    OAuthTokenResult,
+    TxDirection,
 )
 from app.services.bank_aggregator_service import (
-    BaseBankAdapter, _MockBankAdapter, _now_dt,
+    BaseBankAdapter,
+    _MockBankAdapter,
+    _now_dt,
 )
-
 
 # ============================================================================
 # RSA-SHA256 工具 (基于 cryptography, 不可用时优雅降级)
@@ -173,7 +177,7 @@ class BaseRealBankAdapter(_MockBankAdapter):
                 **params,
                 "app_id": creds["app_id"],
                 "sign": sign,
-                "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "timestamp": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
             url = f"{creds['api_base_url']}{endpoint}"
             async with httpx.AsyncClient(timeout=self.TIMEOUT_SECONDS) as client:
@@ -314,4 +318,4 @@ class BaseRealBankAdapter(_MockBankAdapter):
             return await super().list_transactions(enterprise_id, account_id, days)
 
 
-__all__ = ["BaseRealBankAdapter", "BaseBankAdapter"]
+__all__ = ["BaseBankAdapter", "BaseRealBankAdapter"]

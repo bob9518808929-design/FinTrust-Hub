@@ -11,19 +11,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from app.schemas.five_flow import (
-    FlowRecord, FlowType, MonitorRuleCreate,
+    FlowRecord,
+    FlowType,
 )
 from app.services.five_flow_consistency_service import (
-    FiveFlowConsistencyService, five_flow_consistency_service,
+    five_flow_consistency_service,
 )
-from app.services.fund_service import FundService, fund_service
+from app.services.fund_service import fund_service
 from app.services.monitor_rules_service import (
-    MonitorRulesService, monitor_rules_service,
+    monitor_rules_service,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -41,7 +42,7 @@ def _make_record(
     status: str = "confirmed",
 ) -> FlowRecord:
     if tx_time_iso is None:
-        tx_time_iso = datetime.now(timezone.utc).isoformat()
+        tx_time_iso = datetime.now(UTC).isoformat()
     return FlowRecord(
         flow_id=f"fr-test-{flow_type.value.lower()}",
         flow_type=flow_type,
@@ -126,7 +127,6 @@ class TestFiveFlowConsistency:
 class TestFiveFlowBatch:
     async def test_batch_check_returns_results(self):
         """批量校验应返回与输入等长的结果列表."""
-        tx_ids = ["TX-2026-0001", "TX-2026-0004", "TX-2026-0005"]
         # 注意: seed 中 TX-2026-0001 属 E001, TX-2026-0004 属 E004, TX-2026-0005 属 E005
         # 为简化, 用 E001 拉 3 个 tx_id (TX-0004/0005 在 E001 下无 seed, 返回空)
         # 改用各 tx_id 对应的企业, 验证返回数量
@@ -157,7 +157,7 @@ class TestFiveFlowBatch:
 class TestMonitorRulesEvaluate:
     async def test_monitor_rules_evaluate_triggers_alert(self):
         """单笔大额交易规则 (MR-001, 阈值 5 亿元 = 500,000,000 分) 应触发 critical 告警."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         records = [
             _make_record(
                 FlowType.FUND,

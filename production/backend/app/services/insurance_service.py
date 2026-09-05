@@ -21,14 +21,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "POL") -> str:
@@ -132,7 +132,7 @@ class _InsuranceStore:
         - POL-2026-0002: E002, 已生效, 70% 覆盖
         - POL-2026-0003: E003, 已过期
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         seed_policies = [
             {
                 "policy_id": "POL-2026-0001",
@@ -204,13 +204,13 @@ class _InsuranceStore:
         }
         self._claims[seed_claim["claim_id"]] = seed_claim
 
-    async def get_policy(self, policy_id: str) -> Optional[dict]:
+    async def get_policy(self, policy_id: str) -> dict | None:
         async with self._lock:
             p = self._policies.get(policy_id)
             return dict(p) if p else None
 
     async def list_policies(
-        self, enterprise_id: Optional[str] = None,
+        self, enterprise_id: str | None = None,
     ) -> list[dict]:
         async with self._lock:
             policies = list(self._policies.values())
@@ -228,7 +228,7 @@ class _InsuranceStore:
             self._claims[claim["claim_id"]] = dict(claim)
             return dict(claim)
 
-    async def get_claim(self, claim_id: str) -> Optional[dict]:
+    async def get_claim(self, claim_id: str) -> dict | None:
         async with self._lock:
             c = self._claims.get(claim_id)
             return dict(c) if c else None
@@ -339,7 +339,7 @@ class InsuranceService:
 
         # 生成保单号 + 时间戳
         policy_id = _id("POL")
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         valid_from = now
         valid_to = now + timedelta(days=365)
 
@@ -363,12 +363,12 @@ class InsuranceService:
         await _insurance_store.put_policy(policy)
         return policy
 
-    async def get_policy(self, policy_id: str) -> Optional[dict]:
+    async def get_policy(self, policy_id: str) -> dict | None:
         """查询保单 (不存在返回 None)."""
         return await _insurance_store.get_policy(policy_id)
 
     async def list_policies(
-        self, enterprise_id: Optional[str] = None,
+        self, enterprise_id: str | None = None,
     ) -> list[dict]:
         """列出企业保单 (可按 enterprise_id 过滤, 不过滤则返回全部)."""
         return await _insurance_store.list_policies(enterprise_id)

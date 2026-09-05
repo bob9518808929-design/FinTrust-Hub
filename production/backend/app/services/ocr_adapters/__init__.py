@@ -17,7 +17,7 @@ from app.services.ocr_adapters.baidu_adapter import BaiduOCRAdapter
 from app.services.ocr_adapters.paddle_adapter import PaddleOCRAdapter
 
 __all__ = [
-    "PaddleOCRAdapter",
-    "BaiduOCRAdapter",
     "AliOCRAdapter",
+    "BaiduOCRAdapter",
+    "PaddleOCRAdapter",
 ]

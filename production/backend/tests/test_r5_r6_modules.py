@@ -18,14 +18,10 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 
 import pytest
 import yaml
-
-from app.main import app
-
 
 pytestmark = pytest.mark.asyncio
 
@@ -110,7 +106,7 @@ class TestR52Invoice:
             bill=bill, discount_rate=0.055, days_to_maturity=90,
         )
         # 利息 = 100万 × 0.055 × 90 / 360 = 13,750.00 元 = 1,375,000 分
-        expected_interest = int(round(10_000_000_00 * 0.055 * 90 / 360))
+        expected_interest = round(10_000_000_00 * 0.055 * 90 / 360)
         assert result.interest_cents == expected_interest
         assert result.net_proceeds_cents == 10_000_000_00 - expected_interest
         assert result.bill_no == "1100TEST"
@@ -256,7 +252,7 @@ class TestR55Emqx:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "infra", "emqx", "mqtt_config.yaml",
         )
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         assert isinstance(data, dict)
         assert "listeners" in data
@@ -274,7 +270,7 @@ class TestR55Emqx:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "infra", "emqx", "docker-compose.yml",
         )
-        with open(compose_path, "r", encoding="utf-8") as f:
+        with open(compose_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         assert "services" in data
         assert "emqx" in data["services"]
@@ -315,8 +311,8 @@ class TestR56AdapterCreds:
 
     def test_15_adapters_have_load_credentials_method(self):
         """所有 15 个适配器都能通过 _load_real_credentials 加载."""
-        from app.services.api_adapter_registry import ApiAdapterRegistry
         from app.schemas.api_adapters import AdapterId
+        from app.services.api_adapter_registry import ApiAdapterRegistry
         reg = ApiAdapterRegistry()
         for aid in AdapterId:
             creds = reg._load_real_credentials(aid)
@@ -325,8 +321,8 @@ class TestR56AdapterCreds:
 
     async def test_real_api_call_returns_none_without_credentials(self):
         """无凭证时 _call_real_api 返回 None (触发 mock 降级)."""
-        from app.services.api_adapter_registry import ApiAdapterRegistry
         from app.schemas.api_adapters import AdapterId
+        from app.services.api_adapter_registry import ApiAdapterRegistry
         reg = ApiAdapterRegistry()
         # 测试环境通常无 env 变量, 应返回 None
         # 对每个适配器都验证 (任一无凭证就返回 None)
@@ -341,13 +337,13 @@ class TestR56AdapterCreds:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "app", "config", "api_adapter_credentials.yaml",
         )
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         assert "adapters" in data
         adapters = data["adapters"]
         assert len(adapters) == 15
         # 每个 adapter 都有 name + env + required
-        for aid, spec in adapters.items():
+        for _aid, spec in adapters.items():
             assert "name" in spec
             assert "env" in spec
             assert "required" in spec
@@ -546,7 +542,7 @@ class TestR62RPA:
 
     async def test_rpa_sdk_unavailable_uses_reportlab(self):
         """_load_rpa_sdk 在无 SDK 时返回 False; PDF 仍能生成."""
-        from app.services.rpa_service import rpa_service, _reportlab_available
+        from app.services.rpa_service import rpa_service
         rpa_service._rpa_sdk_tried = False
         rpa_service._rpa_sdk = None
         ok = rpa_service._load_rpa_sdk()

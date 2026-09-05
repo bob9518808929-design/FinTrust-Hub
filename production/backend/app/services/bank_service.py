@@ -13,19 +13,26 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.bank import (
-    BankDecision, BankListItem, BankStatistics, BankTrustProfile, BankTrustStage,
-    CreditMultiplierResult, FreezeAccountResult, SupervisionAccount,
-    RiskLetter, StageUpgradeResult,
+    BankDecision,
+    BankListItem,
+    BankStatistics,
+    BankTrustProfile,
+    BankTrustStage,
+    CreditMultiplierResult,
+    FreezeAccountResult,
+    RiskLetter,
+    StageUpgradeResult,
+    SupervisionAccount,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "bnk") -> str:
@@ -754,7 +761,7 @@ class BankService:
         )
         previous_status = updated.get("previousStatus", "active") if updated else "active"
         # reason 字段当前仅用于审计日志 (内存兜底未持久化审计表, 留扩展点)
-        _ = reason  # noqa: F841 (审计字段, 后续可写入审计表)
+        _ = reason
         return FreezeAccountResult(
             account_id=account_id,
             status=new_status,
@@ -771,12 +778,12 @@ class BankService:
         - 返回 previous (基于旧乘数) + new (基于新乘数) 双额度
         - reason 字段仅审计用 (内存兜底未持久化, 留扩展点)
         """
-        _ = reason  # noqa: F841 (审计字段)
+        _ = reason
         result = await _bank_store.set_credit_multiplier(bank_id, multiplier)
         base = result["base_credit_limit_cents"]
         prev_mult = result["previous_multiplier"]
-        new_limit = int(round(base * multiplier))
-        prev_limit = int(round(base * prev_mult))
+        new_limit = round(base * multiplier)
+        prev_limit = round(base * prev_mult)
         return CreditMultiplierResult(
             bank_id=bank_id,
             multiplier=multiplier,

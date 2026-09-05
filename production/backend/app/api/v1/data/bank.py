@@ -18,12 +18,16 @@ from fastapi import APIRouter, Query, status
 from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.bank_aggregator import (
-    AggregatedResult, BankAccount, BankAdapterInfo, BankTransaction,
-    OAuthAuthorizationRequest, OAuthAuthorizationResponse, OAuthTokenResult,
+    AggregatedResult,
+    BankAccount,
+    BankAdapterInfo,
+    BankTransaction,
+    OAuthAuthorizationRequest,
+    OAuthAuthorizationResponse,
+    OAuthTokenResult,
 )
 from app.schemas.common import ApiResult
 from app.services.bank_aggregator_service import BankAggregatorService
-
 
 data_bank_router = APIRouter(prefix="/data/bank", tags=["DATA-01 银企直连"])
 

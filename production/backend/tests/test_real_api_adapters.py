@@ -33,8 +33,12 @@ import yaml
 
 from app.schemas.parsers import OcrEngine, OcrRequest
 from app.services.bank_adapters import (
-    ABCRealAdapter, BOCRealAdapter, BOCOMRealAdapter,
-    CCBRealAdapter, CMBRealAdapter, ICBCRealAdapter,
+    ABCRealAdapter,
+    BOCOMRealAdapter,
+    BOCRealAdapter,
+    CCBRealAdapter,
+    CMBRealAdapter,
+    ICBCRealAdapter,
 )
 from app.services.bank_adapters.base_real_adapter import BaseRealBankAdapter
 from app.services.bank_aggregator_service import _bank_agg_store
@@ -46,7 +50,6 @@ from app.services.ocr_adapters.ali_adapter import AliOCRAdapter
 from app.services.ocr_adapters.baidu_adapter import BaiduOCRAdapter
 from app.services.ocr_adapters.paddle_adapter import PaddleOCRAdapter
 from app.services.ocr_service import OcrService
-
 
 pytestmark = pytest.mark.asyncio
 

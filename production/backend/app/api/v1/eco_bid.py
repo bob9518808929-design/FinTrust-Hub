@@ -16,7 +16,11 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.eco import (
-    BankBid, BidSubmitInput, MultiHeadCheckResult, Tender, TenderPublishInput,
+    BankBid,
+    BidSubmitInput,
+    MultiHeadCheckResult,
+    Tender,
+    TenderPublishInput,
 )
 from app.services.eco_service import eco_bid_service
 

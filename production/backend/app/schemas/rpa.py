@@ -7,14 +7,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import Id, IsoTimestamp
-
 
 # === 枚举 ===
 
@@ -49,4 +47,4 @@ class RPATask(_RpaBase):
     error_message: str | None = Field(default=None, description="错误信息 (失败时)")
 
 
-__all__ = ["TaskType", "TaskStatus", "RPATask"]
+__all__ = ["RPATask", "TaskStatus", "TaskType"]

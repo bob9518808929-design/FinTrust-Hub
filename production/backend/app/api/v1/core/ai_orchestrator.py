@@ -18,12 +18,16 @@ from fastapi import APIRouter, Query, status
 from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.ai_orchestrator import (
-    AIDAG, ApproveNodeRequest, DAGExecution, DAGStatus,
-    DecisionLogEntry, ExecuteDAGRequest, TaskResult,
+    AIDAG,
+    ApproveNodeRequest,
+    DAGExecution,
+    DAGStatus,
+    DecisionLogEntry,
+    ExecuteDAGRequest,
+    TaskResult,
 )
 from app.schemas.common import ApiResult
 from app.services.ai_orchestrator_service import AIOrchestratorService
-
 
 ai_orch_router = APIRouter(prefix="/core/ai-orchestrator", tags=["CORE-01 AI 编排"])
 

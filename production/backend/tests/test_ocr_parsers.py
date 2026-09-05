@@ -13,8 +13,6 @@ import pytest
 
 from app.api.v1.data.ocr_parsers import parsers_router
 from app.main import app
-from app.schemas.parsers import OcrEngine, OcrRequest
-
 
 _PARSERS_ROUTE_REGISTERED = False
 for _r in app.routes:

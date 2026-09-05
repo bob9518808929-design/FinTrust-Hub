@@ -16,7 +16,7 @@ import hashlib
 import json
 import re
 import time
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 import httpx
 from loguru import logger
@@ -28,7 +28,6 @@ from tenacity import (
 )
 
 from app.config import settings
-
 
 # === PII 脱敏 (请求侧脱敏, 响应侧还原) ===
 
@@ -121,7 +120,7 @@ class LLMService:
         self.default_model = settings.DEEPSEEK_MODEL or "deepseek-chat"
         # 以下字段 config.py 暂未声明, 用 getattr 兜底 (见 DEEPSEEK_INTEGRATION_TECH_SPEC 步骤 1)
         self.reasoner_model = getattr(settings, "DEEPSEEK_REASONER_MODEL", "deepseek-reasoner")
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self.circuit = CircuitBreaker()
 
     @property
@@ -335,7 +334,7 @@ class LLMService:
                         yield f"data: {line[6:]}\n\n"
         except asyncio.CancelledError:
             # 客户端关闭 SSE 连接 (高频正常行为), 不打 warning 避免日志噪音
-            logger.info(f"LLM 流式被客户端取消 (用户关闭 SSE 连接)")
+            logger.info("LLM 流式被客户端取消 (用户关闭 SSE 连接)")
             raise  # 必须传播, 让 ASGI 正确关闭连接
         except Exception as exc:
             logger.warning(f"LLM 流式失败: {exc}")
@@ -367,7 +366,7 @@ class LLMService:
         )
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
-    async def _get_cached(self, key: str) -> Optional[str]:
+    async def _get_cached(self, key: str) -> str | None:
         """从 Redis 取缓存 (Redis 挂时返回 None)."""
         from app.services.redis_client import get_redis
 

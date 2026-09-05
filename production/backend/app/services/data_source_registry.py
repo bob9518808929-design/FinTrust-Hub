@@ -15,28 +15,30 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.schemas.external_data import (
-    AdapterHealth, AdapterHealthStatus, DataSourceType,
+    AdapterHealth,
+    AdapterHealthStatus,
+    DataSourceType,
 )
-from app.services.ecds_adapter import EcdsAdapterService, ecds_adapter_service
-from app.services.gsxt_adapter import GsxtAdapterService, gsxt_adapter_service
-from app.services.invoice_verifier import InvoiceVerifierService, invoice_verifier_service
-from app.services.judiciary_adapter import JudiciaryAdapterService, judiciary_adapter_service
+from app.services.ecds_adapter import ecds_adapter_service
+from app.services.gsxt_adapter import gsxt_adapter_service
+from app.services.invoice_verifier import invoice_verifier_service
+from app.services.judiciary_adapter import judiciary_adapter_service
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class DataSourceRegistry:
     """数据源适配器注册表 (单例, 热插拔)."""
 
-    _instance: "DataSourceRegistry | None" = None
+    _instance: DataSourceRegistry | None = None
     _instance_lock = asyncio.Lock()
 
     def __init__(self) -> None:
@@ -44,7 +46,7 @@ class DataSourceRegistry:
         self._adapters: dict[DataSourceType, Any] = {}
 
     @classmethod
-    async def get_instance(cls) -> "DataSourceRegistry":
+    async def get_instance(cls) -> DataSourceRegistry:
         """获取单例 (线程安全)."""
         async with cls._instance_lock:
             if cls._instance is None:

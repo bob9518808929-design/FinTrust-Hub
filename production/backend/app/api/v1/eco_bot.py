@@ -9,14 +9,19 @@
 project_memory 硬约束: action 字符串用管道分隔 (如 switchTab|approval).
 """
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter
 
 from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.eco import (
-    BotBroadcastInput, BotBroadcastResult, BotCommandParse, BotCommandResult,
-    BotConfig, BotExecuteInput, BotParseInput,
+    BotBroadcastInput,
+    BotBroadcastResult,
+    BotCommandParse,
+    BotCommandResult,
+    BotConfig,
+    BotExecuteInput,
+    BotParseInput,
 )
 from app.services.eco_service import eco_bot_service
 

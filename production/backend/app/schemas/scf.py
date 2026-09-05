@@ -18,7 +18,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.common import AmountInCents, Id, IsoTimestamp, Percentage, Ratio, Score
 
-
 # ============================================================================
 # 枚举
 # ============================================================================

@@ -7,24 +7,22 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Literal
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import Id, IsoTimestamp
 
-
 # === 枚举 ===
 
-class FallbackMode(str, Enum):
+class FallbackMode(StrEnum):
     ONLINE = "ONLINE"
     OFFLINE = "OFFLINE"
     DEGRADED = "DEGRADED"
 
 
-class SyncStatus(str, Enum):
+class SyncStatus(StrEnum):
     SYNCED = "SYNCED"
     PENDING = "PENDING"
     CONFLICT = "CONFLICT"
@@ -66,4 +64,4 @@ class SyncResult(_Base):
     sync_duration_ms: int = Field(ge=0, description="同步耗时 (毫秒)")
 
 
-__all__ = ["FallbackMode", "SyncStatus", "FallbackConfig", "SyncResult"]
+__all__ = ["FallbackConfig", "FallbackMode", "SyncResult", "SyncStatus"]

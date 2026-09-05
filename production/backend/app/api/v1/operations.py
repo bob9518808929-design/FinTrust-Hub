@@ -14,12 +14,13 @@ project_memory 硬约束:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, status
+from datetime import UTC
+
+from fastapi import APIRouter
 
 from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
-
 
 # ============================================================================
 # 内存兜底数据 (C 档独立兜底, 后端无 DB 时返回)
@@ -83,8 +84,8 @@ async def decide_approval(req_id: str, payload: dict, _user: CurrentUser):
         if r["id"] == req_id:
             r["status"] = {"approve": "approved", "reject": "rejected", "return": "returned"}.get(decision, "returned")
             r["decision"] = decision
-            from datetime import datetime, timezone
-            r["decidedAt"] = datetime.now(timezone.utc).isoformat()
+            from datetime import datetime
+            r["decidedAt"] = datetime.now(UTC).isoformat()
             return make_ok(r)
     return make_ok(None, code=404, message="工单不存在")
 

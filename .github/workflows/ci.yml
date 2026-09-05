@@ -1,0 +1,39 @@
+# FinTrust Hub CI —— push / PR 自动跑后端静态检查与测试
+# 密钥不入库: conftest autouse fixture 默认禁 LLM, CI 无需任何 API key
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  backend:
+    name: Backend lint & tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: production/backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: production/backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ruff 静态检查
+        run: ruff check app tests
+
+      - name: Pytest
+        run: pytest tests -q --disable-warnings

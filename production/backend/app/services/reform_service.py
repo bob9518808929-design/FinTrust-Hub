@@ -22,25 +22,33 @@ import asyncio
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reform import ReformStateORM, ReformCaseORM
-from app.schemas.scorecard import (
-    ComplianceCheckResult, GapItem, ReformAction, ReformActionResult,
-    ReformCase, ReformImpact, ReformMonitorResult, ReformPhase, ReformReplanResult,
-    ReformState, Scorecard8D,
-)
+from app.models.reform import ReformStateORM
 from app.schemas.enterprise import ReformPrecheck
+from app.schemas.scorecard import (
+    ComplianceCheckResult,
+    GapItem,
+    ReformAction,
+    ReformActionResult,
+    ReformCase,
+    ReformImpact,
+    ReformMonitorResult,
+    ReformPhase,
+    ReformReplanResult,
+    ReformState,
+    Scorecard8D,
+)
 from app.services.enterprise_service import enterprise_service
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 logger = logging.getLogger(__name__)
@@ -140,7 +148,7 @@ class ReformService:
     """改造引擎 R0-R10 服务."""
 
     # R4 自动调度 runner (每企业一个 task; 内存态, 与开发期 store 同生命周期)
-    _sched_tasks: dict[str, "asyncio.Task[None]"] = {}
+    _sched_tasks: dict[str, asyncio.Task[None]] = {}
 
     # R1 画像缓存 (类级, 跨请求实例共享): 记录最近一次画像的评分卡与来源.
     # 用途: R4_startReform 复用 ECO-01 产物画像 — 材料销毁后启动改造时,
@@ -1096,8 +1104,7 @@ class ReformService:
                     "raisedAt": _now_iso(), "acknowledgedAt": None,
                 })
 
-        from datetime import timedelta
-        est = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        est = (datetime.now(UTC) + timedelta(days=30)).isoformat()
         return ReformMonitorResult(
             milestones=milestones, alerts=alerts,
             overallProgress=state.get("progress", 0.0),
@@ -1196,7 +1203,7 @@ class ReformService:
         text = "|".join(features)
         vec: list[float] = [0.0] * VECTOR_DIM
         for i in range(VECTOR_DIM):
-            h = hashlib.sha256(f"{text}:{i}".encode("utf-8")).hexdigest()
+            h = hashlib.sha256(f"{text}:{i}".encode()).hexdigest()
             vec[i] = int(h[:8], 16) / 0xFFFFFFFF
         return vec
 
@@ -1205,7 +1212,7 @@ class ReformService:
         text = query or ""
         vec: list[float] = [0.0] * VECTOR_DIM
         for i in range(VECTOR_DIM):
-            h = hashlib.sha256(f"{text}:{i}".encode("utf-8")).hexdigest()
+            h = hashlib.sha256(f"{text}:{i}".encode()).hexdigest()
             vec[i] = int(h[:8], 16) / 0xFFFFFFFF
         return vec
 
@@ -1213,7 +1220,7 @@ class ReformService:
         """余弦相似度 (0 ~ 1)."""
         if len(v1) != len(v2) or not v1:
             return 0.0
-        dot = sum(a * b for a, b in zip(v1, v2))
+        dot = sum(a * b for a, b in zip(v1, v2, strict=False))
         n1 = sum(a * a for a in v1) ** 0.5
         n2 = sum(b * b for b in v2) ** 0.5
         if n1 == 0 or n2 == 0:

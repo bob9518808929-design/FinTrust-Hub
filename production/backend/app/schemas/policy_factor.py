@@ -1,16 +1,15 @@
 """文件名：policy_factor.py 职责：政策与行业因素 Pydantic 模型,定义因素类型枚举与企业政策分析 schema."""
 from __future__ import annotations
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import Id, IsoTimestamp, Ratio
+from app.schemas.common import Id, IsoTimestamp
 
 
-class FactorType(str, Enum):
+class FactorType(StrEnum):
     INDUSTRY = "industry"
     POLICY = "policy"
     SEASONAL = "seasonal"

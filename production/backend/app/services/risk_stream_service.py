@@ -19,12 +19,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.risk_rule import (
-    RiskEvaluationResult, RiskStreamEvent, RuleAction,
+    RiskEvaluationResult,
+    RiskStreamEvent,
+    RuleAction,
 )
 from app.services.risk_rule_engine import risk_rule_engine
 
@@ -32,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "se") -> str:
@@ -58,7 +60,7 @@ class _RiskStreamStore:
 
     def _seed(self) -> None:
         """20 个事件 (5 blocked, 5 flagged, 10 passed) + 对应评估结果."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         seed_events: list[dict] = []
 
         # 5 个 blocked 事件 (大额 / 黑名单)
@@ -164,8 +166,8 @@ class _RiskStreamStore:
 
     async def list_events(
         self,
-        enterprise_id: Optional[str] = None,
-        processed: Optional[bool] = None,
+        enterprise_id: str | None = None,
+        processed: bool | None = None,
         limit: int = 100,
     ) -> list[dict]:
         async with self._lock:
@@ -178,7 +180,7 @@ class _RiskStreamStore:
                 events = [e for e in events if e.get("processed") == processed]
             return [dict(e) for e in events[:limit]]
 
-    async def get_event(self, event_id: str) -> Optional[dict]:
+    async def get_event(self, event_id: str) -> dict | None:
         async with self._lock:
             e = self._events.get(event_id)
             return dict(e) if e else None
@@ -190,7 +192,7 @@ class _RiskStreamStore:
 
     async def mark_processed(
         self, event_id: str, result_id: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         async with self._lock:
             if event_id not in self._events:
                 return None
@@ -306,8 +308,8 @@ class RiskStreamService:
 
     async def list_events(
         self,
-        enterprise_id: Optional[str] = None,
-        processed: Optional[bool] = None,
+        enterprise_id: str | None = None,
+        processed: bool | None = None,
         limit: int = 100,
     ) -> list[RiskStreamEvent]:
         items = await _risk_stream_store.list_events(
@@ -315,7 +317,7 @@ class RiskStreamService:
         )
         return [RiskStreamEvent.model_validate(e) for e in items]
 
-    async def get_event(self, event_id: str) -> Optional[RiskStreamEvent]:
+    async def get_event(self, event_id: str) -> RiskStreamEvent | None:
         e = await _risk_stream_store.get_event(event_id)
         return RiskStreamEvent.model_validate(e) if e else None
 
@@ -354,7 +356,7 @@ class RiskStreamService:
                 rules_hit_count[rid] += 1
 
         # 2. alerts_today: 今日 (UTC) 告警数 (block + flag)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         alerts_today = 0
         for r in results:
@@ -371,7 +373,7 @@ class RiskStreamService:
         trend_7d: list[dict] = []
         for i in range(6, -1, -1):
             day = (now - timedelta(days=i)).date()
-            day_start = datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc)
+            day_start = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
             day_end = day_start + timedelta(days=1)
             day_alert_count = 0
             day_block_count = 0

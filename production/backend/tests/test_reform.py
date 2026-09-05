@@ -246,7 +246,7 @@ class TestReformPlanOrchestration:
 
         from app.services.llm_service import llm_service
 
-        current, target = self._current_target()
+        _current, _target = self._current_target()
 
         async def fake_chat(*args, **kwargs):
             return {
@@ -280,7 +280,7 @@ class TestReformPlanOrchestration:
 
         from app.services.llm_service import llm_service
 
-        current, target = self._current_target()
+        _current, _target = self._current_target()
 
         async def fake_chat(*args, **kwargs):
             return {
@@ -306,7 +306,7 @@ class TestReformPlanOrchestration:
         """A 档失败 (LLM 抛异常) → B 档规则编排, 方案照常生成."""
         from app.services.llm_service import llm_service
 
-        current, target = self._current_target()
+        _current, _target = self._current_target()
 
         async def boom(*args, **kwargs):
             raise RuntimeError("模拟 LLM 故障")

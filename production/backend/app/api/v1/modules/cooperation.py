@@ -9,7 +9,9 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.cooperation import (
-    CooperationMode, ModeConfig, SwitchResult,
+    CooperationMode,
+    ModeConfig,
+    SwitchResult,
 )
 from app.services.cooperation_mode_service import CooperationModeService
 

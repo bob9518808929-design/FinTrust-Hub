@@ -14,7 +14,6 @@
         # Redis 不可用, 走无缓存逻辑
 """
 
-from typing import Optional
 
 from loguru import logger
 from redis.asyncio import Redis
@@ -23,11 +22,10 @@ from redis.exceptions import RedisError
 
 from app.config import settings
 
-
 # === 懒加载连接池 (driver/连接 缺失时降级) ===
 
-_redis: Optional[Redis] = None
-_redis_error: Optional[Exception] = None
+_redis: Redis | None = None
+_redis_error: Exception | None = None
 
 
 async def init_redis() -> None:
@@ -66,12 +64,12 @@ async def close_redis() -> None:
     _redis_error = None
 
 
-def get_redis() -> Optional[Redis]:
+def get_redis() -> Redis | None:
     """获取 Redis 客户端 (懒加载, 不可用时返回 None)."""
     return _redis
 
 
-def get_redis_error() -> Optional[Exception]:
+def get_redis_error() -> Exception | None:
     """获取 Redis 连接错误 (诊断用)."""
     return _redis_error
 

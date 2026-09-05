@@ -8,14 +8,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
-class IndicatorStatus(str, Enum):
+class IndicatorStatus(StrEnum):
     """指标状态 (对比基线)."""
     IMPROVED = "improved"
     DEGRADED = "degraded"
@@ -66,8 +65,8 @@ class SandboxReport(_IndicatorBase):
 
 
 __all__ = [
-    "IndicatorStatus",
     "CurvePoint",
     "IndicatorCurve",
+    "IndicatorStatus",
     "SandboxReport",
 ]

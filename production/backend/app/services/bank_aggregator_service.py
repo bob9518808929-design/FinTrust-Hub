@@ -13,27 +13,32 @@ import asyncio
 import hashlib
 import random
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
 from uuid import uuid4
 
 from app.schemas.bank_aggregator import (
-    AdapterRefreshResult, AggregatedResult, BankAccount, BankAdapterInfo,
-    BankTransaction, OAuthAuthorizationResponse, OAuthTokenResult, TxDirection,
+    AdapterRefreshResult,
+    AggregatedResult,
+    BankAccount,
+    BankAdapterInfo,
+    BankTransaction,
+    OAuthAuthorizationResponse,
+    OAuthTokenResult,
+    TxDirection,
 )
-
 
 # ============================================================================
 # 工具函数
 # ============================================================================
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _now_dt() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _id(prefix: str) -> str:
@@ -367,8 +372,12 @@ class _BankAggStore:
         使用延迟导入避免循环依赖 (bank_adapters 反向导入本模块的基类).
         """
         from app.services.bank_adapters import (
-            ABCRealAdapter, BOCRealAdapter, BOCOMRealAdapter,
-            CCBRealAdapter, CMBRealAdapter, ICBCRealAdapter,
+            ABCRealAdapter,
+            BOCOMRealAdapter,
+            BOCRealAdapter,
+            CCBRealAdapter,
+            CMBRealAdapter,
+            ICBCRealAdapter,
         )
 
         _REAL_ADAPTER_CLASSES: list[type[BaseBankAdapter]] = [
@@ -650,7 +659,7 @@ class BankAggregatorService:
                             enterprise_id, adapter.adapter_id, success, msg,
                         )
                         return (adapter.adapter_id, success, msg)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     msg = f"刷新超时 (第 {attempt+1} 次尝试)"
                     if attempt >= self.REFRESH_MAX_RETRIES:
                         await _bank_agg_store.set_refresh_result(

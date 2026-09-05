@@ -11,8 +11,6 @@ prefix="/modules/insurance", tags=["MOD-05 应收款保险"]
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -21,7 +19,6 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.services.insurance_service import insurance_service
-
 
 router = APIRouter(prefix="/modules/insurance", tags=["MOD-05 应收款保险"])
 
@@ -66,12 +63,12 @@ async def create_policy(payload: CreatePolicyReq = Body(...), _user: CurrentUser
         )
         return make_ok(policy)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 @router.get(
     "/policies/{policy_id}",
-    response_model=ApiResult[Optional[dict]],
+    response_model=ApiResult[dict | None],
     summary="查询保单",
 )
 async def get_policy(policy_id: str, _user: CurrentUser = None):
@@ -87,7 +84,7 @@ async def get_policy(policy_id: str, _user: CurrentUser = None):
     summary="列出保单 (可按企业筛选)",
 )
 async def list_policies(
-    enterprise_id: Optional[str] = Query(default=None, alias="enterpriseId"),
+    enterprise_id: str | None = Query(default=None, alias="enterpriseId"),
     _user: CurrentUser = None,
 ):
     items = await insurance_service.list_policies(enterprise_id)
@@ -108,4 +105,4 @@ async def file_claim(payload: FileClaimReq = Body(...), _user: CurrentUser = Non
         )
         return make_ok(claim)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None

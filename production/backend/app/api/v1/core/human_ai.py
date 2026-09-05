@@ -21,12 +21,19 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.human_ai_gateway import (
-    ApprovalPriority, ApprovalRecord, ApprovalStatus, ApprovalTask,
-    ApproverRole, ApproveRequest, CreateApprovalRequest, DelegateRequest,
-    EscalateRequest, HumanRoutingDecision, RouteFromAIRequest, WorkflowRule,
+    ApprovalRecord,
+    ApprovalStatus,
+    ApprovalTask,
+    ApproveRequest,
+    ApproverRole,
+    CreateApprovalRequest,
+    DelegateRequest,
+    EscalateRequest,
+    HumanRoutingDecision,
+    RouteFromAIRequest,
+    WorkflowRule,
 )
 from app.services.human_ai_gateway import HumanAIGatewayService
-
 
 router = APIRouter(prefix="/core/human-ai", tags=["CORE-02 人机协同"])
 

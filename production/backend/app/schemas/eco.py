@@ -4,15 +4,12 @@
 字段命名: snake_case, 通过 alias 对齐前端 camelCase.
 """
 
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.common import AmountInCents, Id, IsoTimestamp, Ratio, Percentage, Score
-from app.schemas.enterprise import Industry
-from app.schemas.scorecard import Scorecard8D, GapItem
-
+from app.schemas.common import AmountInCents, Id, IsoTimestamp, Percentage, Ratio
+from app.schemas.scorecard import GapItem, Scorecard8D
 
 # ============================================================================
 # ECO-01 阅后即焚

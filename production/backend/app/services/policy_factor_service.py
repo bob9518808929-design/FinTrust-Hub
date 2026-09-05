@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from app.schemas.policy_factor import (
-    EnterprisePolicyAnalysis, FactorType, MatchedFactor, PolicyFactor,
+    EnterprisePolicyAnalysis,
+    FactorType,
+    MatchedFactor,
+    PolicyFactor,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class _PolicyStore:
@@ -20,7 +23,7 @@ class _PolicyStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         from_iso = (now.replace(year=now.year - 1)).isoformat()
         to_iso = (now.replace(year=now.year + 2)).isoformat()
         factors = [
@@ -117,7 +120,7 @@ class PolicyFactorService:
     async def analyze_enterprise(
         self,
         enterprise_id: str,
-        enterprise_info: Optional[dict] = None,
+        enterprise_info: dict | None = None,
     ) -> EnterprisePolicyAnalysis:
         meta = enterprise_info or _ENTERPRISE_META.get(enterprise_id, {
             "name": f"企业{enterprise_id}",
@@ -126,7 +129,7 @@ class PolicyFactorService:
         })
         uscc_prefix = meta.get("usccPrefix", "91")
         industry = meta.get("industry", "general")
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         month = now.month
 
         all_factors = await self.list_factors()

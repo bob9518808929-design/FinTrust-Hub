@@ -16,28 +16,29 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.bill_discount import DiscountResult
 from app.schemas.external_data import (
-    BillStatus, ECDSBillRecord,
+    BillStatus,
+    ECDSBillRecord,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _days_future_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) + timedelta(days=days)).isoformat()
 
 
 def _days_past_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) - timedelta(days=days)).isoformat()
 
 
 # === 票据生命周期状态机 ===
@@ -219,7 +220,7 @@ class InvoiceService:
         face = int(bill.amount_cents)
         # 利息 (分) = 票面 * rate * days / 360; 用 float 计算后取整
         interest_float = face * discount_rate * max(0, days_to_maturity) / 360.0
-        interest_cents = int(round(interest_float))
+        interest_cents = round(interest_float)
         net = face - interest_cents
         return DiscountResult(
             bill_no=bill.bill_no,
@@ -290,14 +291,14 @@ class InvoiceService:
 
     async def verify_invoice(self, invoice_no: str, amount: float) -> dict:
         """发票验真 (委托 invoice_verifier: 国家税务总局 API, A 档真实接入)."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from app.schemas.external_data import InvoiceVerifyRequest
         from app.services.invoice_verifier import invoice_verifier_service
         request = InvoiceVerifyRequest(
             invoice_code="",
             invoice_no=invoice_no,
-            invoice_date_iso=datetime.now(timezone.utc).isoformat(),
+            invoice_date_iso=datetime.now(UTC).isoformat(),
             tax_amount_cents=int(amount * 13 / 113),  # 13% 增值税价内税
             enterprise_id="SYSTEM",
         )

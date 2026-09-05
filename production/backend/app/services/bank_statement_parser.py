@@ -12,10 +12,11 @@ import re
 from datetime import datetime
 
 from app.schemas.parsers import (
-    BankStatementParseResult, BankStatementRecord, OcrRequest,
+    BankStatementParseResult,
+    BankStatementRecord,
+    OcrRequest,
 )
 from app.services.ocr_service import OcrService, ocr_service
-
 
 # ============================================================================
 # 内置 seed 样本 (3 家银行)
@@ -349,7 +350,7 @@ def _parse_amount_cents(line: str) -> int:
         return 0
     amt_str = m.group(1).replace(",", "").replace("+", "")
     try:
-        return int(round(float(amt_str) * 100))
+        return round(float(amt_str) * 100)
     except ValueError:
         return 0
 
@@ -434,9 +435,7 @@ class BankStatementParserService:
             )
             if bal_match:
                 try:
-                    balance_cents_after = int(
-                        round(float(bal_match.group(1).replace(",", "")) * 100)
-                    )
+                    balance_cents_after = round(float(bal_match.group(1).replace(",", "")) * 100)
                 except ValueError:
                     pass
 

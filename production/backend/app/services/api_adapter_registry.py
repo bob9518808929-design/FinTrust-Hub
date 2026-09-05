@@ -15,19 +15,23 @@ import os
 import time
 import uuid
 from collections import deque
-from datetime import datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime
 
 import yaml
 
 from app.schemas.api_adapters import (
-    AdapterId, AdapterRuntime, InvokeRequest, InvokeResult, InvokeStatus,
+    AdapterId,
+    AdapterRuntime,
+    InvokeRequest,
+    InvokeResult,
+    InvokeStatus,
     RuntimeStatus,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _trace_id() -> str:
@@ -45,7 +49,7 @@ _CREDENTIALS_FILE = os.path.join(
 def _load_credentials_config() -> dict:
     """加载 config/api_adapter_credentials.yaml, 失败返回空 dict."""
     try:
-        with open(_CREDENTIALS_FILE, "r", encoding="utf-8") as f:
+        with open(_CREDENTIALS_FILE, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         return data
     except Exception:
@@ -117,7 +121,7 @@ def _mock_response(aid: AdapterId, operation: str, params: dict) -> dict:
 
 
 class ApiAdapterRegistry:
-    _instance: "ApiAdapterRegistry | None" = None
+    _instance: ApiAdapterRegistry | None = None
     _instance_lock = asyncio.Lock()
 
     def __init__(self) -> None:
@@ -130,7 +134,7 @@ class ApiAdapterRegistry:
         self.register_15_defaults()
 
     @classmethod
-    async def get_instance(cls) -> "ApiAdapterRegistry":
+    async def get_instance(cls) -> ApiAdapterRegistry:
         async with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls()

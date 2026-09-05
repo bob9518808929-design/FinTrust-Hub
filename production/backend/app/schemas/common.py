@@ -9,7 +9,6 @@ from typing import Annotated, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # === 通用类型别名 ===
 
 Id = Annotated[str, Field(min_length=1, max_length=64)]

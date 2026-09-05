@@ -7,17 +7,15 @@
 真实查询由调用方在 service 层用 run_in_executor 包装, 或后续替换为 async 客户端.
 """
 
-from typing import Optional
 
 from loguru import logger
 
 from app.config import settings
 
-
 # === 懒加载客户端 ===
 
 _client = None
-_clickhouse_error: Optional[Exception] = None
+_clickhouse_error: Exception | None = None
 
 
 async def init_clickhouse() -> None:
@@ -64,6 +62,6 @@ def get_clickhouse_client():
     return _client
 
 
-def get_clickhouse_error() -> Optional[Exception]:
+def get_clickhouse_error() -> Exception | None:
     """获取 ClickHouse 连接错误 (诊断用)."""
     return _clickhouse_error

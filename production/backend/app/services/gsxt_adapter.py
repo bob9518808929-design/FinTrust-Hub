@@ -12,19 +12,20 @@ from __future__ import annotations
 import asyncio
 import os
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 
 from app.schemas.external_data import (
-    AdapterHealth, AdapterHealthStatus, DataSourceType,
+    AdapterHealth,
+    AdapterHealthStatus,
     GSXTEnterpriseInfo,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class _GsxtStore:

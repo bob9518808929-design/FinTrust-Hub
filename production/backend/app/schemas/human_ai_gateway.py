@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -16,13 +16,12 @@ from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, ApiResult, Id, IsoTimestamp
 
-
 ApproverRole = Literal[
     "loan_officer", "risk_manager", "branch_manager", "cfo", "auditor"
 ]
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
@@ -31,14 +30,14 @@ class ApprovalStatus(str, Enum):
     DELEGATED = "DELEGATED"
 
 
-class ApprovalPriority(str, Enum):
+class ApprovalPriority(StrEnum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     URGENT = "URGENT"
 
 
-class WorkflowType(str, Enum):
+class WorkflowType(StrEnum):
     SERIAL = "SERIAL"
     PARALLEL = "PARALLEL"
     ANY_ONE = "ANY_ONE"
@@ -152,22 +151,22 @@ class EscalateRequest(_HumanAIBase):
 
 
 __all__ = [
-    "ApprovalStatus",
+    "AmountInCents",
+    "ApiResult",
     "ApprovalPriority",
-    "WorkflowType",
+    "ApprovalRecord",
+    "ApprovalStatus",
+    "ApprovalTask",
+    "ApproveRequest",
     "ApproverRole",
     "ApproverSlot",
-    "WorkflowRule",
-    "ApprovalRecord",
-    "ApprovalTask",
     "CreateApprovalRequest",
-    "ApproveRequest",
-    "HumanRoutingDecision",
-    "RouteFromAIRequest",
     "DelegateRequest",
     "EscalateRequest",
-    "ApiResult",
+    "HumanRoutingDecision",
     "Id",
     "IsoTimestamp",
-    "AmountInCents",
+    "RouteFromAIRequest",
+    "WorkflowRule",
+    "WorkflowType",
 ]

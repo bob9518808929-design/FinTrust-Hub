@@ -27,12 +27,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import statistics
 import sys
 import time
 from collections import Counter
-from typing import Any
 
 # 让 tests 目录可导入 app
 sys.path.insert(0, ".")
@@ -57,7 +55,6 @@ async def _http_one_request(client, payload: dict) -> dict:
     """单次 HTTP 请求, 返回 {latency, intent, fallback}."""
     t0 = time.perf_counter()
     try:
-        import httpx
         r = await client.post("/api/v1/eco-bot/parse", json=payload, timeout=60.0)
         dt = (time.perf_counter() - t0) * 1000
         if r.status_code != 200:
@@ -138,11 +135,12 @@ def _make_fault_injector(fail_rate: float, latency_ms: float = 0):
 async def run_circuit_breaker_scenario(concurrency: int, total: int) -> None:
     """熔断器场景: 持续故障注入, 验证阈值→熔断→半开→恢复."""
     from unittest.mock import patch
+
     from app.services.llm_service import LLMService, llm_service
 
     print(_c("\n[熔断器场景] 注入持续故障, 观察熔断阈值与恢复", COLOR_CYAN))
     print("-" * 70)
-    print(f"  CircuitBreaker 默认 threshold=5, cooldown=60s")
+    print("  CircuitBreaker 默认 threshold=5, cooldown=60s")
     print(f"  并发={concurrency} 总数={total} 全部注入失败 (fail_rate=1.0)")
     print("-" * 70)
 
@@ -206,6 +204,7 @@ async def run_circuit_breaker_scenario(concurrency: int, total: int) -> None:
 async def run_rate_limit_scenario(concurrency: int, total: int) -> None:
     """限流场景: 高并发同企业, 验证 10/分钟阈值."""
     from unittest.mock import patch
+
     from app.services.llm_service import llm_service
 
     print(_c("\n[限流场景] 同企业高并发, 验证 10/分钟阈值", COLOR_CYAN))
@@ -219,7 +218,7 @@ async def run_rate_limit_scenario(concurrency: int, total: int) -> None:
 
     # 接入真实 redis_client.rate_limit (需 Redis 在跑)
     # 若 Redis 未跑, rate_limit 返回 True (降级放行), 无法测限流
-    from app.services.redis_client import init_redis, get_redis
+    from app.services.redis_client import get_redis, init_redis
     await init_redis()
     redis = get_redis()
     if redis is None:
@@ -256,6 +255,7 @@ async def run_rate_limit_scenario(concurrency: int, total: int) -> None:
 async def run_mixed_scenario(concurrency: int, total: int) -> None:
     """混合场景: 50% 成功 50% 失败, 验证熔断器开闭切换稳定性."""
     from unittest.mock import patch
+
     from app.services.llm_service import LLMService, llm_service
 
     print(_c("\n[混合场景] 50% 故障注入, 验证熔断器开闭切换稳定性", COLOR_CYAN))
@@ -321,7 +321,7 @@ def _print_summary(results: list[dict]) -> None:
     print(f"  延迟 p99:      {_p(0.99):.1f}ms")
     print(f"  延迟 max:      {max(latencies):.1f}ms")
     print(f"  延迟 avg:      {statistics.mean(latencies):.1f}ms")
-    print(f"  fallback 分布:")
+    print("  fallback 分布:")
     for fb, count in fallbacks.most_common():
         print(f"    - {fb[:50]:50s}  {count:4d}  ({count * 100 / len(results):.1f}%)")
 

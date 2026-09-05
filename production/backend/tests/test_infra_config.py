@@ -22,7 +22,6 @@ import asyncio
 import importlib.util
 import sys
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import yaml
@@ -270,11 +269,11 @@ class TestTemporalWorker:
 
     def test_temporal_fallback_runs_dag(self) -> None:
         """asyncio 兜底模式下 run_dag 应能完成一次 DAG 执行 (走内存 _OrchStore)."""
+        from app.schemas.ai_orchestrator import ExecuteDAGRequest
         from app.workers.temporal_worker import (
             get_temporal_worker,
             reset_temporal_worker,
         )
-        from app.schemas.ai_orchestrator import ExecuteDAGRequest
 
         async def _check():
             await reset_temporal_worker()
@@ -441,7 +440,6 @@ class TestLLMServiceVllmFallback:
     def test_llm_service_vllm_success_no_fallback(self) -> None:
         """vLLM 主模型调用成功时, 不应触发降级 (mock)."""
         mod = _load_ai_engine_llm_service()
-        import httpx
 
         svc = mod.LLMService()
 
@@ -536,11 +534,13 @@ class TestAIOrchestratorR48:
 
     def test_persist_to_postgres_db_none_returns_false(self) -> None:
         """db=None 时 _persist_to_postgres 应返回 False (降级到内存 _OrchStore)."""
-        from app.services.ai_orchestrator_service import (
-            AIOrchestratorService, _orch_store,
-        )
         from app.schemas.ai_orchestrator import (
-            DAGStatus, DAGExecution,
+            DAGExecution,
+            DAGStatus,
+        )
+        from app.services.ai_orchestrator_service import (
+            AIOrchestratorService,
+            _orch_store,
         )
 
         svc = AIOrchestratorService(db=None, redis_client=None)
@@ -567,10 +567,10 @@ class TestAIOrchestratorR48:
 
     def test_load_from_temporal_db_none_uses_memory_store(self) -> None:
         """db=None 时 _load_from_temporal 应从内存 _OrchStore 读取."""
-        from app.services.ai_orchestrator_service import AIOrchestratorService
         from app.schemas.ai_orchestrator import (
-            AutonomyLevel, ExecuteDAGRequest,
+            ExecuteDAGRequest,
         )
+        from app.services.ai_orchestrator_service import AIOrchestratorService
 
         svc = AIOrchestratorService(db=None, redis_client=None)
         # 先执行一次 L4 DAG, 写入内存 store
@@ -593,8 +593,8 @@ class TestAIOrchestratorR48:
         """to_temporal_workflow 应返回可 JSON 序列化的 dict, 含 DAG 节点/边."""
         import json
 
-        from app.services.ai_orchestrator_service import AIOrchestratorService
         from app.schemas.ai_orchestrator import ExecuteDAGRequest
+        from app.services.ai_orchestrator_service import AIOrchestratorService
 
         svc = AIOrchestratorService(db=None, redis_client=None)
         # 取一个种子 DAG (内存 store 已 seed)

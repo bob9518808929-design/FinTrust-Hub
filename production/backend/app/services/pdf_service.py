@@ -10,7 +10,6 @@ spec 依据: ECO-08 政府背书报告 / 监管沙盒穿透报告 / 改造结果
 import io
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class PDFService:
         self,
         template_name: str,
         context: dict,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
     ) -> bytes:
         """生成 PDF 报告.
 
@@ -52,15 +51,15 @@ class PDFService:
         except ImportError:
             logger.warning("weasyprint 未安装, 降级到 reportlab")
             return await self._render_with_reportlab(template_name, context, output_path)
-        except Exception as e:
+        except Exception:
             logger.exception("weasyprint 渲染失败, 降级到 reportlab")
             return await self._render_with_reportlab(template_name, context, output_path)
 
     async def _render_with_weasyprint(
-        self, template_name: str, context: dict, output_path: Optional[str]
+        self, template_name: str, context: dict, output_path: str | None
     ) -> bytes:
-        from weasyprint import HTML, CSS
         from jinja2 import Environment, FileSystemLoader
+        from weasyprint import CSS, HTML
 
         env = Environment(loader=FileSystemLoader(str(self.template_dir)))
         template = env.get_template(template_name)
@@ -74,13 +73,13 @@ class PDFService:
         return pdf_bytes
 
     async def _render_with_reportlab(
-        self, template_name: str, context: dict, output_path: Optional[str]
+        self, template_name: str, context: dict, output_path: str | None
     ) -> bytes:
         from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
         if self.font_path and Path(self.font_path).exists():
             pdfmetrics.registerFont(TTFont("NotoSans", self.font_path))
@@ -104,8 +103,8 @@ class PDFService:
 
         # 表格数据 (如果 context 提供 metrics)
         if context.get("metrics"):
-            from reportlab.platypus import Table, TableStyle
             from reportlab.lib import colors
+            from reportlab.platypus import Table, TableStyle
             data = [["指标", "当前值", "行业基准", "状态"]]
             for m in context["metrics"]:
                 data.append([

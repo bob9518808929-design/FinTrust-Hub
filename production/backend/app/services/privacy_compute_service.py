@@ -6,21 +6,29 @@ import hashlib
 import math
 import random
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.privacy import (
-    EncryptedField, EncryptionScheme, PurgeJob, PurgeStatus, ShamirShardInfo,
+    EncryptedField,
+    EncryptionScheme,
+    PurgeJob,
+    PurgeStatus,
+    ShamirShardInfo,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str) -> str:
     return f"{prefix}-{uuid4().hex[:12]}"
+
+
+# 后台任务强引用集合（防 asyncio 任务被 GC 提前回收，完成后自动摘除）
+_BG_TASKS: set[asyncio.Task] = set()
 
 
 class _PrivacyStore:
@@ -33,7 +41,6 @@ class _PrivacyStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = _now_iso()
         sample_values = [
             ("id_card", "110101199001011234", EncryptionScheme.FF1_FPE),
             ("bank_card", "6222021234567890123", EncryptionScheme.FF1_FPE),
@@ -60,7 +67,7 @@ class _PrivacyStore:
                 "reason": f"合规数据保留期满 #{i}",
                 "retentionDays": 90,
                 "status": PurgeStatus.COMPLETED.value,
-                "scheduledAt": (datetime.now(timezone.utc) - timedelta(days=30 + i)).isoformat(),
+                "scheduledAt": (datetime.now(UTC) - timedelta(days=30 + i)).isoformat(),
                 "purgedCount": 128 + i * 50,
                 "failedCount": 0,
                 "dataTypes": ["invoices", "bank_transactions"],
@@ -310,7 +317,7 @@ class PrivacyComputeService:
     def decrypt_field(
         self,
         enc: EncryptedField,
-        shards_for_shamir: Optional[list[str]] = None,
+        shards_for_shamir: list[str] | None = None,
     ) -> str | None:
         if enc.scheme == EncryptionScheme.AES_GCM:
             try:
@@ -366,7 +373,7 @@ class PrivacyComputeService:
         secret: str,
         total: int = 5,
         threshold: int = 3,
-        holders: Optional[list[str]] = None,
+        holders: list[str] | None = None,
     ) -> tuple[list[str], ShamirShardInfo]:
         if total < 2 or threshold < 2 or threshold > total:
             raise ValueError("Invalid shamir params")
@@ -375,7 +382,7 @@ class PrivacyComputeService:
         secret_bytes = secret.encode("utf-8")
         for i in range(1, total + 1):
             noise = hashlib.sha256(f"shard:{i}:{secret}:{uuid4().hex[:8]}".encode()).digest()
-            combined = bytes([a ^ b for a, b in zip(secret_bytes.ljust(32, b'\0'), noise)])
+            combined = bytes([a ^ b for a, b in zip(secret_bytes.ljust(32, b'\0'), noise, strict=False)])
             shards.append(f"SH{i:02d}-{base64.urlsafe_b64encode(combined).decode().rstrip('=')}")
         info = ShamirShardInfo(
             total_shards=total,
@@ -386,7 +393,10 @@ class PrivacyComputeService:
         try:
             loop = asyncio.get_running_loop()
             if loop.is_running():
-                loop.create_task(_privacy_store.store_shards(key, shards))
+                # 持有强引用, 防事件循环 GC 回收后台任务 (RUF006)
+                task = loop.create_task(_privacy_store.store_shards(key, shards))
+                _BG_TASKS.add(task)
+                task.add_done_callback(_BG_TASKS.discard)
         except RuntimeError:
             pass
         return shards, info
@@ -710,7 +720,7 @@ class PrivacyComputeService:
 
         # 尝试启用 HE-SEAL
         he_available = self._init_he_seal()
-        lib_name: Optional[str] = None
+        lib_name: str | None = None
         if he_available and self._he_seal_lib is not None:
             lib_name = getattr(self._he_seal_lib, "__name__", "unknown")
 
@@ -796,7 +806,6 @@ class PrivacyComputeService:
             - 模拟收敛: 每轮 loss 轻微下降 (基于聚合梯度优化)
             - 真实 LLM/模型库不可用时降级为 mock
         """
-        import time as _time
 
         if not participants or len(participants) < 2:
             raise ValueError("participants 至少需要 2 个")

@@ -2,18 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.refinance import (
-    AIRecommendation, CashflowForecast, GapSizeLabel, RefinanceEntrance,
-    RefinanceSubmission, SubmissionStatus,
+    AIRecommendation,
+    CashflowForecast,
+    GapSizeLabel,
+    RefinanceEntrance,
+    RefinanceSubmission,
+    SubmissionStatus,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str) -> str:
@@ -32,7 +36,7 @@ class _RefiStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base_inflow = {
             "E001": 5_000_000_00,  # 500 万/月 (分)
             "E002": 8_000_000_00,  # 800 万
@@ -94,7 +98,7 @@ class RefinanceService:
     ) -> list[CashflowForecast]:
         items = await _refi_store.get_forecast(enterprise_id, months)
         if not items:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             items = []
             cumulative = 0
             for m in range(months):

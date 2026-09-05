@@ -5,12 +5,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class DataFlow(str, Enum):
+class DataFlow(StrEnum):
     FUND = "FUND"
     CONTRACT = "CONTRACT"
     INVOICE = "INVOICE"
@@ -19,7 +19,7 @@ class DataFlow(str, Enum):
     HUMAN = "HUMAN"
 
 
-class OptionalModule(str, Enum):
+class OptionalModule(StrEnum):
     BANK_AGGREGATOR = "BANK_AGGREGATOR"
     EXTERNAL_DATA = "EXTERNAL_DATA"
     OCR = "OCR"
@@ -38,7 +38,7 @@ class OptionalModule(str, Enum):
     REFORM_SANDBOX = "REFORM_SANDBOX"
 
 
-class CooperationMethod(str, Enum):
+class CooperationMethod(StrEnum):
     FULL_TRUST = "FULL_TRUST"
     CO_LENDING = "CO_LENDING"
     GUARANTEED = "GUARANTEED"

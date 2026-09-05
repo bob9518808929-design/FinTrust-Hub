@@ -16,16 +16,20 @@ from __future__ import annotations
 import pytest
 
 from app.schemas.risk_rule import (
-    RiskRule, RiskRuleCreate, RiskStreamEvent, RuleAction, RuleCondition,
-    RuleLogic, RuleOperator,
+    RiskRuleCreate,
+    RiskStreamEvent,
+    RuleAction,
+    RuleCondition,
+    RuleLogic,
+    RuleOperator,
 )
 from app.services.risk_rule_engine import (
-    RiskRuleEngine, risk_rule_engine, _risk_rule_store,
-)
-from app.services.risk_stream_service import (
-    RiskStreamService, risk_stream_service,
+    risk_rule_engine,
 )
 from app.services.risk_service import risk_service
+from app.services.risk_stream_service import (
+    risk_stream_service,
+)
 
 pytestmark = pytest.mark.asyncio
 

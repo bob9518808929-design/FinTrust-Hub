@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,10 +20,9 @@ from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, ApiResult, Id, IsoTimestamp
 
-
 # === 枚举 ===
 
-class DataSourceType(str, Enum):
+class DataSourceType(StrEnum):
     """第三方数据源类型."""
     INVOICE_VERIFIER = "INVOICE_VERIFIER"
     GSXT = "GSXT"
@@ -31,7 +30,7 @@ class DataSourceType(str, Enum):
     ECDS = "ECDS"
 
 
-class AdapterHealthStatus(str, Enum):
+class AdapterHealthStatus(StrEnum):
     """适配器健康状态 (三档)."""
     OK = "ok"
     DEGRADED = "degraded"
@@ -130,21 +129,21 @@ class ECDSBillRecord(_ExternalDataBase):
 
 
 __all__ = [
-    "DataSourceType",
-    "AdapterHealthStatus",
-    "InvoiceStatus",
-    "CaseType",
-    "BillType",
-    "BillStatus",
-    "BillRole",
     "AdapterHealth",
+    "AdapterHealthStatus",
+    "AmountInCents",
+    "ApiResult",
+    "BillRole",
+    "BillStatus",
+    "BillType",
+    "CaseType",
+    "DataSourceType",
+    "ECDSBillRecord",
+    "GSXTEnterpriseInfo",
+    "Id",
+    "InvoiceStatus",
     "InvoiceVerifyRequest",
     "InvoiceVerifyResult",
-    "GSXTEnterpriseInfo",
-    "JudiciaryCaseRecord",
-    "ECDSBillRecord",
-    "ApiResult",
-    "Id",
     "IsoTimestamp",
-    "AmountInCents",
+    "JudiciaryCaseRecord",
 ]

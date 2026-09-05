@@ -11,11 +11,13 @@ from fastapi.responses import Response
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.reform_sandbox import (
-    PurgeInfo, Sandbox, SandboxChange, SandboxDiff,
+    PurgeInfo,
+    Sandbox,
+    SandboxChange,
+    SandboxDiff,
 )
 from app.schemas.sandbox_indicator import IndicatorCurve, SandboxReport
 from app.services.reform_sandbox_service import reform_sandbox_service
-
 
 reform_sandbox_router = APIRouter(prefix="/infra/reform-sandbox", tags=["INFRA-04 改造沙箱"])
 
@@ -200,7 +202,7 @@ async def export_pdf_report(
         sbs = await reform_sandbox_service.list_by_enterprise(enterprise_id)
         if not sbs:
             return Response(
-                content=f"企业 {enterprise_id} 无沙箱".encode("utf-8"),
+                content=f"企业 {enterprise_id} 无沙箱".encode(),
                 media_type="text/plain",
                 status_code=404,
             )

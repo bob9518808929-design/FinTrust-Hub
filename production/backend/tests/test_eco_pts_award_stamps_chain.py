@@ -234,7 +234,7 @@ class TestAwardStampsChain:
             side_effect=RuntimeError("chain still down"),
         ):
             # 模拟 3 轮 APScheduler 重试扫描
-            for round_num in range(1, 4):
+            for _round_num in range(1, 4):
                 drained = eco_pts_service.drain_in_memory_retry_queue()
                 for entry in drained:
                     ok = await eco_pts_service.retry_stamp_once(entry)

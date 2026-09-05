@@ -6,7 +6,8 @@ JWT 鉴权 (P0 必补):
     - 支持 sub / user_id / role / tenant_id 字段映射
 """
 
-from typing import Annotated, Optional
+from datetime import UTC
+from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
@@ -24,7 +25,7 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 # === JWT 工具 ===
 
 
-def _decode_jwt(token: str) -> Optional[dict]:
+def _decode_jwt(token: str) -> dict | None:
     """验证 JWT 签名并返回 payload. 失败返回 None."""
     try:
         payload = jwt.decode(
@@ -45,10 +46,10 @@ def create_access_token(payload: dict, expires_minutes: int | None = None) -> st
     (默认 1440 分钟 = 24 小时). APP-02 工人 token 传 settings.WORKER_JWT_EXPIRE_MINUTES
     (7 天). 同时写入 iat (签发时间) 便于客户端展示与测试断言.
     """
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     minutes = expires_minutes if expires_minutes is not None else settings.JWT_EXPIRE_MINUTES
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + timedelta(minutes=minutes)
     payload = {**payload, "iat": now, "exp": expire}
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)

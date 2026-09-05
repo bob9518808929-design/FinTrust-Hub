@@ -10,11 +10,13 @@ from fastapi import APIRouter, Body
 
 from app.api.deps import make_ok
 from app.schemas.api_adapters import (
-    AdapterId, AdapterRuntime, InvokeRequest, InvokeResult,
+    AdapterId,
+    AdapterRuntime,
+    InvokeRequest,
+    InvokeResult,
 )
 from app.schemas.common import ApiResult
 from app.services.api_adapter_registry import get_adapter_registry_sync
-
 
 api_adapters_router = APIRouter(prefix="/infra/adapters", tags=["INFRA-01b API 适配层"])
 

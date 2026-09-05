@@ -20,18 +20,21 @@ import logging
 import math
 import os
 from collections import defaultdict
-from typing import Optional
 
 import httpx
 
 from app.schemas.risk_rule import (
-    RiskEvaluationResult, RiskRuleSet, RiskStreamEvent,
+    RiskEvaluationResult,
+    RiskRuleSet,
+    RiskStreamEvent,
 )
 from app.services.risk_rule_engine import (
-    RiskRuleEngine, risk_rule_engine,
+    RiskRuleEngine,
+    risk_rule_engine,
 )
 from app.services.risk_stream_service import (
-    RiskStreamService, risk_stream_service,
+    RiskStreamService,
+    risk_stream_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -271,7 +274,7 @@ class RiskService:
         }
 
     async def detect_hollow_out(
-        self, enterprise_id: str, transactions: Optional[list[dict]] = None,
+        self, enterprise_id: str, transactions: list[dict] | None = None,
     ) -> dict:
         """空心化检测 (监管账户只有过桥还款, 日常经营支出不走该账户).
 
@@ -316,8 +319,8 @@ class RiskService:
 
     async def detect_repayment_cliff(
         self, enterprise_id: str,
-        repayments: Optional[list[dict]] = None,
-        invoices: Optional[list[dict]] = None,
+        repayments: list[dict] | None = None,
+        invoices: list[dict] | None = None,
     ) -> dict:
         """回款断崖检测 (回款额下滑但开票/纳税数据增长).
 
@@ -361,7 +364,7 @@ class RiskService:
 
     async def predict_cashflow_cliff(
         self, enterprise_id: str, days: int = 30,
-        daily_net: Optional[list[float]] = None,
+        daily_net: list[float] | None = None,
     ) -> dict:
         """现金流悬崖预测 (未来 N 天缺口, 线性外推).
 
@@ -394,7 +397,7 @@ class RiskService:
 
     async def detect_related_fraud(
         self, enterprise_id: str, hops: int = 2,
-        relations: Optional[dict[str, list[str]]] = None,
+        relations: dict[str, list[str]] | None = None,
     ) -> dict:
         """关联方欺诈检测 (2 跳内关联方资金回流).
 
@@ -420,14 +423,14 @@ class RiskService:
                     if nb == enterprise_id and len(path) >= 1:
                         # 回流环: path + [enterprise_id]
                         backflow.append({
-                            "path": path + [enterprise_id],
+                            "path": [*path, enterprise_id],
                             "hops": len(path),
                         })
                         continue
                     if nb not in visited:
                         visited.add(nb)
                         related.add(nb)
-                        nxt.append((nb, path + [nb]))
+                        nxt.append((nb, [*path, nb]))
             frontier = nxt
         return {
             "related_parties": sorted(related),

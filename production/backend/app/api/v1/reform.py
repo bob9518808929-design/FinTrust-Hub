@@ -27,7 +27,9 @@
   POST     /reform/{enterprise_id}/bank-match       银行撮合
 """
 
-from fastapi import APIRouter, Body, Response, status
+from datetime import UTC
+
+from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 
 from app.api.deps import make_ok
@@ -36,12 +38,17 @@ from app.schemas.common import ApiResult
 from app.schemas.enterprise import ReformPrecheck
 from app.schemas.reform import CaseStats
 from app.schemas.scorecard import (
-    ComplianceCheckResult, ReformActionResult, ReformCase,
-    ReformMonitorResult, ReformReplanResult, ReformState, ReformPhase,
-    Scorecard8D, BankProductMatch,
+    ComplianceCheckResult,
+    ReformActionResult,
+    ReformCase,
+    ReformMonitorResult,
+    ReformPhase,
+    ReformReplanResult,
+    ReformState,
+    Scorecard8D,
 )
-from app.services.reform_service import ReformService, _reform_store
 from app.services.bank_service import BankService
+from app.services.reform_service import ReformService, _reform_store
 
 router = APIRouter(prefix="/reform", tags=["改造引擎"])
 
@@ -406,7 +413,7 @@ async def r5_execute_compat(req: ExecuteActionCompatReq, db: DbSession, _user: C
     """前端旧签名: POST /reform/execute-action { action, context }.
     从 action.phaseId 反查 enterprise_id."""
     action_id = req.action.get("id", "")
-    phase_id = req.action.get("phaseId", "")
+    req.action.get("phaseId", "")
     if not action_id:
         return make_ok(None, code=400, message="缺少 action.id")
     result = await _svc(db).R5_executeAction("__compat__", action_id)
@@ -498,5 +505,5 @@ async def list_cases(industry: str | None = None, db: DbSession = None, _user: C
 
 
 def _now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
+    from datetime import datetime
+    return datetime.now(UTC).isoformat()

@@ -17,18 +17,21 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 import httpx
 
 from app.schemas.five_flow import (
-    ConsistencyCheckResult, FundAccountLock, MonitorAlert,
+    ConsistencyCheckResult,
+    FundAccountLock,
+    MonitorAlert,
 )
 from app.services.five_flow_consistency_service import (
-    FiveFlowConsistencyService, five_flow_consistency_service,
+    FiveFlowConsistencyService,
+    five_flow_consistency_service,
 )
 from app.services.monitor_rules_service import (
-    MonitorRulesService, monitor_rules_service,
+    MonitorRulesService,
+    monitor_rules_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -132,7 +135,7 @@ class FundService:
         return await self._consistency_service.check_consistency(enterprise_id, tx_id)
 
     async def monitor_alerts(
-        self, enterprise_id: Optional[str] = None,
+        self, enterprise_id: str | None = None,
     ) -> list[MonitorAlert]:
         """列出监控告警 (委托 MonitorRulesService, 可按企业过滤)."""
         return await self._monitor_service.list_alerts(enterprise_id=enterprise_id)
@@ -154,7 +157,7 @@ class FundService:
             duration_hours=duration_hours,
         )
 
-    async def release_account(self, lock_id: str) -> Optional[FundAccountLock]:
+    async def release_account(self, lock_id: str) -> FundAccountLock | None:
         """释放资金账户锁定 (委托 MonitorRulesService)."""
         return await self._monitor_service.release_fund_account(lock_id)
 

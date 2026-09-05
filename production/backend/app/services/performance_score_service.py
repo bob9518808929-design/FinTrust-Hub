@@ -5,20 +5,18 @@ import json
 import logging
 import os
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import uuid4
 
 import yaml
 
 from app.schemas.performance import PerformanceScore, PerfTrend
 
-
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _month_iso(year: int, month: int) -> str:
@@ -42,7 +40,7 @@ class _PerfStore:
 
     def _seed(self) -> None:
         enterprises = ["E001", "E002", "E003", "E004"]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base_pd = {"E001": 8.0, "E002": 3.5, "E003": 18.0, "E004": 5.0}
         base_ioy = {"E001": 82.0, "E002": 92.0, "E003": 65.0, "E004": 88.0}
 
@@ -128,7 +126,7 @@ class PerformanceScoreService:
             "输出 JSON (pd, ioy, factors, reasoning)."
         )
         try:
-            with open(_PROMPT_TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            with open(_PROMPT_TEMPLATE_PATH, encoding="utf-8") as f:
                 tpl = yaml.safe_load(f) or {}
             self._prompt_template = {
                 "system_prompt": tpl.get("system_prompt", default_system),
@@ -437,7 +435,7 @@ class PerformanceScoreService:
         # 补齐: 若历史不足 months 个月, 用 mock 生成更早的历史
         if len(historical) < months:
             existing_months = {h["monthIso"] for h in historical}
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             # 找出最早的月份, 向前补齐
             if historical:
                 earliest = historical[0]["monthIso"]
@@ -494,7 +492,7 @@ class PerformanceScoreService:
             try:
                 last_dt = datetime.strptime(last["monthIso"], "%Y-%m")
             except ValueError:
-                last_dt = datetime.now(timezone.utc)
+                last_dt = datetime.now(UTC)
             for i in range(1, forecast_count + 1):
                 # 月份前进 i 个月
                 year = last_dt.year
@@ -575,7 +573,7 @@ class PerformanceScoreService:
             return 0.0
         sum_x = sum(xs)
         sum_y = sum(ys)
-        sum_xy = sum(x * y for x, y in zip(xs, ys))
+        sum_xy = sum(x * y for x, y in zip(xs, ys, strict=False))
         sum_x2 = sum(x * x for x in xs)
         denom = n * sum_x2 - sum_x * sum_x
         if denom == 0:

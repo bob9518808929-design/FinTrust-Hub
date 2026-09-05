@@ -1,16 +1,16 @@
 """文件名：privacy.py 职责：数据安全与隐私计算 Pydantic 模型,定义加密方案、清除任务与 Shamir 分片 schema."""
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import AmountInCents, Id, IsoTimestamp
+from app.schemas.common import Id, IsoTimestamp
 
 
-class EncryptionScheme(str, Enum):
+class EncryptionScheme(StrEnum):
     FF1_FPE = "FF1_FPE"
     SHAMIR = "SHAMIR"
     HE_SEAL = "HE_SEAL"
@@ -18,7 +18,7 @@ class EncryptionScheme(str, Enum):
     MOCK = "MOCK"
 
 
-class PurgeStatus(str, Enum):
+class PurgeStatus(StrEnum):
     SCHEDULED = "SCHEDULED"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"

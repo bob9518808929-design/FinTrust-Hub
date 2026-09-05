@@ -15,14 +15,16 @@ from fastapi import APIRouter, Query
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.parsers import (
-    BankStatementParseResult, ContractParseResult, InvoiceParseResult,
-    OcrRequest, OcrResult,
+    BankStatementParseResult,
+    ContractParseResult,
+    InvoiceParseResult,
+    OcrRequest,
+    OcrResult,
 )
 from app.services.bank_statement_parser import BankStatementParserService
 from app.services.contract_parser import ContractParserService
 from app.services.invoice_parser import InvoiceParserService
 from app.services.ocr_service import OcrService, ocr_service
-
 
 parsers_router = APIRouter(prefix="/data/parsers", tags=["DATA-03 OCR 解析"])
 

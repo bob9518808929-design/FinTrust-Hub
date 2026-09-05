@@ -28,8 +28,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.ai_orchestrator import (
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 def _now_iso() -> str:
     """返回 UTC ISO8601 时间戳 (用于 Activity 侧; Workflow 侧应使用 workflow.now())."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 # ============================================================================
@@ -62,12 +62,12 @@ try:
     # try/except ImportError 兜底: SDK 缺失时所有 Temporal 引用替换为占位对象
     from temporalio import activity, workflow
     from temporalio.client import Client
-    from temporalio.worker import Worker
     from temporalio.common import RetryPolicy
+    from temporalio.worker import Worker
 
     _TEMPORAL_AVAILABLE = True
-    _TEMPORAL_IMPORT_ERROR: Optional[Exception] = None
-except ImportError as exc:  # noqa: BLE001
+    _TEMPORAL_IMPORT_ERROR: Exception | None = None
+except ImportError as exc:
     # 降级模式: 不可用时所有 Temporal SDK 引用替换为占位对象, 业务侧不感知
     activity = None  # type: ignore[assignment]
     workflow = None  # type: ignore[assignment]
@@ -228,7 +228,7 @@ if _TEMPORAL_AVAILABLE:
                 "evidence_ids": list(evidence),
                 "status": "SUCCESS",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # 兜底: 不抛异常打断 workflow, 返回 FAILED 标记由 workflow 决定是否继续
             return {
                 "enterprise_id": enterprise_id,
@@ -264,7 +264,7 @@ if _TEMPORAL_AVAILABLE:
                 "evidence_ids": list(evidence),
                 "status": "SUCCESS",
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {
                 "enterprise_id": enterprise_id,
                 "step": "credit_assessment",
@@ -558,14 +558,14 @@ class _TemporalWorkerRunner:
         self._address = temporal_address
         self._namespace = namespace
         self._task_queue = task_queue
-        self._client: Optional[Any] = None     # temporalio.client.Client
-        self._worker: Optional[Any] = None     # temporalio.worker.Worker
+        self._client: Any | None = None     # temporalio.client.Client
+        self._worker: Any | None = None     # temporalio.worker.Worker
         self._started = False
 
     async def _connect(self) -> Any:
         """建立 Temporal Client 连接 (失败抛异常, 由 start/run_dag 捕获后降级)."""
         if self._client is None:
-            assert Client is not None  # noqa: S101
+            assert Client is not None
             self._client = await Client.connect(
                 self._address, namespace=self._namespace,
             )
@@ -600,7 +600,7 @@ class _TemporalWorkerRunner:
 
         try:
             client = await self._connect()
-            assert workflow is not None  # noqa: S101
+            assert workflow is not None
 
             # 生成 workflow_id (含 uuid, 避免重复请求被去重)
             workflow_id = (
@@ -640,7 +640,7 @@ class _TemporalWorkerRunner:
                 return await self._service.execute_dag(request)
 
             return _build_financing_execution(request, result)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(
                 f"Temporal Workflow 启动 / 等待失败, 降级到 asyncio 编排: {exc}"
             )
@@ -657,7 +657,7 @@ class _TemporalWorkerRunner:
             return
         try:
             client = await self._connect()
-            assert Worker is not None and RetryPolicy is not None  # noqa: S101
+            assert Worker is not None and RetryPolicy is not None
 
             workflows, activities = self._workflow_and_activities()
             self._worker = Worker(
@@ -673,9 +673,10 @@ class _TemporalWorkerRunner:
                 f"activities={len(activities)})"
             )
             # 不阻塞调用方: 后台运行, 失败时由 run_dag 兜底
-            asyncio.create_task(self._worker.run())  # type: ignore[arg-type]
+            # 必须持有引用, 否则事件循环可能 GC 回收该任务 (RUF006)
+            self._run_task = asyncio.create_task(self._worker.run())  # type: ignore[arg-type]
             self._started = True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(
                 f"Temporal Worker 启动失败, 降级为 asyncio 兜底: {exc}"
             )
@@ -686,7 +687,7 @@ class _TemporalWorkerRunner:
         if self._worker is not None:
             try:
                 await self._worker.shutdown()  # type: ignore[attr-defined]
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"Temporal Worker 关闭异常: {exc}")
         self._worker = None
         self._started = False
@@ -696,15 +697,15 @@ class _TemporalWorkerRunner:
 # 单例工厂 (自动选择真实 Worker / asyncio 兜底)
 # ============================================================================
 
-_worker_singleton: Optional[Any] = None
+_worker_singleton: Any | None = None
 _worker_lock = asyncio.Lock()
 
 
 async def get_temporal_worker(
-    service: Optional[AIOrchestratorService] = None,
-    temporal_address: Optional[str] = None,
-    namespace: Optional[str] = None,
-    task_queue: Optional[str] = None,
+    service: AIOrchestratorService | None = None,
+    temporal_address: str | None = None,
+    namespace: str | None = None,
+    task_queue: str | None = None,
 ) -> Any:
     """获取 Temporal Worker 单例 (自动降级).
 
@@ -767,7 +768,7 @@ async def get_temporal_worker(
                 f"Temporal Worker 已初始化 (真实模式, address={address}, "
                 f"namespace={ns}, task_queue={tq})"
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(
                 f"Temporal Worker 初始化失败, 降级 asyncio: {exc}"
             )
@@ -782,7 +783,7 @@ async def reset_temporal_worker() -> None:
         if _worker_singleton is not None:
             try:
                 await _worker_singleton.stop()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.warning(f"reset_temporal_worker stop 异常: {exc}")
         _worker_singleton = None
 

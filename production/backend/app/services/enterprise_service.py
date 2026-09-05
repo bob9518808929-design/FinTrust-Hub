@@ -14,22 +14,27 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enterprise import Enterprise as EnterpriseORM, Bank as BankORM, Guarantor as GuarantorORM, Insurer as InsurerORM
+from app.models.enterprise import Bank as BankORM
+from app.models.enterprise import Enterprise as EnterpriseORM
+from app.models.enterprise import Guarantor as GuarantorORM
+from app.models.enterprise import Insurer as InsurerORM
 from app.schemas.enterprise import Enterprise, EnterpriseCreate, EnterpriseUpdate
 from app.services.seed import (
-    BANKS_SEED, ENTERPRISES_SEED, GUARANTORS_SEED, INSURERS_SEED,
+    BANKS_SEED,
+    ENTERPRISES_SEED,
+    GUARANTORS_SEED,
+    INSURERS_SEED,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 # ============================================================================

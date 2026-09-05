@@ -12,24 +12,25 @@ from __future__ import annotations
 import asyncio
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import httpx
 
 from app.schemas.external_data import (
-    AdapterHealth, AdapterHealthStatus, DataSourceType,
+    AdapterHealth,
+    AdapterHealthStatus,
     JudiciaryCaseRecord,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _days_ago_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) - timedelta(days=days)).isoformat()
 
 
 def _case_id() -> str:
@@ -198,7 +199,7 @@ class JudiciaryAdapterService:
         未结案件定义: caseStatus 包含 "审理中" 或 "执行中".
         近 12 个月: filingDateIso 在 365 天内.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(days=365)
 
         cases = await self.query_cases(enterprise_id)

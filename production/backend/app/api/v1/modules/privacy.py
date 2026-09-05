@@ -1,9 +1,7 @@
 """文件名：privacy.py 职责：MOD-07 数据安全与隐私计算接口,提供字段加密方案、隐私计算与数据清除任务."""
 from __future__ import annotations
 
-from typing import Any, Optional
-
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -11,7 +9,10 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.privacy import (
-    EncryptedField, EncryptionScheme, PurgeJob, ShamirShardInfo,
+    EncryptedField,
+    EncryptionScheme,
+    PurgeJob,
+    ShamirShardInfo,
 )
 from app.services.data_purge_service import DataPurgeService
 from app.services.privacy_compute_service import PrivacyComputeService
@@ -35,7 +36,7 @@ class EncryptRequest(_Base):
 
 class DecryptRequest(_Base):
     encrypted: EncryptedField
-    shards_for_shamir: Optional[list[str]] = None
+    shards_for_shamir: list[str] | None = None
 
 
 class ShamirSplitRequest(_Base):
@@ -87,7 +88,7 @@ async def encrypt_field(payload: EncryptRequest, _user: CurrentUser = None):
 
 @router.post(
     "/decrypt",
-    response_model=ApiResult[Optional[str]],
+    response_model=ApiResult[str | None],
     summary="解密字段 (仅 AES/SHAMIR)",
 )
 async def decrypt_field(payload: DecryptRequest, _user: CurrentUser = None):
@@ -144,7 +145,7 @@ async def run_purge(payload: PurgeRequest, _user: CurrentUser = None):
     summary="列出 purge 作业 (可按企业筛选)",
 )
 async def list_purge(
-    enterprise_id: Optional[str] = Query(default=None, alias="enterpriseId"),
+    enterprise_id: str | None = Query(default=None, alias="enterpriseId"),
     _user: CurrentUser = None,
 ):
     jobs = await _pc_svc().list_purge_jobs(enterprise_id=enterprise_id)
@@ -179,7 +180,7 @@ class FederatedAggregateRequest(_Base):
 
 @router.post(
     "/he/encrypt",
-    response_model=ApiResult[Optional[str]],
+    response_model=ApiResult[str | None],
     summary="同态加密 (HE-SEAL, 库不可用返回 None)",
 )
 async def he_encrypt(payload: HEEncryptRequest, _user: CurrentUser = None):
@@ -189,7 +190,7 @@ async def he_encrypt(payload: HEEncryptRequest, _user: CurrentUser = None):
 
 @router.post(
     "/he/decrypt",
-    response_model=ApiResult[Optional[int]],
+    response_model=ApiResult[int | None],
     summary="同态解密 (HE-SEAL, 库不可用返回 None)",
 )
 async def he_decrypt(payload: HEDecryptRequest, _user: CurrentUser = None):
@@ -199,7 +200,7 @@ async def he_decrypt(payload: HEDecryptRequest, _user: CurrentUser = None):
 
 @router.post(
     "/he/add",
-    response_model=ApiResult[Optional[str]],
+    response_model=ApiResult[str | None],
     summary="同态密文加法 (HE-SEAL, 库不可用返回 None)",
 )
 async def he_add(payload: HEAddRequest, _user: CurrentUser = None):

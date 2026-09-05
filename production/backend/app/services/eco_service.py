@@ -19,32 +19,64 @@ import json
 import logging
 import re
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.eco import (
-    AwardPointsInput, AwardPointsResult, BankBid, BidSubmitInput, BotBroadcastInput,
-    BotBroadcastResult, BotCommandParse, BotCommandResult, BotConfig, BotExecuteInput,
-    BurnAuditTrail, BurnChainEvidence, BurnDataSummary, BurnDiagnosisResult, BurnDiagnosisSummary,
-    BurnGapBrief, BurnLoadResult, BurnProgress, BurnRawDataInput, CollusionEvidence,
-    ComplianceIndexSnapshot, CooperationRateResult, CreditApplicationInput, CreditApplicationRecord,
-    CredentialIssueInput, CredentialVerifyResult, ExchangeOrder, FraudLogEntry,
-    GovEndorseApplyInput, GovEndorseApplyResult, GovEndorsement, GovReport, GovReportInput,
-    IndexCompareResult, MultiHeadCheckResult, PlaceOrderInput, SettlementCalcInput,
-    SettlementRecord, ShopItem, Tender, TenderPublishInput, VerifiableCredential, WorkerAccount,
+    AwardPointsInput,
+    AwardPointsResult,
+    BankBid,
+    BidSubmitInput,
+    BotBroadcastInput,
+    BotBroadcastResult,
+    BotCommandParse,
+    BotCommandResult,
+    BotConfig,
+    BotExecuteInput,
+    BurnAuditTrail,
+    BurnChainEvidence,
+    BurnDataSummary,
+    BurnDiagnosisResult,
+    BurnDiagnosisSummary,
+    BurnGapBrief,
+    BurnLoadResult,
+    BurnProgress,
+    BurnRawDataInput,
+    ComplianceIndexSnapshot,
+    CooperationRateResult,
+    CredentialIssueInput,
+    CredentialVerifyResult,
+    CreditApplicationInput,
+    CreditApplicationRecord,
+    ExchangeOrder,
+    FraudLogEntry,
+    GovEndorseApplyInput,
+    GovEndorseApplyResult,
+    GovEndorsement,
+    GovReport,
+    GovReportInput,
+    IndexCompareResult,
+    MultiHeadCheckResult,
+    PlaceOrderInput,
+    SettlementCalcInput,
+    SettlementRecord,
+    ShopItem,
+    Tender,
+    TenderPublishInput,
+    VerifiableCredential,
+    WorkerAccount,
     WorkerBalances,
 )
-from app.schemas.scorecard import Scorecard8D, GapItem
+from app.schemas.scorecard import GapItem, Scorecard8D
 from app.services.seed import SHOP_ITEMS_SEED, WORKERS_SEED
-
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "id") -> str:
@@ -789,7 +821,7 @@ class EcoCredentialService:
 
     async def issue(self, inp: CredentialIssueInput) -> VerifiableCredential:
         async with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             expiry = now + timedelta(days=30 * (inp.expiry_months or 12))
             subject = {
                 "enterpriseId": inp.enterprise_id,
@@ -833,7 +865,7 @@ class EcoCredentialService:
                     revocationCheckedAt=_now_iso(),
                     signatureValid=False, blockchainVerified=False,
                 )
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             expired = datetime.fromisoformat(vc.expiration_date.replace("Z", "+00:00")) < now
             revoked = credential_id in self._revoked
             valid = not expired and not revoked and vc.status == "active"
@@ -884,7 +916,7 @@ class EcoBidService:
 
     async def publishTender(self, inp: TenderPublishInput) -> Tender:
         async with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             deadline = now + timedelta(hours=inp.bidding_hours or 24)
             # 链上存证
             prev = self._chain_head
@@ -919,7 +951,7 @@ class EcoBidService:
                 raise ValueError(f"标书状态 {tender.status}, 不可出价")
 
             # 多头防控
-            mh = await self._multiHeadCheck(tender.enterprise_id, inp.amount)
+            await self._multiHeadCheck(tender.enterprise_id, inp.amount)
 
             # 串通报价检测
             is_fraud, fraud_reason = self._detectCollusion(inp)
@@ -1235,7 +1267,7 @@ class EcoPtsService:
             "award_id": str(award_record.get("awardId", "")),
             "evidence_hash": evidence_hash,
             "retry_count": 0,
-            "next_retry_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+            "next_retry_at": (datetime.now(UTC) + timedelta(minutes=10)).isoformat(),
             "status": "pending",
             "last_error": reason,
         }
@@ -1392,7 +1424,7 @@ class EcoGovService:
 
     async def grantEndorsement(self, application_id: str, level: str = "provisional") -> GovEndorsement:
         async with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             end = GovEndorsement(
                 endorsementId=_id("end"), enterpriseId=application_id,
                 regulator="地方金融监管局", level=level,

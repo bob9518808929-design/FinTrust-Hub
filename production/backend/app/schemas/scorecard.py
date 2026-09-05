@@ -4,9 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.common import AmountInCents, Id, IsoTimestamp, Ratio, Score, TimestampMixin
+from app.schemas.common import AmountInCents, Id, IsoTimestamp, Ratio, Score
 from app.schemas.enterprise import AutonomyLevel, ReformLevel
-
 
 ScorecardDimension = Literal[
     "subject", "finance", "tax", "business", "assets", "credit", "policy", "capital",

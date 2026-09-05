@@ -16,11 +16,15 @@
 from fastapi import APIRouter, File, Form, UploadFile, status
 
 from app.api.deps import make_ok
-from app.deps import CurrentUser, DbSession
+from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.eco import (
-    BurnAuditTrail, BurnDataType, BurnDiagnosisResult, BurnLoadResult,
-    BurnProgress, BurnRawDataInput,
+    BurnAuditTrail,
+    BurnDataType,
+    BurnDiagnosisResult,
+    BurnLoadResult,
+    BurnProgress,
+    BurnRawDataInput,
 )
 from app.services.eco_service import eco_burn_service
 from app.services.raw_file_loader import parse_file_to_records

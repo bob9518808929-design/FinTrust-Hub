@@ -89,17 +89,17 @@ class AggregatedResult(_BankAggBase):
 
 
 __all__ = [
+    "AdapterRefreshResult",
+    "AggregatedResult",
+    "AmountInCents",
+    "ApiResult",
+    "BankAccount",
     "BankAdapterInfo",
+    "BankTransaction",
+    "Id",
+    "IsoTimestamp",
     "OAuthAuthorizationRequest",
     "OAuthAuthorizationResponse",
     "OAuthTokenResult",
-    "BankAccount",
-    "BankTransaction",
     "TxDirection",
-    "AdapterRefreshResult",
-    "AggregatedResult",
-    "ApiResult",
-    "Id",
-    "IsoTimestamp",
-    "AmountInCents",
 ]

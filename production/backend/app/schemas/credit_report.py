@@ -7,14 +7,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, Id, IsoTimestamp
-
 
 # === 枚举 ===
 
@@ -78,12 +76,12 @@ class CreditEvaluation(_CreditBase):
     factors: list[str] = Field(default_factory=list, description="影响因子列表")
     reasoning: str = Field(default="", description="评估理由")
     evaluated_at_iso: IsoTimestamp = Field(description="评估时间")
-    report: "CreditReport" = Field(description="原始征信报告")
+    report: CreditReport = Field(description="原始征信报告")
 
 
 __all__ = [
-    "CreditRating",
     "CreditDecision",
-    "CreditReport",
     "CreditEvaluation",
+    "CreditRating",
+    "CreditReport",
 ]

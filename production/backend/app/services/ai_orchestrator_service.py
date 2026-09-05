@@ -15,19 +15,28 @@ R4.8 升级 (2026-08-20): Temporal 工作流持久化接口
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.ai_orchestrator import (
-    AIDAG, ApproveNodeRequest, AutonomyLevel, DAGEdge, DAGExecution, DAGNode,
-    DAGStatus, DecisionLogEntry, EdgeCondition, ExecuteDAGRequest, TaskResult,
-    TaskResultStatus, TaskType,
+    AIDAG,
+    AutonomyLevel,
+    DAGEdge,
+    DAGExecution,
+    DAGNode,
+    DAGStatus,
+    DecisionLogEntry,
+    EdgeCondition,
+    ExecuteDAGRequest,
+    TaskResult,
+    TaskResultStatus,
+    TaskType,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "orch") -> str:
@@ -326,7 +335,7 @@ class _NodeHandlers:
             "ocr_confidence_avg": ocr_confidence,
             "ocr_mode": ocr_mode,
         }
-        evidence_ids = list(invoice_nos) + [output["contract_no"]]
+        evidence_ids = [*list(invoice_nos), output["contract_no"]]
         return output, evidence_ids
 
     @staticmethod
@@ -383,7 +392,7 @@ class _NodeHandlers:
                 {"role": "user", "content": f"企业{context.get('enterprise_id', 'E001')}申请{amount_cents//100}元贷款, 请评分."},
             ]
             resp = await llm_service.chat(messages, enterprise_id=context.get("enterprise_id", "E001"), scene="score")
-            content = resp.get("content", "")
+            resp.get("content", "")
             score_val = 78 if "fallback" in resp or resp.get("fallback") != "none" else 82
             confidence = 0.85
         except Exception:
@@ -918,7 +927,6 @@ class AIOrchestratorService:
         ai_rec = (existing.output or {}).get("ai_recommendation", {}) if existing else {}
         human_dec = human_decision_override_dict or {}
 
-        score_out: dict = {}
         decision_out: dict = {}
         evidence_ids: list[str] = []
         output: dict = {"human_approved": True, "operator": operator, "override": human_dec}
@@ -926,7 +934,6 @@ class AIOrchestratorService:
 
         if nt == _s(TaskType.SCORE):
             so, ev = await _node_handlers.handle_score(node.params, execution.context)
-            score_out = so
             output["result"] = so
             evidence_ids = ev
         elif nt == _s(TaskType.DECISION):
@@ -1036,7 +1043,7 @@ class AIOrchestratorService:
             if dlog:
                 await self._add_decision_log(**dlog)
             if extra.get("score_output"):
-                score_out = extra["score_output"]
+                extra["score_output"]
             if extra.get("decision_output"):
                 decision_out = extra["decision_output"]
 
@@ -1133,7 +1140,7 @@ class AIOrchestratorService:
                     "end": execution.end_at,
                 })
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # 持久化失败, 降级到内存 _OrchStore, 业务不中断
             # logger.warning 即可, 不抛出异常 (与 llm_service 降级模式一致)
             import logging as _logging
@@ -1148,7 +1155,7 @@ class AIOrchestratorService:
         self,
         execution_id: str,
         table_name: str = "ai_dag_executions",
-    ) -> Optional[DAGExecution]:
+    ) -> DAGExecution | None:
         """从 Temporal / PostgreSQL 恢复 DAG 执行状态.
 
         当 Worker 进程崩溃 / 服务重启后, 通过此方法根据 execution_id 从 PG
@@ -1208,7 +1215,7 @@ class AIOrchestratorService:
             execution = DAGExecution.model_validate(row_dict)
             await _orch_store.update_execution(execution.id, execution.model_dump())
             return execution
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             import logging as _logging
             _logging.getLogger(__name__).warning(
                 f"_load_from_temporal 失败, 降级到内存 _OrchStore: "

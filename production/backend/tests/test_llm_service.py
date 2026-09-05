@@ -36,7 +36,7 @@ try:
         _unmask_pii,
     )
     _IMPLEMENTED = True
-except ImportError:  # noqa: BLE001
+except ImportError:
     _IMPLEMENTED = False
 
 pytestmark = pytest.mark.skipif(
@@ -461,6 +461,7 @@ class TestChatDegrade:
         覆盖 redis_client.py L101-109 新增的 try/except RedisError 分支.
         """
         from redis.exceptions import RedisError
+
         from app.services import redis_client
 
         # 构造一个有 client 但 pipeline.execute 抛 RedisError 的假 Redis

@@ -1,22 +1,21 @@
 """文件名：refinance.py 职责：再融资 Pydantic 模型,定义缺口标签、提交状态、现金流预测与 AI 推荐 schema."""
 from __future__ import annotations
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import AmountInCents, Id, IsoTimestamp, Ratio
+from app.schemas.common import AmountInCents, Id, IsoTimestamp
 
 
-class GapSizeLabel(str, Enum):
+class GapSizeLabel(StrEnum):
     SMALL = "small"
     MEDIUM = "medium"
     LARGE = "large"
 
 
-class SubmissionStatus(str, Enum):
+class SubmissionStatus(StrEnum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
     PENDING_APPROVAL = "pending_approval"

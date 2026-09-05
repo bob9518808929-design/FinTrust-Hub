@@ -16,7 +16,6 @@ import hashlib
 import json
 import logging
 import time
-from typing import Optional
 
 import httpx
 
@@ -39,7 +38,7 @@ class ChainService:
         self.ant_access_key: str = getattr(settings, "ANT_CHAIN_ACCESS_KEY", "") or ""
         self.ant_secret: str = getattr(settings, "ANT_CHAIN_SECRET", "") or ""
         self.zxin_endpoint: str = getattr(settings, "ZXIN_CHAIN_ENDPOINT", "") or ""
-        self._client: Optional[httpx.AsyncClient] = httpx.AsyncClient(timeout=10.0)
+        self._client: httpx.AsyncClient | None = httpx.AsyncClient(timeout=10.0)
 
     @property
     def available(self) -> bool:

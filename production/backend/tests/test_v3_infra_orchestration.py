@@ -14,16 +14,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 from pathlib import Path
 
 import pytest
 import yaml
-
-from app.main import app
-
 
 # asyncio_mode=auto 自动为 async 测试应用 mark.asyncio, 无需全局 marker
 # (避免给 sync 测试误加 asyncio mark 触发 warning)
@@ -104,10 +100,12 @@ class TestInfra04SandboxPDF:
 
     async def test_export_pdf_report_recommendations(self):
         """_build_recommendations 根据 risk_flags + 指标状态生成改造建议."""
-        from app.services.reform_sandbox_service import ReformSandboxService
         from app.schemas.sandbox_indicator import (
-            CurvePoint, IndicatorCurve, IndicatorStatus,
+            CurvePoint,
+            IndicatorCurve,
+            IndicatorStatus,
         )
+        from app.services.reform_sandbox_service import ReformSandboxService
 
         # 构造一个含 degraded 指标 + 高资产负债率 risk_flag 的场景
         indicators = [
@@ -181,7 +179,7 @@ class TestInfra05BankApplicationPDF:
         assert _BANK_TEMPLATES_PATH.exists(), (
             f"bank_application_templates.yaml 不存在: {_BANK_TEMPLATES_PATH}"
         )
-        with open(_BANK_TEMPLATES_PATH, "r", encoding="utf-8") as f:
+        with open(_BANK_TEMPLATES_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         banks = data.get("banks", [])
         bank_codes = {b["bank_code"] for b in banks}
@@ -327,7 +325,9 @@ class TestCore01BusinessDAGs:
     def test_dag_workflows_module_loads_3_dags(self):
         """dag_workflows.py 加载 3 个业务 DAG (LOAN-APPROVAL/INVOICE-DISCOUNT/FUND-MONITOR)."""
         from app.workers.dag_workflows import (
-            BUSINESS_DAGS, BUSINESS_DAG_WORKFLOWS, get_business_dag,
+            BUSINESS_DAG_WORKFLOWS,
+            BUSINESS_DAGS,
+            get_business_dag,
         )
 
         assert len(BUSINESS_DAGS) == 3, f"应有 3 个 DAG, 实际: {len(BUSINESS_DAGS)}"
@@ -439,8 +439,8 @@ class TestCore01BusinessDAGs:
 
     async def test_business_dag_can_execute(self):
         """业务 DAG 可被 execute_dag 执行 (asyncio 降级模式)."""
-        from app.services.ai_orchestrator_service import ai_orchestrator_service
         from app.schemas.ai_orchestrator import ExecuteDAGRequest
+        from app.services.ai_orchestrator_service import ai_orchestrator_service
 
         # 确保已注册
         await ai_orchestrator_service.register_predefined_dags(overwrite=True)
@@ -471,7 +471,7 @@ class TestData04EmqxDeploy:
         assert _DEVICE_AUTH_PATH.exists(), (
             f"device_auth.conf 不存在: {_DEVICE_AUTH_PATH}"
         )
-        with open(_DEVICE_AUTH_PATH, "r", encoding="utf-8") as f:
+        with open(_DEVICE_AUTH_PATH, encoding="utf-8") as f:
             content = f.read()
         # 解析非注释行
         entries = [
@@ -498,7 +498,7 @@ class TestData04EmqxDeploy:
         assert _ALERT_RULES_PATH.exists(), (
             f"alert_rules.json 不存在: {_ALERT_RULES_PATH}"
         )
-        with open(_ALERT_RULES_PATH, "r", encoding="utf-8") as f:
+        with open(_ALERT_RULES_PATH, encoding="utf-8") as f:
             data = json.load(f)
         rules = data.get("rules", [])
         assert len(rules) >= 5, f"告警规则至少 5 条, 实际: {len(rules)}"
@@ -527,7 +527,7 @@ class TestData04EmqxDeploy:
     def test_docker_compose_yml_enhanced_with_alerts(self):
         """docker-compose.yml 完善: 含告警环境变量 + 挂载 device_auth.conf / alert_rules.json."""
         assert _DOCKER_COMPOSE_PATH.exists()
-        with open(_DOCKER_COMPOSE_PATH, "r", encoding="utf-8") as f:
+        with open(_DOCKER_COMPOSE_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         emqx = data["services"]["emqx"]
         env = emqx.get("environment", [])
@@ -553,7 +553,7 @@ class TestData04EmqxDeploy:
         assert _USERS_CONF_PATH.exists(), (
             f"users.conf 不存在: {_USERS_CONF_PATH}"
         )
-        with open(_USERS_CONF_PATH, "r", encoding="utf-8") as f:
+        with open(_USERS_CONF_PATH, encoding="utf-8") as f:
             content = f.read()
         entries = [
             line.strip() for line in content.splitlines()
@@ -637,6 +637,7 @@ class TestModuleIntegration:
         """app.main:app 能正常 import (新方法/路由不破坏现有启动)."""
         # 强制重新 import (避免上轮测试的缓存)
         import importlib
+
         import app.main as _m
         importlib.reload(_m)
         assert hasattr(_m, "app")

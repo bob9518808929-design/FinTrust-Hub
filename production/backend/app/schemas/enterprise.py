@@ -5,10 +5,14 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.common import (
-    AmountInCents, ApiResult, Id, IsoTimestamp, Ratio, Score,
+    AmountInCents,
+    ApiResult,
+    Id,
+    IsoTimestamp,
+    Ratio,
+    Score,
     TimestampMixin,
 )
-
 
 # === 枚举 ===
 

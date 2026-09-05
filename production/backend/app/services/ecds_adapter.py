@@ -12,28 +12,30 @@ from __future__ import annotations
 import asyncio
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import httpx
 
 from app.schemas.external_data import (
-    AdapterHealth, AdapterHealthStatus, BillRole, DataSourceType,
+    AdapterHealth,
+    AdapterHealthStatus,
+    BillRole,
     ECDSBillRecord,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _days_future_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) + timedelta(days=days)).isoformat()
 
 
 def _days_past_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) - timedelta(days=days)).isoformat()
 
 
 def _bill_id() -> str:

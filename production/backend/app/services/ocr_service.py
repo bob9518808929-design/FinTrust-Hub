@@ -21,11 +21,15 @@ from __future__ import annotations
 
 import hashlib
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.schemas.parsers import (
-    AdapterHealth, OcrBlock, OcrEngine, OcrRequest, OcrResult,
+    AdapterHealth,
+    OcrBlock,
+    OcrEngine,
+    OcrRequest,
+    OcrResult,
 )
 from app.services.ocr_adapters.ali_adapter import AliOCRAdapter
 from app.services.ocr_adapters.baidu_adapter import BaiduOCRAdapter
@@ -33,7 +37,7 @@ from app.services.ocr_adapters.paddle_adapter import PaddleOCRAdapter
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _seed_rng(seed_str: str) -> random.Random:

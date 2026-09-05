@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,10 +19,9 @@ from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, ApiResult, Id, IsoTimestamp
 
-
 # === 枚举 ===
 
-class BankTrustStage(str, Enum):
+class BankTrustStage(StrEnum):
     """银行信任培育阶段 (越高越信任, 数值越小)."""
     L4_READONLY = "L4_READONLY"        # 培育期 0-6 月
     L3_ADVISORY = "L3_ADVISORY"        # 验证期 6-12 月
@@ -209,27 +208,27 @@ class CreditMultiplierResult(_BankBase):
 # === 通用响应包装别名 ===
 
 __all__ = [
-    "BankTrustStage",
-    "RiskLevel",
-    "AiRecommendation",
-    "BankFinalDecision",
-    "BankTrustProfile",
-    "RiskLetter",
-    "RiskLetterCreate",
-    "BankDecision",
-    "BankDecisionCreate",
-    "BankStatistics",
-    "BankListItem",
-    "StageUpgradeResult",
-    "ApiResult",
-    "Id",
-    "IsoTimestamp",
-    "AmountInCents",
     # APP-01 操作面板
     "AccountFreezeStatus",
-    "SupervisionAccount",
-    "FreezeAccountPayload",
-    "FreezeAccountResult",
+    "AiRecommendation",
+    "AmountInCents",
+    "ApiResult",
+    "BankDecision",
+    "BankDecisionCreate",
+    "BankFinalDecision",
+    "BankListItem",
+    "BankStatistics",
+    "BankTrustProfile",
+    "BankTrustStage",
     "CreditMultiplierPayload",
     "CreditMultiplierResult",
+    "FreezeAccountPayload",
+    "FreezeAccountResult",
+    "Id",
+    "IsoTimestamp",
+    "RiskLetter",
+    "RiskLetterCreate",
+    "RiskLevel",
+    "StageUpgradeResult",
+    "SupervisionAccount",
 ]

@@ -18,8 +18,13 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.eco import (
-    AwardPointsInput, AwardPointsResult, CooperationRateResult,
-    ExchangeOrder, PlaceOrderInput, ShopItem, WorkerAccount,
+    AwardPointsInput,
+    AwardPointsResult,
+    CooperationRateResult,
+    ExchangeOrder,
+    PlaceOrderInput,
+    ShopItem,
+    WorkerAccount,
 )
 from app.services.eco_service import eco_pts_service
 

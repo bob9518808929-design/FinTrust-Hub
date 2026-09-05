@@ -23,14 +23,22 @@ from fastapi import APIRouter, HTTPException, Query, status
 from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.bank import (
-    BankDecision, BankDecisionCreate, BankListItem, BankStatistics,
-    BankTrustProfile, CreditMultiplierPayload, CreditMultiplierResult,
-    FreezeAccountPayload, FreezeAccountResult, RiskLetter, RiskLetterCreate,
-    StageUpgradeResult, SupervisionAccount,
+    BankDecision,
+    BankDecisionCreate,
+    BankListItem,
+    BankStatistics,
+    BankTrustProfile,
+    CreditMultiplierPayload,
+    CreditMultiplierResult,
+    FreezeAccountPayload,
+    FreezeAccountResult,
+    RiskLetter,
+    RiskLetterCreate,
+    StageUpgradeResult,
+    SupervisionAccount,
 )
 from app.schemas.common import ApiResult
 from app.services.bank_service import BankService
-
 
 bank_router = APIRouter(prefix="/bank", tags=["银行信任培育 (CORE-01b)"])
 
@@ -235,7 +243,7 @@ async def freeze_account(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from None
     return make_ok(result)
 
 

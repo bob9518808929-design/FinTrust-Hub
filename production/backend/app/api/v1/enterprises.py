@@ -19,8 +19,10 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser, DbSession
 from app.schemas.common import ApiResult
 from app.schemas.enterprise import (
-    ApplyReformResultInput, Enterprise, EnterpriseCreate, EnterpriseListResult,
-    EnterpriseResult, EnterpriseUpdate,
+    ApplyReformResultInput,
+    Enterprise,
+    EnterpriseCreate,
+    EnterpriseUpdate,
 )
 from app.services.enterprise_service import EnterpriseService
 

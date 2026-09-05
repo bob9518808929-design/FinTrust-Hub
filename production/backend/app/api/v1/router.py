@@ -25,45 +25,52 @@
 from fastapi import APIRouter
 
 from app.api.v1.auth import router as auth_router
+from app.api.v1.bank import bank_router
+from app.api.v1.core.ai_orchestrator import ai_orch_router
+from app.api.v1.core.opt_in_config import opt_in_router  # CORE-03 R2.10 企业可选配置引擎
+from app.api.v1.data.bank import data_bank_router
+from app.api.v1.data.external import external_data_router
+from app.api.v1.data.ocr_parsers import parsers_router
+from app.api.v1.eco_adapter import router as eco_adapter_router
+from app.api.v1.eco_bid import router as eco_bid_router
+from app.api.v1.eco_bot import router as eco_bot_router
+from app.api.v1.eco_burn import router as eco_burn_router
+from app.api.v1.eco_credential import router as eco_credential_router
+from app.api.v1.eco_gov import router as eco_gov_router
+from app.api.v1.eco_index import router as eco_index_router
+from app.api.v1.eco_pricing import router as eco_pricing_router
+from app.api.v1.eco_pts import router as eco_pts_router
 from app.api.v1.enterprises import (
-    banks_router, guarantors_router, insurers_router, router as enterprises_router,
+    banks_router,
+    guarantors_router,
+    insurers_router,
+)
+from app.api.v1.enterprises import (
+    router as enterprises_router,
+)
+from app.api.v1.infra.api_adapters import api_adapters_router  # INFRA-01b R2.11 15 个 API 适配器
+from app.api.v1.infra.reform_sandbox import reform_sandbox_router  # INFRA-04 R3.2 改造沙箱仿真
+from app.api.v1.infra.rpa import router as rpa_router  # INFRA-05 R6.2 RPA 适配层
+from app.api.v1.modules.cooperation import router as cooperation_router  # MOD-09
+from app.api.v1.modules.credential import credential_router  # MOD-08b R3.1 W3C VC 信用凭证
+from app.api.v1.modules.fallback_engine import router as fallback_router  # MOD-15 R6.3 兜底引擎
+from app.api.v1.modules.five_flow import router as five_flow_router  # MOD-01 R4.6 五流合一
+from app.api.v1.modules.insurance import router as insurance_router  # MOD-05 V3 应收款保险
+from app.api.v1.modules.iot_gateway import iot_router  # DATA-04 R2.7 IoT MQTT 网关
+from app.api.v1.modules.multilateral import router as multilateral_router  # MOD-13 R5.8 多方协作
+from app.api.v1.modules.performance import router as performance_router  # MOD-06
+from app.api.v1.modules.policy import router as policy_router  # MOD-10
+from app.api.v1.modules.privacy import router as privacy_router  # MOD-07
+from app.api.v1.modules.refinance import router as refinance_router  # MOD-11
+from app.api.v1.modules.responsibility import router as responsibility_router  # MOD-14
+from app.api.v1.modules.risk_rule import router as risk_rule_router  # MOD-02 R4.7 风控规则
+from app.api.v1.operations import (
+    approvals_router,
+    cockpit_router,
+    institutions_router,
 )
 from app.api.v1.reform import router as reform_router
-from app.api.v1.operations import (
-    approvals_router, cockpit_router, institutions_router,
-)
-from app.api.v1.bank import bank_router
 from app.api.v1.scf import router as scf_router
-from app.api.v1.eco_burn import router as eco_burn_router
-from app.api.v1.eco_pricing import router as eco_pricing_router
-from app.api.v1.eco_adapter import router as eco_adapter_router
-from app.api.v1.eco_credential import router as eco_credential_router
-from app.api.v1.eco_bid import router as eco_bid_router
-from app.api.v1.eco_pts import router as eco_pts_router
-from app.api.v1.eco_index import router as eco_index_router
-from app.api.v1.eco_gov import router as eco_gov_router
-from app.api.v1.eco_bot import router as eco_bot_router
-from app.api.v1.core.ai_orchestrator import ai_orch_router
-from app.api.v1.data.ocr_parsers import parsers_router
-from app.api.v1.data.external import external_data_router
-from app.api.v1.data.bank import data_bank_router
-from app.api.v1.modules.performance import router as performance_router  # MOD-06
-from app.api.v1.modules.privacy import router as privacy_router        # MOD-07
-from app.api.v1.modules.cooperation import router as cooperation_router  # MOD-09
-from app.api.v1.modules.policy import router as policy_router          # MOD-10
-from app.api.v1.modules.refinance import router as refinance_router    # MOD-11
-from app.api.v1.modules.responsibility import router as responsibility_router  # MOD-14
-from app.api.v1.modules.five_flow import router as five_flow_router    # MOD-01 R4.6 五流合一
-from app.api.v1.modules.risk_rule import router as risk_rule_router    # MOD-02 R4.7 风控规则
-from app.api.v1.modules.iot_gateway import iot_router                  # DATA-04 R2.7 IoT MQTT 网关
-from app.api.v1.modules.credential import credential_router            # MOD-08b R3.1 W3C VC 信用凭证
-from app.api.v1.core.opt_in_config import opt_in_router                # CORE-03 R2.10 企业可选配置引擎
-from app.api.v1.infra.api_adapters import api_adapters_router          # INFRA-01b R2.11 15 个 API 适配器
-from app.api.v1.infra.reform_sandbox import reform_sandbox_router      # INFRA-04 R3.2 改造沙箱仿真
-from app.api.v1.modules.multilateral import router as multilateral_router  # MOD-13 R5.8 多方协作
-from app.api.v1.infra.rpa import router as rpa_router                  # INFRA-05 R6.2 RPA 适配层
-from app.api.v1.modules.fallback_engine import router as fallback_router  # MOD-15 R6.3 兜底引擎
-from app.api.v1.modules.insurance import router as insurance_router    # MOD-05 V3 应收款保险
 
 api_router = APIRouter(prefix="/v1")
 

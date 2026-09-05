@@ -24,11 +24,11 @@ from app.services.bank_adapters.cmb_adapter import CMBRealAdapter
 from app.services.bank_adapters.icbc_adapter import ICBCRealAdapter
 
 __all__ = [
-    "BaseRealBankAdapter",
-    "ICBCRealAdapter",
-    "CMBRealAdapter",
-    "CCBRealAdapter",
     "ABCRealAdapter",
-    "BOCRealAdapter",
     "BOCOMRealAdapter",
+    "BOCRealAdapter",
+    "BaseRealBankAdapter",
+    "CCBRealAdapter",
+    "CMBRealAdapter",
+    "ICBCRealAdapter",
 ]

@@ -7,24 +7,28 @@ import base64
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.schemas.credential import (
-    ChainType, CredentialType, CrossChainVerifyRequest, CrossChainVerifyResult,
-    RevocationStatus, W3cProof, W3cVerifiableCredential,
+    ChainType,
+    CredentialType,
+    CrossChainVerifyRequest,
+    CrossChainVerifyResult,
+    RevocationStatus,
+    W3cProof,
+    W3cVerifiableCredential,
 )
-
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _days_later_iso(days: int) -> str:
-    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    return (datetime.now(UTC) + timedelta(days=days)).isoformat()
 
 
 def _vc_id() -> str:
@@ -300,11 +304,11 @@ class CredentialService:
         exp = raw.get("expiration_date_iso", "")
         try:
             exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00"))
-            if exp_dt < datetime.now(timezone.utc):
+            if exp_dt < datetime.now(UTC):
                 return False
         except Exception:
             pass
-        issuer_did, _, vm = _issuer_info()
+        _issuer_did, _, vm = _issuer_info()
         proof_payload = {
             "issuerDid": raw.get("issuer_did"),
             "holderDid": raw.get("holder_did"),

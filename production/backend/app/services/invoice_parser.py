@@ -13,10 +13,11 @@ import re
 from datetime import datetime
 
 from app.schemas.parsers import (
-    InvoiceItem, InvoiceParseResult, OcrRequest,
+    InvoiceItem,
+    InvoiceParseResult,
+    OcrRequest,
 )
 from app.services.ocr_service import OcrService, ocr_service
-
 
 # ============================================================================
 # 内置 seed 样本 (2 张发票)
@@ -165,7 +166,7 @@ def _parse_amount(text: str, patterns: list[re.Pattern]) -> int:
         if m:
             try:
                 amt = float(m.group(1).replace(",", "").replace("，", ""))
-                return int(round(amt * 100))
+                return round(amt * 100)
             except ValueError:
                 continue
     return 0
@@ -239,7 +240,7 @@ def _make_item_from_lines(
 ) -> InvoiceItem:
     text = " ".join(lines)
     moneys = [
-        int(round(float(m.replace(",", "")) * 100))
+        round(float(m.replace(",", "")) * 100)
         for m in money_pat.findall(text)
     ]
     unit_price = moneys[0] if len(moneys) >= 1 else 0

@@ -17,20 +17,24 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.five_flow import (
-    FundAccountLock, MonitorAlert, MonitorRule, MonitorRuleCreate,
-    FlowRecord, FlowType,
+    FlowRecord,
+    FlowType,
+    FundAccountLock,
+    MonitorAlert,
+    MonitorRule,
+    MonitorRuleCreate,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "mrt") -> str:
@@ -167,7 +171,7 @@ class _MonitorStore:
             self._alerts[a["alertId"]] = dict(a)
 
         # 3 个账户锁定 (locked / released / forfeited 各 1)
-        locked_at = datetime.now(timezone.utc)
+        locked_at = datetime.now(UTC)
         seed_locks = [
             {
                 "lockId": "LCK-2026-0001", "enterpriseId": "E001",
@@ -200,14 +204,14 @@ class _MonitorStore:
         for l in seed_locks:
             self._locks[l["lockId"]] = dict(l)
 
-    async def list_rules(self, flow_type: Optional[str] = None) -> list[dict]:
+    async def list_rules(self, flow_type: str | None = None) -> list[dict]:
         async with self._lock:
             rules = list(self._rules.values())
             if flow_type:
                 rules = [r for r in rules if r.get("flowType") == flow_type]
             return [dict(r) for r in rules]
 
-    async def get_rule(self, rule_id: str) -> Optional[dict]:
+    async def get_rule(self, rule_id: str) -> dict | None:
         async with self._lock:
             r = self._rules.get(rule_id)
             return dict(r) if r else None
@@ -217,7 +221,7 @@ class _MonitorStore:
             self._rules[rule["ruleId"]] = dict(rule)
             return dict(rule)
 
-    async def update_rule(self, rule_id: str, patch: dict) -> Optional[dict]:
+    async def update_rule(self, rule_id: str, patch: dict) -> dict | None:
         async with self._lock:
             if rule_id not in self._rules:
                 return None
@@ -233,7 +237,7 @@ class _MonitorStore:
             return False
 
     async def list_alerts(
-        self, enterprise_id: Optional[str] = None, status: Optional[str] = None,
+        self, enterprise_id: str | None = None, status: str | None = None,
     ) -> list[dict]:
         async with self._lock:
             alerts = list(self._alerts.values())
@@ -250,7 +254,7 @@ class _MonitorStore:
 
     async def update_alert_status(
         self, alert_id: str, status: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         async with self._lock:
             if alert_id not in self._alerts:
                 return None
@@ -258,7 +262,7 @@ class _MonitorStore:
             return dict(self._alerts[alert_id])
 
     async def list_locks(
-        self, enterprise_id: Optional[str] = None, status: Optional[str] = None,
+        self, enterprise_id: str | None = None, status: str | None = None,
     ) -> list[dict]:
         async with self._lock:
             locks = list(self._locks.values())
@@ -275,7 +279,7 @@ class _MonitorStore:
 
     async def update_lock_status(
         self, lock_id: str, status: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         async with self._lock:
             if lock_id not in self._locks:
                 return None
@@ -298,7 +302,7 @@ class MonitorRulesService:
 
     # === 规则 CRUD ===
 
-    async def list_rules(self, flow_type: Optional[FlowType] = None) -> list[MonitorRule]:
+    async def list_rules(self, flow_type: FlowType | None = None) -> list[MonitorRule]:
         flow_val = flow_type.value if isinstance(flow_type, FlowType) else flow_type
         items = await _monitor_store.list_rules(flow_type=flow_val)
         return [MonitorRule.model_validate(r) for r in items]
@@ -319,12 +323,12 @@ class MonitorRulesService:
 
     async def update_rule(
         self, rule_id: str,
-        rule_name: Optional[str] = None,
-        condition: Optional[str] = None,
-        threshold_cents: Optional[int] = None,
-        action: Optional[str] = None,
-        severity: Optional[str] = None,
-    ) -> Optional[MonitorRule]:
+        rule_name: str | None = None,
+        condition: str | None = None,
+        threshold_cents: int | None = None,
+        action: str | None = None,
+        severity: str | None = None,
+    ) -> MonitorRule | None:
         patch: dict[str, Any] = {}
         if rule_name is not None:
             patch["ruleName"] = rule_name
@@ -370,7 +374,7 @@ class MonitorRulesService:
             rule_name = rule["ruleName"]
             flow_type_val = rule.get("flowType", FlowType.FUND.value)
             condition = rule.get("condition", "")
-            action = rule.get("action", "alert")
+            rule.get("action", "alert")
             severity = rule.get("severity", "medium")
             threshold = rule.get("thresholdCents", 0)
 
@@ -502,18 +506,18 @@ class MonitorRulesService:
     # === 告警工作流 ===
 
     async def list_alerts(
-        self, enterprise_id: Optional[str] = None, status: Optional[str] = None,
+        self, enterprise_id: str | None = None, status: str | None = None,
     ) -> list[MonitorAlert]:
         items = await _monitor_store.list_alerts(
             enterprise_id=enterprise_id, status=status,
         )
         return [MonitorAlert.model_validate(a) for a in items]
 
-    async def acknowledge_alert(self, alert_id: str) -> Optional[MonitorAlert]:
+    async def acknowledge_alert(self, alert_id: str) -> MonitorAlert | None:
         updated = await _monitor_store.update_alert_status(alert_id, "acknowledged")
         return MonitorAlert.model_validate(updated) if updated else None
 
-    async def resolve_alert(self, alert_id: str) -> Optional[MonitorAlert]:
+    async def resolve_alert(self, alert_id: str) -> MonitorAlert | None:
         updated = await _monitor_store.update_alert_status(alert_id, "resolved")
         return MonitorAlert.model_validate(updated) if updated else None
 
@@ -527,7 +531,7 @@ class MonitorRulesService:
         reason: str,
         duration_hours: int = 72,
     ) -> FundAccountLock:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         lock_dict = {
             "lockId": _id("LCK"),
             "enterpriseId": enterprise_id,
@@ -541,12 +545,12 @@ class MonitorRulesService:
         await _monitor_store.add_lock(lock_dict)
         return FundAccountLock.model_validate(lock_dict)
 
-    async def release_fund_account(self, lock_id: str) -> Optional[FundAccountLock]:
+    async def release_fund_account(self, lock_id: str) -> FundAccountLock | None:
         updated = await _monitor_store.update_lock_status(lock_id, "released")
         return FundAccountLock.model_validate(updated) if updated else None
 
     async def list_locks(
-        self, enterprise_id: Optional[str] = None, status: Optional[str] = None,
+        self, enterprise_id: str | None = None, status: str | None = None,
     ) -> list[FundAccountLock]:
         items = await _monitor_store.list_locks(
             enterprise_id=enterprise_id, status=status,

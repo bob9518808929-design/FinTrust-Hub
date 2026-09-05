@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CredentialType(str, Enum):
+class CredentialType(StrEnum):
     ENTERPRISE_CREDIT_SCORE = "EnterpriseCreditScore"
     PAYMENT_HISTORY = "PaymentHistory"
     COMPLIANCE_RECORD = "ComplianceRecord"
     PERFORMANCE_RATING = "PerformanceRating"
 
 
-class RevocationStatus(str, Enum):
+class RevocationStatus(StrEnum):
     ACTIVE = "active"
     REVOKED = "revoked"
     SUSPENDED = "suspended"
 
 
-class ChainType(str, Enum):
+class ChainType(StrEnum):
     ANT_CHAIN = "AntChain"
     ZHIXIN_CHAIN = "ZhiXinChain"
     LOCAL = "Local"

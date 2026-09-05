@@ -13,18 +13,17 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Literal, Optional
+from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, Id, IsoTimestamp
 
-
 # === 枚举 ===
 
-class FlowType(str, Enum):
+class FlowType(StrEnum):
     """五流合一校验涉及的六类业务流."""
     FUND = "FUND"
     CONTRACT = "CONTRACT"
@@ -140,7 +139,7 @@ class MonitorAlert(_FiveFlowBase):
     alert_id: Id
     rule_id: Id
     enterprise_id: Id
-    tx_id: Optional[Id] = None
+    tx_id: Id | None = None
     alert_type: str = Field(default="", description="告警类型 (rule_name 派生)")
     severity: MonitorSeverity = "medium"
     message: str
@@ -175,21 +174,21 @@ class FundAccountLockCreate(_FiveFlowBase):
 
 
 __all__ = [
-    "FlowType",
+    "AlertStatus",
+    "AmountInCents",
+    "ConsistencyCheckResult",
     "FlowRecord",
     "FlowRecordCreate",
     "FlowRecordStatus",
-    "ConsistencyCheckResult",
-    "MonitorRule",
-    "MonitorRuleCreate",
-    "MonitorAction",
-    "MonitorSeverity",
-    "MonitorAlert",
-    "AlertStatus",
+    "FlowType",
     "FundAccountLock",
     "FundAccountLockCreate",
-    "LockStatus",
     "Id",
     "IsoTimestamp",
-    "AmountInCents",
+    "LockStatus",
+    "MonitorAction",
+    "MonitorAlert",
+    "MonitorRule",
+    "MonitorRuleCreate",
+    "MonitorSeverity",
 ]

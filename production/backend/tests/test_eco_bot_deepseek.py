@@ -227,6 +227,7 @@ class TestCircuitBreakerEndToEnd:
     async def test_circuit_recovers_after_cooldown(self, reset_bot_service):
         """熔断 cooldown 过期后 → 半开, 允许重试, 成功后 reset 失败计数."""
         import time as _time
+
         from app.services.llm_service import CircuitBreaker, LLMService
 
         svc = LLMService()

@@ -21,8 +21,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import PurePosixPath
 
-from app.services.ocr_service import OcrService
 from app.schemas.parsers import OcrEngine, OcrRequest
+from app.services.ocr_service import OcrService
 
 # 解析上限防御: 超大文件不至于拖垮 "安全内存"
 MAX_RECORDS = 5000
@@ -140,7 +140,7 @@ def _parse_xlsx(content: bytes) -> list[dict]:
         if not header:
             header = cells  # 首个非空行作表头
             continue
-        records.append({"type": "row", **dict(zip(header, cells))})
+        records.append({"type": "row", **dict(zip(header, cells, strict=False))})
     return _trim(records)
 
 
@@ -220,7 +220,7 @@ async def parse_file_to_records(filename: str, content: bytes) -> list[dict]:
 
     # 兜底: 当作纯文本尝试
     try:
-        text = content.decode("utf-8-sig")
+        content.decode("utf-8-sig")
     except UnicodeDecodeError as e:
         raise ValueError(
             f"暂不支持的文件格式: {ext or filename} "

@@ -5,14 +5,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.schemas.common import AmountInCents, IsoTimestamp, Ratio
-
 
 # === 基础 mixin (snake_case + camelCase alias) ===
 
@@ -36,7 +35,7 @@ class AdapterHealth(_ParserBase):
 
 # === OCR 枚举 ===
 
-class OcrEngine(str, Enum):
+class OcrEngine(StrEnum):
     """OCR 引擎枚举 (PaddleOCR / 百度 / 阿里 + Mock 兜底)."""
     PADDLE = "PADDLE"
     BAIDU = "BAIDU"
@@ -156,16 +155,16 @@ class InvoiceParseResult(_ParserBase):
 
 __all__ = [
     "AdapterHealth",
-    "OcrEngine",
-    "SourceType",
-    "TxDirection",
-    "InvoiceType",
-    "OcrRequest",
-    "OcrBlock",
-    "OcrResult",
-    "BankStatementRecord",
     "BankStatementParseResult",
+    "BankStatementRecord",
     "ContractParseResult",
     "InvoiceItem",
     "InvoiceParseResult",
+    "InvoiceType",
+    "OcrBlock",
+    "OcrEngine",
+    "OcrRequest",
+    "OcrResult",
+    "SourceType",
+    "TxDirection",
 ]

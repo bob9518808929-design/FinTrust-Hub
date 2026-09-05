@@ -127,8 +127,8 @@ class PaddleOCRAdapter:
         """执行 PaddleOCR 推理 (同步, 在线程池中调用)."""
         # PaddleOCR.ocr 接受图片路径或 numpy 数组; 此处传字节需落盘或转 ndarray.
         # 简化: 写入临时文件再推理.
-        import tempfile
         import os as _os
+        import tempfile
 
         tmp_path = ""
         try:
@@ -169,7 +169,7 @@ def _parse_paddle_result(result: Any) -> list[OcrBlock]:
         for page_idx, page in enumerate(result):
             if not page:
                 continue
-            for idx, line in enumerate(page):
+            for _idx, line in enumerate(page):
                 bbox_raw, (text, confidence) = line[0], line[1]
                 # bbox_raw: [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
                 bbox = _normalize_bbox(bbox_raw)

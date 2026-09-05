@@ -5,12 +5,12 @@
 生产期: 由数据迁移脚本 (alembic) 注入, 不在运行时加载.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str) -> str:

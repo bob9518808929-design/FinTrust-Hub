@@ -28,20 +28,28 @@ import asyncio
 import logging
 import re
 import time
-from datetime import datetime, timezone
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.risk_rule import (
-    RiskEvaluationResult, RiskRule, RiskRuleCreate, RiskRuleSet,
-    RuleAction, RuleCondition, RuleLogic, RuleOperator, RulesetStatus,
+    RiskEvaluationResult,
+    RiskRule,
+    RiskRuleCreate,
+    RiskRuleSet,
+    RuleAction,
+    RuleCondition,
+    RuleLogic,
+    RuleOperator,
+    RulesetStatus,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "rr") -> str:
@@ -78,7 +86,7 @@ def _split_conditions(cond_str: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
-def _parse_single_condition(c: str) -> Optional[RuleCondition]:
+def _parse_single_condition(c: str) -> RuleCondition | None:
     """解析单条条件为 RuleCondition. BETWEEN 特殊处理为 IN (用集合近似)."""
     # IN [...]
     m = _COND_IN_RE.match(c)
@@ -473,7 +481,7 @@ class _RiskRuleStore:
 
     async def list_rules(
         self,
-        ruleset_id: Optional[str] = None,
+        ruleset_id: str | None = None,
         enabled_only: bool = False,
     ) -> list[dict]:
         async with self._lock:
@@ -484,7 +492,7 @@ class _RiskRuleStore:
                 rules = [r for r in rules if r.get("enabled")]
             return [dict(r) for r in rules]
 
-    async def get_rule(self, rule_id: str) -> Optional[dict]:
+    async def get_rule(self, rule_id: str) -> dict | None:
         async with self._lock:
             r = self._rules.get(rule_id)
             return dict(r) if r else None
@@ -495,7 +503,7 @@ class _RiskRuleStore:
             self._compiled[rule["ruleId"]] = self._compile_dict(rule)
             return dict(rule)
 
-    async def update_rule(self, rule_id: str, patch: dict) -> Optional[dict]:
+    async def update_rule(self, rule_id: str, patch: dict) -> dict | None:
         async with self._lock:
             if rule_id not in self._rules:
                 return None
@@ -513,14 +521,14 @@ class _RiskRuleStore:
                 return True
             return False
 
-    async def list_rulesets(self, status: Optional[str] = None) -> list[dict]:
+    async def list_rulesets(self, status: str | None = None) -> list[dict]:
         async with self._lock:
             rulesets = list(self._rulesets.values())
             if status:
                 rulesets = [r for r in rulesets if r.get("status") == status]
             return [dict(r) for r in rulesets]
 
-    async def get_ruleset(self, ruleset_id: str) -> Optional[dict]:
+    async def get_ruleset(self, ruleset_id: str) -> dict | None:
         async with self._lock:
             rs = self._rulesets.get(ruleset_id)
             return dict(rs) if rs else None
@@ -534,7 +542,7 @@ class _RiskRuleStore:
                     self._compiled[r["ruleId"]] = self._compile_dict(r)
             return dict(rs)
 
-    def get_compiled(self, rule_id: str) -> Optional[Callable[[dict], bool]]:
+    def get_compiled(self, rule_id: str) -> Callable[[dict], bool] | None:
         """同步获取编译函数 (评估时无需 await)."""
         return self._compiled.get(rule_id)
 
@@ -625,7 +633,7 @@ class RiskRuleEngine:
     async def evaluate(
         self,
         tx_data: dict,
-        ruleset_id: Optional[str] = None,
+        ruleset_id: str | None = None,
     ) -> RiskEvaluationResult:
         """按 priority 排序执行规则, 累加 risk_score_delta.
 
@@ -741,7 +749,7 @@ class RiskRuleEngine:
         await _risk_rule_store.add_rule(rule_dict)
         return RiskRule.model_validate(rule_dict)
 
-    async def update_rule(self, rule_id: str, patch: dict) -> Optional[RiskRule]:
+    async def update_rule(self, rule_id: str, patch: dict) -> RiskRule | None:
         # 转换 RuleCondition 列表为 dict
         if "conditions" in patch and patch["conditions"] is not None:
             patch["conditions"] = [
@@ -758,15 +766,15 @@ class RiskRuleEngine:
     async def delete_rule(self, rule_id: str) -> bool:
         return await _risk_rule_store.delete_rule(rule_id)
 
-    async def enable_rule(self, rule_id: str) -> Optional[RiskRule]:
+    async def enable_rule(self, rule_id: str) -> RiskRule | None:
         return await self.update_rule(rule_id, {"enabled": True})
 
-    async def disable_rule(self, rule_id: str) -> Optional[RiskRule]:
+    async def disable_rule(self, rule_id: str) -> RiskRule | None:
         return await self.update_rule(rule_id, {"enabled": False})
 
     async def list_rules(
         self,
-        ruleset_id: Optional[str] = None,
+        ruleset_id: str | None = None,
         enabled_only: bool = False,
     ) -> list[RiskRule]:
         items = await _risk_rule_store.list_rules(
@@ -774,7 +782,7 @@ class RiskRuleEngine:
         )
         return [RiskRule.model_validate(r) for r in items]
 
-    async def list_rulesets(self, status: Optional[str] = None) -> list[RiskRuleSet]:
+    async def list_rulesets(self, status: str | None = None) -> list[RiskRuleSet]:
         items = await _risk_rule_store.list_rulesets(status=status)
         results: list[RiskRuleSet] = []
         for rs in items:

@@ -20,8 +20,12 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.external_data import (
-    AdapterHealth, BillRole, DataSourceType, ECDSBillRecord,
-    GSXTEnterpriseInfo, InvoiceVerifyRequest, InvoiceVerifyResult,
+    AdapterHealth,
+    BillRole,
+    ECDSBillRecord,
+    GSXTEnterpriseInfo,
+    InvoiceVerifyRequest,
+    InvoiceVerifyResult,
     JudiciaryCaseRecord,
 )
 from app.services.data_source_registry import get_registry
@@ -29,7 +33,6 @@ from app.services.ecds_adapter import EcdsAdapterService
 from app.services.gsxt_adapter import GsxtAdapterService
 from app.services.invoice_verifier import InvoiceVerifierService
 from app.services.judiciary_adapter import JudiciaryAdapterService
-
 
 external_data_router = APIRouter(prefix="/data/external", tags=["DATA-02 外部数据"])
 

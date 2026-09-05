@@ -20,7 +20,7 @@ tags:   MOD-02 风控规则
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from datetime import UTC
 
 from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,12 +30,16 @@ from app.api.deps import make_ok
 from app.deps import CurrentUser
 from app.schemas.common import ApiResult
 from app.schemas.risk_rule import (
-    RiskEvaluationResult, RiskRule, RiskRuleCreate, RiskRuleSet,
-    RiskRuleUpdate, RiskStreamEvent, RiskStreamEventCreate,
+    RiskEvaluationResult,
+    RiskRule,
+    RiskRuleCreate,
+    RiskRuleSet,
+    RiskRuleUpdate,
+    RiskStreamEvent,
+    RiskStreamEventCreate,
 )
 from app.services.risk_rule_engine import RiskRuleEngine, risk_rule_engine
 from app.services.risk_stream_service import RiskStreamService, risk_stream_service
-
 
 router = APIRouter(prefix="/modules/risk-rule", tags=["MOD-02 风控规则"])
 
@@ -65,7 +69,7 @@ class _EvaluateReq(BaseModel):
     summary="列出规则 (可按 ruleset_id / enabled_only 过滤)",
 )
 async def list_rules(
-    ruleset_id: Optional[str] = Query(default=None, alias="rulesetId"),
+    ruleset_id: str | None = Query(default=None, alias="rulesetId"),
     enabled_only: bool = Query(default=False, alias="enabledOnly"),
     _user: CurrentUser = None,
 ):
@@ -138,7 +142,7 @@ async def disable_rule(rule_id: str, _user: CurrentUser = None):
     summary="列出规则集 (可按 status 过滤)",
 )
 async def list_rulesets(
-    status: Optional[str] = Query(default=None),
+    status: str | None = Query(default=None),
     _user: CurrentUser = None,
 ):
     items = await _engine_svc().list_rulesets(status=status)
@@ -175,8 +179,8 @@ async def evaluate_tx(payload: _EvaluateReq = Body(...), _user: CurrentUser = No
     summary="列出流事件 (可按 enterprise_id / processed 过滤)",
 )
 async def list_stream_events(
-    enterprise_id: Optional[str] = Query(default=None, alias="enterpriseId"),
-    processed: Optional[bool] = Query(default=None),
+    enterprise_id: str | None = Query(default=None, alias="enterpriseId"),
+    processed: bool | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     _user: CurrentUser = None,
 ):
@@ -242,8 +246,8 @@ async def risk_dashboard(_user: CurrentUser = None):
 # === 工具函数 ===
 
 def _now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
+    from datetime import datetime
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "se") -> str:

@@ -16,21 +16,34 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from app.schemas.scf import (
-    AlertLevel, CaseOutcome, CaseQuery, CaseRecord, GuaranteeMethod,
-    MatchCandidate, MatchInput, MatchOutput, MonitorAlert,
-    MonitorStatusSummary, PricingInput, PricingOutput, PropagationNode,
-    ReformSyncEvent, ReformSyncResult, RiskPropagationInput,
-    RiskPropagationOutput, SCFScenario, ScfIndustry, ScfProduct, ScenarioId,
+    CaseQuery,
+    CaseRecord,
+    GuaranteeMethod,
+    MatchCandidate,
+    MatchInput,
+    MatchOutput,
+    MonitorAlert,
+    MonitorStatusSummary,
+    PricingInput,
+    PricingOutput,
+    PropagationNode,
+    ReformSyncEvent,
+    ReformSyncResult,
+    RiskPropagationInput,
+    RiskPropagationOutput,
+    ScenarioId,
+    ScfIndustry,
+    SCFScenario,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "scf") -> str:

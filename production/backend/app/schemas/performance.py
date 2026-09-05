@@ -1,13 +1,10 @@
 """文件名：performance.py 职责：履约评分 Pydantic 模型,定义 PD/IOY 评分与趋势 schema."""
 from __future__ import annotations
 
-from enum import Enum
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import Id, IsoTimestamp, Score
+from app.schemas.common import Id, IsoTimestamp
 
 
 class _PerfBase(BaseModel):

@@ -12,10 +12,11 @@ from pydantic.alias_generators import to_camel
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.multilateral import (
-    CollaborationTask, ElectronicSeal, SLAMetric,
+    CollaborationTask,
+    ElectronicSeal,
+    SLAMetric,
 )
 from app.services.multilateral_service import multilateral_service
-
 
 router = APIRouter(prefix="/modules/multilateral", tags=["MOD-13 多方协作"])
 

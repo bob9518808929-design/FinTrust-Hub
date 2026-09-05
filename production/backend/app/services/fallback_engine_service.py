@@ -13,18 +13,21 @@ import asyncio
 import logging
 import time
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.schemas.fallback_engine import (
-    FallbackConfig, FallbackMode, SyncResult, SyncStatus,
+    FallbackConfig,
+    FallbackMode,
+    SyncResult,
+    SyncStatus,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "op") -> str:
@@ -49,7 +52,7 @@ class _FallbackStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # 4 企业: 2 online / 1 offline / 1 degraded
         specs = [
             ("E001", FallbackMode.ONLINE, 0),

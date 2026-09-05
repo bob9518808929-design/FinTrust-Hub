@@ -1,16 +1,15 @@
 """文件名：responsibility.py 职责：人流责任链 Pydantic 模型,定义 R0-R4 阶段枚举、责任链与行为挖掘记录 schema."""
 from __future__ import annotations
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from app.schemas.common import Id, IsoTimestamp, Ratio
+from app.schemas.common import Id, IsoTimestamp
 
 
-class ChainStage(str, Enum):
+class ChainStage(StrEnum):
     R0_NONE = "R0_NONE"
     R1_INFO = "R1_INFO"
     R2_VERIFIED = "R2_VERIFIED"
@@ -54,7 +53,7 @@ class BehaviorMiningRecord(_RespBase):
     weight: float = Field(ge=0.0, le=1.0)
     points_awarded: int = Field(ge=0)
     action_time_iso: IsoTimestamp
-    linked_tx_id: Optional[Id] = None
+    linked_tx_id: Id | None = None
 
 
 class ResponsibilityResult(_RespBase):

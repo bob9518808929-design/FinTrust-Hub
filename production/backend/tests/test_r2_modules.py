@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-import random
+from datetime import UTC
 from unittest.mock import patch
 
 import pytest
@@ -191,8 +191,8 @@ class TestR24Policy:
     async def test_bank_q1_冲量_appears_in_jan(self, client):
         # mock 当前月为 1 月, 应命中 F005 Q1 冲量
         with patch("app.services.policy_factor_service.datetime") as mock_dt:
-            from datetime import datetime as _dt, timezone
-            fake_now = _dt(2026, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+            from datetime import datetime as _dt
+            fake_now = _dt(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
             mock_dt.now.return_value = fake_now
             mock_dt.side_effect = lambda *a, **kw: _dt(*a, **kw) if a else fake_now
 

@@ -1,6 +1,6 @@
 """API 层辅助函数."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -10,5 +10,5 @@ def make_ok(data: Any, code: int = 0, message: str = "OK") -> dict:
     return {
         "code": code, "message": message, "data": data,
         "requestId": f"req-{uuid4().hex[:16]}",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

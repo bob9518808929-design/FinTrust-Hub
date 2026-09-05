@@ -22,14 +22,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "DEV") -> str:
@@ -76,7 +76,7 @@ class _IotDeviceStore:
         - DEV-PLC-003: E003, PLC 监控, alarm (温度超阈值)
         - DEV-EMT-004: E004, 能耗监测, offline
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         seed_devices = [
             {
                 "device_id": "DEV-GPS-001",
@@ -151,13 +151,13 @@ class _IotDeviceStore:
             self._devices[d["device_id"]] = d
             self._telemetry[d["device_id"]] = []
 
-    async def get_device(self, device_id: str) -> Optional[dict]:
+    async def get_device(self, device_id: str) -> dict | None:
         async with self._lock:
             d = self._devices.get(device_id)
             return dict(d) if d else None
 
     async def list_devices(
-        self, enterprise_id: Optional[str] = None,
+        self, enterprise_id: str | None = None,
     ) -> list[dict]:
         async with self._lock:
             devs = list(self._devices.values())
@@ -172,8 +172,8 @@ class _IotDeviceStore:
             return dict(device)
 
     async def update_status(
-        self, device_id: str, status: str, heartbeat_iso: Optional[str] = None,
-    ) -> Optional[dict]:
+        self, device_id: str, status: str, heartbeat_iso: str | None = None,
+    ) -> dict | None:
         async with self._lock:
             if device_id not in self._devices:
                 return None
@@ -185,7 +185,7 @@ class _IotDeviceStore:
 
     async def append_telemetry(
         self, device_id: str, sample: dict,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         async with self._lock:
             if device_id not in self._telemetry:
                 return None
@@ -197,7 +197,7 @@ class _IotDeviceStore:
 
     async def get_telemetry(
         self, device_id: str, limit: int = 100,
-        sample_type: Optional[str] = None,
+        sample_type: str | None = None,
     ) -> list[dict]:
         """查询设备遥测样本 (EMQX 通道采集, 可按类型过滤, 时间倒序)."""
         async with self._lock:
@@ -316,7 +316,7 @@ class IotService:
             raise ValueError(f"证书校验失败: {err_msg}")
 
         # 注册
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         valid_to = now + timedelta(days=365)
         device = {
             "device_id": device_id,
@@ -491,7 +491,7 @@ class IotService:
             "verified_at_iso": _now_iso(),
         }
 
-    async def get_device_status(self, device_id: str) -> Optional[dict]:
+    async def get_device_status(self, device_id: str) -> dict | None:
         """设备状态查询.
 
         Args:
@@ -516,7 +516,7 @@ class IotService:
         if not device:
             return None
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # 证书有效期校验
         cert_valid_to_iso = device.get("cert_valid_to_iso", "")
         cert_valid = True

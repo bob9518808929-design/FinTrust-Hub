@@ -15,7 +15,7 @@ import asyncio
 import logging
 import os
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.schemas.rpa import RPATask
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str = "rpa") -> str:
@@ -74,7 +74,7 @@ def _load_bank_templates() -> dict[str, dict[str, Any]]:
     """
     try:
         import yaml
-        with open(_BANK_APPLICATION_TEMPLATES_PATH, "r", encoding="utf-8") as f:
+        with open(_BANK_APPLICATION_TEMPLATES_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         banks_list = data.get("banks", []) if data else []
         result: dict[str, dict[str, Any]] = {}
@@ -142,7 +142,7 @@ class _RPAStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         out_dir = _ensure_output_dir()
         specs = [
             # (eid, type, target_bank, status, completed_offset_hours)
@@ -309,7 +309,11 @@ class RPAService:
                 from reportlab.lib.pagesizes import A4
                 from reportlab.lib.styles import getSampleStyleSheet
                 from reportlab.platypus import (
-                    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+                    Paragraph,
+                    SimpleDocTemplate,
+                    Spacer,
+                    Table,
+                    TableStyle,
                 )
 
                 doc = SimpleDocTemplate(path, pagesize=A4)
@@ -528,7 +532,7 @@ class RPAService:
     ) -> list[list[str]]:
         """把章节字段映射 + 数据 → 二维行列表 (bank_field_name, value)."""
         rows: list[list[str]] = []
-        for bank_field, std_field in (section.get("fields") or {}).items():
+        for _bank_field, std_field in (section.get("fields") or {}).items():
             # 中文字段名 → 翻译映射 (粗略, 真实场景应做完整字典)
             cn_name = RPAService._std_field_to_cn(std_field)
             value = data.get(std_field, "")
@@ -581,7 +585,11 @@ class RPAService:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak,
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
         )
 
         if save_to_file:
@@ -640,7 +648,7 @@ class RPAService:
             rows = RPAService._map_section_data(section, data)
             if not rows:
                 rows = [["(本章节无字段)", ""]]
-            table_rows = [["字段", "值"]] + rows
+            table_rows = [["字段", "值"], *rows]
             tbl = Table(table_rows, colWidths=[200, 240])
             tbl.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), header_color),
@@ -657,8 +665,8 @@ class RPAService:
         if template.get("signature_required", True):
             story.append(Spacer(1, 30))
             story.append(Paragraph(
-                f"<b>声明:</b> 申请人承诺以上所填信息真实、完整、有效, "
-                f"如有不实, 愿承担相应法律责任.",
+                "<b>声明:</b> 申请人承诺以上所填信息真实、完整、有效, "
+                "如有不实, 愿承担相应法律责任.",
                 styles["Normal"],
             ))
             story.append(Spacer(1, 20))

@@ -15,7 +15,10 @@ import pytest
 
 from app.schemas.reform import CaseStats, SimilarCaseQuery
 from app.services.reform_service import (
-    VECTOR_DIM, VECTOR_INDEX_THRESHOLD, ReformService, _reform_store,
+    VECTOR_DIM,
+    VECTOR_INDEX_THRESHOLD,
+    ReformService,
+    _reform_store,
 )
 
 pytestmark = pytest.mark.asyncio

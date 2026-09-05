@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SandboxStatus(str, Enum):
+class SandboxStatus(StrEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
     ROLLED_BACK = "rolled_back"
     COMMITTED = "committed"
 
 
-class ChangeDataType(str, Enum):
+class ChangeDataType(StrEnum):
     FLOW = "flow"
     MODULE = "module"
     CONFIG = "config"

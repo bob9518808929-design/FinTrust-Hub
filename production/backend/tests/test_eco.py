@@ -133,7 +133,7 @@ class TestEcoBurn:
         """回归: CSV 行字段数多于表头时, 解析层直接清洗 restkey (双保险)."""
         from app.services.raw_file_loader import _parse_csv
 
-        content = "date,amount\n2026-08-01,1000\n2026-08-02,2000,多出的字段A,多出的字段B\n".encode("utf-8")
+        content = "date,amount\n2026-08-01,1000\n2026-08-02,2000,多出的字段A,多出的字段B\n".encode()
         rows = _parse_csv(content)
         assert len(rows) == 2
         for r in rows:

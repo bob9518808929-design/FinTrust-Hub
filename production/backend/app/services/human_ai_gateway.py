@@ -12,23 +12,29 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, Literal
 from uuid import uuid4
 
 from app.schemas.human_ai_gateway import (
-    ApprovalPriority, ApprovalRecord, ApprovalStatus, ApprovalTask,
-    ApproverRole, ApproverSlot, CreateApprovalRequest, EscalateRequest,
-    HumanRoutingDecision, WorkflowRule, WorkflowType,
+    ApprovalPriority,
+    ApprovalRecord,
+    ApprovalStatus,
+    ApprovalTask,
+    ApproverRole,
+    CreateApprovalRequest,
+    HumanRoutingDecision,
+    WorkflowRule,
+    WorkflowType,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _now_dt() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _parse_iso(iso: str) -> datetime:
@@ -505,7 +511,7 @@ class HumanAIGatewayService:
             "delegated_from_role": delegated_from_role,
             "proxy_used": proxy,
         }
-        task_dict["approvals"] = list(task_dict.get("approvals", [])) + [record]
+        task_dict["approvals"] = [*list(task_dict.get("approvals", [])), record]
 
         if decision == "reject":
             task_dict["status"] = ApprovalStatus.REJECTED.value
@@ -552,7 +558,7 @@ class HumanAIGatewayService:
             "delegated_from_role": None,
             "proxy_used": False,
         }
-        task_dict["approvals"] = list(task_dict.get("approvals", [])) + [record]
+        task_dict["approvals"] = [*list(task_dict.get("approvals", [])), record]
 
         await _human_ai_store.update_task(task_id, task_dict)
         return self._task_from_dict(task_dict)

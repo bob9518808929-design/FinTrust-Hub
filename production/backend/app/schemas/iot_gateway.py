@@ -5,25 +5,25 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class DeviceStatus(str, Enum):
+class DeviceStatus(StrEnum):
     ONLINE = "ONLINE"
     OFFLINE = "OFFLINE"
     ALARM = "ALARM"
     SLEEP = "SLEEP"
 
 
-class GatewayProtocol(str, Enum):
+class GatewayProtocol(StrEnum):
     MQTT5 = "MQTT5"
     HTTP_LONGPOLL = "HTTP_LONGPOLL"
 
 
-class GatewayStatus(str, Enum):
+class GatewayStatus(StrEnum):
     ACTIVE = "ACTIVE"
     DEGRADED = "DEGRADED"
     OFFLINE = "OFFLINE"
@@ -73,7 +73,7 @@ class CommandRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
-class CommandStatus(str, Enum):
+class CommandStatus(StrEnum):
     SENT = "sent"
     ACKED = "acked"
     NACK = "nack"

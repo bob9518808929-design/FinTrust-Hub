@@ -11,7 +11,7 @@
     test_l1_low_amount_routes_to_auto_approve (L1 小额 routed_to == AUTO_APPROVE)
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -27,13 +27,17 @@ for _r in app.routes:
 if not _ROUTE_REGISTERED:
     app.include_router(human_ai_router, prefix="/api/v1")
 
-from app.services.human_ai_gateway import (
-    SMALL_LOAN_SERIAL_ID, BIG_LOAN_PARALLEL_ID,
-    ANY_ONE_HIGH_PRIORITY_ID, DEFAULT_L3_ADVISORY_ID,
-    AUTO_APPROVE_MARKER,
-)
 from app.schemas.human_ai_gateway import (
-    ApprovalStatus, ApprovalPriority, CreateApprovalRequest,
+    ApprovalPriority,
+    ApprovalStatus,
+    CreateApprovalRequest,
+)
+from app.services.human_ai_gateway import (
+    ANY_ONE_HIGH_PRIORITY_ID,
+    AUTO_APPROVE_MARKER,
+    BIG_LOAN_PARALLEL_ID,
+    DEFAULT_L3_ADVISORY_ID,
+    SMALL_LOAN_SERIAL_ID,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -208,7 +212,7 @@ class TestTimeoutOverride:
         assert task.status == ApprovalStatus.PENDING
         assert task.escalation_triggered is False
 
-        future_iso = (datetime.now(timezone.utc) + timedelta(hours=25)).isoformat()
+        future_iso = (datetime.now(UTC) + timedelta(hours=25)).isoformat()
         overridden = await svc.check_timeout_and_override(now_iso=future_iso)
 
         matched = [t for t in overridden if t.task_id == task.task_id]
@@ -254,7 +258,7 @@ class TestDelegate:
         ]
         assert "auditor" in roles_after
 
-        approved = await svc.approve(
+        await svc.approve(
             task_id=task.task_id,
             approver_id="U-AUDITOR-PROXY",
             approver_role="auditor",

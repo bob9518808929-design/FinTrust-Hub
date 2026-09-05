@@ -8,14 +8,22 @@ import logging
 import os
 import random
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.schemas.reform_sandbox import (
-    ChangeDataType, PurgeInfo, Sandbox, SandboxChange, SandboxDiff, SandboxStatus,
+    ChangeDataType,
+    PurgeInfo,
+    Sandbox,
+    SandboxChange,
+    SandboxDiff,
+    SandboxStatus,
 )
 from app.schemas.sandbox_indicator import (
-    CurvePoint, IndicatorCurve, IndicatorStatus, SandboxReport,
+    CurvePoint,
+    IndicatorCurve,
+    IndicatorStatus,
+    SandboxReport,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,7 +57,7 @@ def _ensure_pdf_output_dir() -> str:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _sb_id() -> str:
@@ -106,7 +114,7 @@ def _gen_curve(baseline: float, projected: float, ratio: float,
     """生成 12 个月曲线 + 最终状态 (improved/degraded/unchanged)."""
     rng = random.Random(seed_offset)
     points: list[CurvePoint] = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for i in range(12, 0, -1):
         year = now.year
         month = now.month - i + 1
@@ -141,7 +149,7 @@ class _SandboxStore:
         self._seed()
 
     def _seed(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         specs = [
             ("E001", "2026-Q3 融资基线-激活", SandboxStatus.ACTIVE, now),
             ("E002", "2026-H1 改造基线-已过期", SandboxStatus.EXPIRED, now - timedelta(days=45)),
@@ -258,7 +266,7 @@ class _SandboxStore:
                         if applied and (now_iso > applied):
                             try:
                                 ap_dt = datetime.fromisoformat(applied.replace("Z", "+00:00"))
-                                if (datetime.now(timezone.utc) - ap_dt).days > 30:
+                                if (datetime.now(UTC) - ap_dt).days > 30:
                                     unconfirmed_timeout = True
                             except Exception:
                                 unconfirmed_timeout = True
@@ -280,7 +288,7 @@ class ReformSandboxService:
     async def create_sandbox(
         self, enterprise_id: str, baseline_name: str, retained_days: int = 30,
     ) -> Sandbox:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sb = {
             "id": _sb_id(),
             "enterprise_id": enterprise_id,
@@ -375,7 +383,7 @@ class ReformSandboxService:
         purged = await _sb_store.purge_expired()
         all_sbs = await _sb_store.list_all()
         remaining_min = 9999
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         next_purge_at = now + timedelta(days=30)
         for s in all_sbs:
             try:
@@ -614,11 +622,13 @@ class ReformSandboxService:
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.graphics.shapes import Drawing, Line, String
-        from reportlab.graphics.charts.lineplots import LinePlot
-        from reportlab.graphics.charts.axes import XCategoryAxis, YValueAxis
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak,
+            PageBreak,
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
         )
 
         buffer = io.BytesIO()
@@ -641,7 +651,7 @@ class ReformSandboxService:
 
         # === 标题 ===
         story.append(Paragraph(
-            f"INFRA-04 改造沙箱预演报告", styles["Title"]))
+            "INFRA-04 改造沙箱预演报告", styles["Title"]))
         story.append(Spacer(1, 8))
         meta_rows = [
             ["企业 ID", enterprise_id],
@@ -740,7 +750,7 @@ class ReformSandboxService:
 
         手工绘制 (避免依赖 reportlab.graphics.charts 模块, 兼容性更好).
         """
-        from reportlab.graphics.shapes import Drawing, Line, String, Rect
+        from reportlab.graphics.shapes import Drawing, Line, Rect, String
         from reportlab.lib import colors
 
         width = 460

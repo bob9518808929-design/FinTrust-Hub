@@ -7,7 +7,7 @@
     4. page=2&page_size=5 → 返回第 6-10 条
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -41,7 +41,7 @@ async def seed_orders():
 
     直接操作单例内存 store (conftest 把 get_db 覆盖为 None, 走内存路径).
     """
-    base = datetime(2026, 8, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 8, 1, 12, 0, 0, tzinfo=UTC)
     saved = eco_pts_service._orders
     injected_ids = []
     for i in range(10):

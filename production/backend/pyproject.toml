@@ -100,7 +100,18 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "B", "UP", "RUF"]
-ignore = ["E501", "B008"]
+# E501: 行长由 100 字符配置柔性控制; B008: FastAPI Depends() 在默认参数是框架约定
+# RUF001/002/003: 中文全角标点与形近字（中文项目, 非歧义）
+# N802/N806: camelCase 方法名对齐 SGX enclave/前端契约命名; 函数内大写常量
+# E741: 历史短变量名; RUF012: 内存单例 Store 模式有意使用可变类属性
+# E701/E402: 紧凑写法与测试 sys.path 前置导入; RUF043: pytest match 正则风格
+ignore = [
+    "E501", "B008",
+    "RUF001", "RUF002", "RUF003",
+    "N802", "N806",
+    "E741", "RUF012",
+    "E701", "E402", "RUF043",
+]
 
 [tool.mypy]
 python_version = "3.11"

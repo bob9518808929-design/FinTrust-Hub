@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import random
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from app.schemas.responsibility import (
-    BehaviorMiningRecord, ChainStage, PersonFlowRole, ResponsibilityChain,
+    BehaviorMiningRecord,
+    ChainStage,
+    ResponsibilityChain,
     ResponsibilityResult,
 )
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _id(prefix: str) -> str:
@@ -102,7 +104,7 @@ class _RespStore:
             ("物流签收拍照", 0.45),
             ("责任链节点签署", 0.9),
         ]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for i in range(20):
             eid = f"E00{(i % 4) + 1}"
             action, weight = random.choice(actions)
@@ -135,10 +137,10 @@ class _RespStore:
             return dict(b)
 
     async def list_behaviors(
-        self, eid: str, person_id: Optional[str] = None, days: int = 30,
+        self, eid: str, person_id: str | None = None, days: int = 30,
     ) -> list[dict]:
         async with self._lock:
-            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+            cutoff = (datetime.now(UTC) - timedelta(days=days)).isoformat()
             items = []
             for b in self._behaviors:
                 if b.get("enterpriseId") != eid:
@@ -196,7 +198,7 @@ class ResponsibilityChainService:
         self,
         enterprise_id: str,
         target_stage: ChainStage | str,
-        evidences: Optional[list[str]] = None,
+        evidences: list[str] | None = None,
     ) -> ResponsibilityResult:
         target_stage = self._parse_stage(target_stage)
         chain = await self.get_chain(enterprise_id)
@@ -220,7 +222,7 @@ class ResponsibilityChainService:
         existing_role_names = {r.role_name for r in chain.roles}
         new_roles = [dict(r.model_dump(by_alias=True)) for r in chain.roles]
         max_person = max([int(r.person_id[-2:]) for r in chain.roles], default=0)
-        for idx, (rname, dept, actions) in enumerate(roles_spec):
+        for _idx, (rname, dept, actions) in enumerate(roles_spec):
             if rname in existing_role_names:
                 continue
             max_person += 1
@@ -273,7 +275,7 @@ class ResponsibilityChainService:
         person_id: str,
         action: str,
         weight: float = 0.5,
-        linked_tx_id: Optional[str] = None,
+        linked_tx_id: str | None = None,
     ) -> BehaviorMiningRecord:
         points = int(max(0.0, min(1.0, weight)) * 10 + random.randint(1, 8))
         b = {
@@ -292,7 +294,7 @@ class ResponsibilityChainService:
     async def list_behaviors(
         self,
         enterprise_id: str,
-        person_id: Optional[str] = None,
+        person_id: str | None = None,
         days: int = 30,
     ) -> list[BehaviorMiningRecord]:
         items = await _resp_store.list_behaviors(enterprise_id, person_id, days)

@@ -14,7 +14,6 @@ from datetime import datetime
 from app.schemas.parsers import ContractParseResult, OcrRequest
 from app.services.ocr_service import OcrService, ocr_service
 
-
 # ============================================================================
 # 内置 seed 样本 (3 类合同)
 # ============================================================================
@@ -166,7 +165,7 @@ def _parse_amount_cents(text: str) -> int:
         if m:
             try:
                 amt = float(m.group(1).replace(",", "").replace("，", ""))
-                return int(round(amt * 100))
+                return round(amt * 100)
             except ValueError:
                 continue
     return 0

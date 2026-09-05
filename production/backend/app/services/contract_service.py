@@ -9,7 +9,7 @@ spec 依据: 第三准则 "数据流可选配置 - 合同流" + MOD-13 多方协
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class ContractService:
             "amount": amount,
             "content": content,
             "status": "draft",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
         return self._contracts[contract_id]
 
@@ -76,7 +76,7 @@ class ContractService:
         party_a = self._extract_party(text, ("甲方", "出借人", "贷款人", "债权人"))
         party_b = self._extract_party(text, ("乙方", "借款人", "债务人", "承租人"))
         amount = self._extract_amount(text)
-        currency = "CNY" if "人民币" in text or "CNY" in text or "￥" in text else "CNY"
+        currency = "CNY"  # 当前仅支持人民币合同
         term = self._extract_term(text)
         rate = self._extract_rate(text)
         repayment = self._extract_repayment(text)
@@ -207,9 +207,9 @@ class ContractService:
             m = re.search(r"(?:期限|借款期限|合同期限)[：:]\s*(\d+)\s*个?月")
             if m:
                 months = int(m.group(1))
-                start = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                start = datetime.now(UTC).strftime("%Y-%m-%d")
                 from datetime import timedelta
-                end = (datetime.now(timezone.utc) + timedelta(days=30 * months)).strftime("%Y-%m-%d")
+                end = (datetime.now(UTC) + timedelta(days=30 * months)).strftime("%Y-%m-%d")
         return {"start": start, "end": end}
 
     @staticmethod

@@ -10,10 +10,13 @@ from fastapi import APIRouter, Body, Query
 from app.api.deps import make_ok
 from app.schemas.common import ApiResult
 from app.schemas.opt_in_config import (
-    ConfigDiff, CooperationMethod, DataFlow, EnterpriseOptConfig, OptionalModule,
+    ConfigDiff,
+    CooperationMethod,
+    DataFlow,
+    EnterpriseOptConfig,
+    OptionalModule,
 )
 from app.services.opt_in_config_engine import opt_in_config_engine
-
 
 opt_in_router = APIRouter(prefix="/core/opt-in", tags=["CORE-03 配置引擎"])
 
